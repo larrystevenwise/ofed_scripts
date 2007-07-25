@@ -48,7 +48,6 @@ $| = 1;
 my $LOCK_EXCLUSIVE = 2;
 my $UNLOCK         = 8;
 
-my $netdir;
 my $interactive = 1;
 my $verbose = 0;
 my $verbose2 = 0;
@@ -64,32 +63,32 @@ my %packages_info = (
 		'libibverbs' => 
 			{ name => "libibverbs", parent => "libibverbs",
 			selected => 0, installed => 0, rpm_exist => 0,
-			available => 1, dist_req_build => "", 
-			dist_req_inst => "", ofa_req_build => "", ofa_req_inst => "", },
+			available => 1, dist_req_build => [],
+			dist_req_inst => [], ofa_req_build => [], ofa_req_inst => [], },
 		'libibverbs-devel' => 
 			{ name => "libibverbs", parent => "libibverbs",
 			selected => 0, installed => 0, rpm_exist => 0,
-			available => 1, dist_req_build => "",
-			dist_req_inst => "", ofa_req_build => "",
-			ofa_req_inst => "libibverbs", },
+			available => 1, dist_req_build => [],
+			dist_req_inst => [], ofa_req_build => [],
+			ofa_req_inst => ["libibverbs"], },
 		'libibverbs-devel-static' => 
 			{ name => "libibverbs", parent => "libibverbs",
 			selected => 0, installed => 0, rpm_exist => 0,
-			available => 1, dist_req_build => "",
-			dist_req_inst => "", ofa_req_build => "",
-			ofa_req_inst => "libibverbs", },
+			available => 1, dist_req_build => [],
+			dist_req_inst => [], ofa_req_build => [],
+			ofa_req_inst => ["libibverbs"], },
 		'libibverbs-utils' => 
 			{ name => "libibverbs", parent => "libibverbs",
 			selected => 0, installed => 0, rpm_exist => 0,
-			available => 1, dist_req_build => "",
-			dist_req_inst => "", ofa_req_build => "",
-			ofa_req_inst => "libibverbs", },
+			available => 1, dist_req_build => [],
+			dist_req_inst => [], ofa_req_build => [],
+			ofa_req_inst => ["libibverbs"], },
 		'libibverbs-debuginfo' => 
 			{ name => "libibverbs", parent => "libibverbs",
 			selected => 0, installed => 0, rpm_exist => 0,
-			available => 1, dist_req_build => "",
-			dist_req_inst => "", ofa_req_build => "",
-			ofa_req_inst => "libibverbs", },
+			available => 1, dist_req_build => [],
+			dist_req_inst => [], ofa_req_build => [],
+			ofa_req_inst => ["libibverbs"], },
 		);
 
 my $build32 = 0;
@@ -100,6 +99,7 @@ my $WDIR  	= dirname($0);
 chdir $WDIR;
 my $CWD 	= $ENV{PWD};
 my $TMPDIR 	= '/tmp';
+my $netdir;
 
 # Define RPMs environment
 my $dist_rpm;
@@ -124,9 +124,9 @@ my $sysconfdir	= `rpm --eval '%{_sysconfdir}'`;
 
 my %MPI_SUPPORTED_COMPILERS = (gcc => 0, pgi => 0, intel => 0, pathscale => 0);
 
-for  my $key ( keys %MPI_SUPPORTED_COMPILERS ) {
-	print $key . ' = ' . $MPI_SUPPORTED_COMPILERS{$key} . "\n";
-}
+# for  my $key ( keys %MPI_SUPPORTED_COMPILERS ) {
+# 	print $key . ' = ' . $MPI_SUPPORTED_COMPILERS{$key} . "\n";
+# }
 
 
 my $config = $CWD . '/ofed.conf';
@@ -174,13 +174,12 @@ sub set_cfg
 
     my $info = get_info($srpm_full_path);
     my $name = (split(/ /,$info,4))[0];
-    print "set_cfg: main_packages $name $info\n" if ( $verbose );
+    print "set_cfg: main_packages $name $info\n" if ( $verbose2 );
 
     ( $main_packages{$name}{'name'},
     $main_packages{$name}{'version'},
     $main_packages{$name}{'release'},
     $main_packages{$name}{'description'} ) = split(/ /,$info,4);
-
     $main_packages{$name}{'srpmpath'} 	= $srpm_full_path;
 
 }
@@ -195,13 +194,19 @@ sub add_subpackage
 
 }
 
+# TBD Set packages availability depending OS/Kernel/arch
+sub set_availability
+{
+}
+
 # Select package for installation
 sub select_package
 {
-	open(CONFIG, "+>$config") || die "Can't open $config: $!";;
-	flock CONFIG, $LOCK_EXCLUSIVE;
 	if ($interactive) {
+		open(CONFIG, "+>$config") || die "Can't open $config: $!";;
+		flock CONFIG, $LOCK_EXCLUSIVE;
 		for my $package ( @all_packages ) {
+			next if (not $packages_info{$package}{'available'});
 			print "Install $package? [y/N]:";
 			my $ans = getch();
 			if ( $ans eq 'Y' or $ans eq 'y' ) {
@@ -215,10 +220,37 @@ sub select_package
 		}
 	}
 	else {
-		print "Not supported yet\n";
+		open(CONFIG, "$config") || die "Can't open $config: $!";;
+		flock CONFIG, $LOCK_EXCLUSIVE;
+		while(<CONFIG>) {
+			next if (m@^\s*#.*@);
+			my ($package,$selected) = (split '=', $_);
+			chomp $package;
+			chomp $selected;
+
+			if ( $selected eq 'y' ) {
+				$packages_info{$package}{'selected'} = 1;
+				print "Selected $package\n" if ($verbose);
+			}
+		}
 	}
 	flock CONFIG, $UNLOCK;
 	close(CONFIG);
+
+}
+
+sub resolve_dependencies
+{
+
+	for my $package ( @all_packages ) {
+		if ($packages_info{$package}{'selected'}) {
+			# Get the list of dependencies
+			my @arr = @{ $packages_info{$package}{'ofa_req_inst'} };
+			for my $i ( 0 .. $#arr ) {
+				print "$package requires $arr[$i]\n"
+			}
+		}
+	}
 }
 
 # Build RPM from source RPM
@@ -283,3 +315,4 @@ select_package();
 build_rpm("libibverbs");
 
 print "libibverbs-devel $packages_info{'libibverbs-devel'}->{'selected'}\n";
+resolve_dependencies();
