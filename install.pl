@@ -30,6 +30,7 @@ use strict;
 use File::Basename;
 use File::Path;
 use File::Find;
+use File::Copy;
 
 # use Cwd;
 
@@ -47,58 +48,66 @@ my $UNLOCK         = 8;
 my $interactive = 1;
 my $verbose = 0;
 my $verbose2 = 0;
-my $use_fork = 1;
-
-my $build_required = 1;
 
 my %main_packages = ();
 my @selected_packages = ();
+my @selected_by_user = ();
 
+# List of all available packages sorted following dependencies
 my @basic_kernel_packages = ("ib_verbs", "ib_mthca", "mlx4", "ib_ipoib");
 my @kernel_packages = (@basic_kernel_packages, "ib_sdp", "ib_srp");
 
-my @all_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static", "libibverbs-utils", "libibverbs-debuginfo",
-            "libmthca", "libmthca-devel");
+my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static", "libibverbs-utils", "libibverbs-debuginfo",
+            "libmthca", "libmthca-devel-static", "libmthca-debuginfo");
+# all_packages is required to save ordered (following dependencies) list of
+# packages. Hash does not saves the order
+my @all_packages = (@kernel_packages, @user_packages);
 
 my %packages_info = (
         'libibverbs' =>
             { name => "libibverbs", parent => "libibverbs",
-            selected => 0, installed => 0, rpm_exist => 0,
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [], ofa_req_inst => [], },
         'libibverbs-devel' =>
             { name => "libibverbs", parent => "libibverbs",
-            selected => 0, installed => 0, rpm_exist => 0,
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => ["libibverbs"], },
         'libibverbs-devel-static' =>
             { name => "libibverbs", parent => "libibverbs",
-            selected => 0, installed => 0, rpm_exist => 0,
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => ["libibverbs"], },
         'libibverbs-utils' =>
             { name => "libibverbs", parent => "libibverbs",
-            selected => 0, installed => 0, rpm_exist => 0,
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => ["libibverbs"], },
         'libibverbs-debuginfo' =>
             { name => "libibverbs", parent => "libibverbs",
-            selected => 0, installed => 0, rpm_exist => 0,
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => ["libibverbs"], },
         'libmthca' =>
             { name => "libmthca", parent => "libmthca",
-            selected => 0, installed => 0, rpm_exist => 0,
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs"],
             ofa_req_inst => ["libibverbs"], },
-        'libmthca-devel' =>
-            { name => "libmthca-devel", parent => "libmthca",
-            selected => 0, installed => 0, rpm_exist => 0,
+        'libmthca-devel-static' =>
+            { name => "libmthca-devel-static", parent => "libmthca",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libmthca"], },
+        'libmthca-debuginfo' =>
+            { name => "libmthca-debuginfo", parent => "libmthca",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
             ofa_req_inst => ["libibverbs", "libmthca"], },
@@ -107,7 +116,9 @@ my %packages_info = (
 my @hidden_packages = ("open-iscsi");
 my $build32 = 0;
 my $arch = `uname -m`;
+chomp $arch;
 my $kernel = `uname -r`;
+chomp $kernel;
 
 my $PACKAGE     = 'OFED';
 
@@ -130,6 +141,10 @@ my $SRPMS = $CWD . '/' . 'SRPMS/';
 chomp $SRPMS;
 my $RPMS  = $CWD . '/' . 'RPMS' . '/' . $dist_rpm;
 chomp $RPMS;
+if (not -d $RPMS) {
+    mkpath([$RPMS]);
+}
+
 my $TOPDIR = "/var/tmp/" . $PACKAGE . "_topdir";
 chomp $TOPDIR;
 
@@ -138,8 +153,18 @@ mkpath([$TOPDIR . '/BUILD' ,$TOPDIR . '/RPMS',$TOPDIR . '/SOURCES',$TOPDIR . '/S
 my $ofedlogs = "/tmp/$PACKAGE.$$.logs";
 mkpath([$ofedlogs]);
 
-my $build_arch  = `rpm --eval '%{_target_cpu}'`;
-chomp $build_arch;
+my $target_cpu  = `rpm --eval '%{_target_cpu}'`;
+chomp $target_cpu;
+
+my $target_cpu32;
+if (-f "/etc/SuSE-release") {
+    $target_cpu32 = 'i586';
+}
+else {
+    $target_cpu32 = 'i686';
+}
+chomp $target_cpu32;
+
 my $mandir      = `rpm --eval '%{_mandir}'`;
 chomp $mandir;
 my $sysconfdir  = `rpm --eval '%{_sysconfdir}'`;
@@ -186,7 +211,12 @@ sub getch
         return $c;
 }
 
-sub get_info
+sub get_rpm_name_arch
+{
+    return `rpm --queryformat "[%{NAME}] [%{ARCH}]" -qp @_`;
+}
+
+sub get_rpm_info
 {
     return `rpm --queryformat "[%{NAME}] [%{VERSION}] [%{RELEASE}] [%{DESCRIPTION}]" -qp @_`;
 }
@@ -195,9 +225,8 @@ sub set_cfg
 {
     my $srpm_full_path = shift @_;
 
-    my $info = get_info($srpm_full_path);
+    my $info = get_rpm_info($srpm_full_path);
     my $name = (split(/ /,$info,4))[0];
-    print "set_cfg: main_packages $name $info\n" if ( $verbose2 );
 
     ( $main_packages{$name}{'name'},
     $main_packages{$name}{'version'},
@@ -207,46 +236,57 @@ sub set_cfg
 
 }
 
-# Add subpackage $2 to package $1
-sub add_subpackage
-{
-    my $name = shift @_;
-    my $sub  = shift @_;
-
-    push @{ $main_packages{$name}{'subpackage'} }, $sub;
-
-}
-
 # TBD Set packages availability depending OS/Kernel/arch
 sub set_availability
 {
 }
 
+# Set rpm_exist parameter for existing RPMs
+sub set_existing_rpms
+{
+    for my $binrpm ( <$RPMS/*.rpm> ) {
+        my ($rpm_name, $rpm_arch) = (split ' ', get_rpm_name_arch($binrpm));
+        if ($rpm_arch eq $target_cpu) {
+            $packages_info{$rpm_name}{'rpm_exist'} = 1;
+        }
+        else {
+            $packages_info{$rpm_name}{'rpm_exist32'} = 1;
+        }
+        print "$rpm_name RPM exist\n" if ($verbose2);
+    }
+}
+
 # Select package for installation
-sub select_package
+sub select_packages
 {
     if ($interactive) {
+        my $ans;
         open(CONFIG, "+>$config") || die "Can't open $config: $!";;
         flock CONFIG, $LOCK_EXCLUSIVE;
         for my $package ( @all_packages ) {
             next if (not $packages_info{$package}{'available'});
             print "Install $package? [y/N]:";
-            my $ans = getch();
+            $ans = getch();
             if ( $ans eq 'Y' or $ans eq 'y' ) {
                 $packages_info{$package}{'selected'} = 1;
                 print CONFIG "$package=y\n";
-                push (@selected_packages, $package);
+                push (@selected_by_user, $package);
             }
             else {
                 $packages_info{$package}{'selected'} = 0;
                 print CONFIG "$package=n\n";
             }
         }
-        if ($arch eq "x86_86" or $arch eq "ppc64") {
+        if ($arch eq "x86_64" or $arch eq "ppc64") {
             print "Install 32-bit packages? [y/N]:";
+            $ans = getch();
             if ( $ans eq 'Y' or $ans eq 'y' ) {
                 $build32 = 1;
                 print CONFIG "build32=1\n";
+            }
+            else {
+                $build32 = 0;
+                print CONFIG "build32=0\n";
             }
         }
     }
@@ -265,7 +305,7 @@ sub select_package
 
             if ( $selected eq 'y' ) {
                 $packages_info{$package}{'selected'} = 1;
-                push (@selected_packages, $package);
+                push (@selected_by_user, $package);
                 print "select_package: selected $package\n" if ($verbose);
             }
         }
@@ -277,29 +317,26 @@ sub select_package
 
 sub resolve_dependencies
 {
-    for my $package ( @selected_packages ) {
-        if ($packages_info{$package}{'selected'}) {
+    for my $package ( @selected_by_user ) {
             # Get the list of dependencies
-            if ($build_required) {
-                for my $req ( @{ $packages_info{$package}{'ofa_req_inst'} } ) {
-                    print "resolve_dependencies: $package requires $req\n" if ($verbose);
-                    if (not $packages_info{$req}{'selected'}) {
-                        $packages_info{$req}{'selected'} = 1;
-                        push (@selected_packages, $package);
-                    }
-                }
-            }
-            else {
+            if (not $packages_info{$package}{'rpm_exist'}) {
                 for my $req ( @{ $packages_info{$package}{'ofa_req_build'} } ) {
-                    print "resolve_dependencies: $package requires $req\n" if ($verbose);
+                    print "resolve_dependencies: $package requires $req for rpmbuild\n" if ($verbose);
                     if (not $packages_info{$req}{'selected'}) {
                         $packages_info{$req}{'selected'} = 1;
-                        push (@selected_packages, $package);
+                        push (@selected_packages, $req);
                     }
                 }
             }
+            for my $req ( @{ $packages_info{$package}{'ofa_req_inst'} } ) {
+                print "resolve_dependencies: $package requires $req for rpm install\n" if ($verbose);
+                if (not $packages_info{$req}{'selected'}) {
+                    $packages_info{$req}{'selected'} = 1;
+                    push (@selected_packages, $req);
+                }
+            }
+            push (@selected_packages, $package);
         }
-    }
 }
 
 # Print the list of selected packages
@@ -310,6 +347,10 @@ sub print_selected
     for my $package ( @selected_packages ) {
         print "$package\n";
     }
+    if ($build32) {
+        print "32-bit binaries/libraries will be created\n";
+    }
+    print "\n";
 }
 
 # Build RPM from source RPM
@@ -319,45 +360,50 @@ sub build_rpm
     my $cmd;
     my $res = 0;
     my $sig = 0;
+    my $TMPRPMS;
 
-    if ($build32) {
-        $cmd .= " linux32";
-    }
+
     $cmd .= " rpmbuild --rebuild --define '_topdir $TOPDIR'";
+    if ($build32) {
+        # $cmd .= " linux32";
+        $cmd .= " --define '_target_cpu $target_cpu32'";
+        $cmd .= " --define '_target $target_cpu32-linux'";
+        $cmd .= " --define '_lib lib'";
+        $cmd .= " --define '__arch_install_post %{nil}'";
+        $cmd .= " --define 'optflags -O2 -g -m32'";
+    }
     $cmd .= " $main_packages{$name}{'srpmpath'}";
 
-    print "$cmd\n" if ($verbose);
-    if ($use_fork) {
-        my $mypid = fork();
-        die "Failed to fork: $!" if not defined $mypid;
-        if ( not $mypid ) {
-            system("$cmd > $ofedlogs/$name.rpmbuild.log 2>&1");
-            exit($?);
-        }
-        waitpid ( $mypid, 0 );
-        $res = $? >> 8;
-        $sig = $? & 127;
-        if ($sig or $res) {
-            print "Failed to build $name RPM\n";
-            print "See $ofedlogs/$name.rpmbuild.log\n";
-            exit 1;
-        }
+    print "Running $cmd\n" if ($verbose);
+    system("$cmd > $ofedlogs/$name.rpmbuild.log 2>&1");
+    $res = $? >> 8;
+    $sig = $? & 127;
+    if ($sig or $res) {
+        print "Failed to build $name RPM\n";
+        print "See $ofedlogs/$name.rpmbuild.log\n";
+        exit 1;
+    }
+
+    if ($build32) {
+        $TMPRPMS = "$TOPDIR/RPMS/$target_cpu32";
     }
     else {
-        system("$cmd > $ofedlogs/$name.rpmbuild.log 2>&1");
-        $res = $? >> 8;
-        $sig = $? & 127;
-        if ($sig or $res) {
-            print "Failed to build $name RPM\n";
-            print "See $ofedlogs/$name.rpmbuild.log\n";
-            exit 1;
-        }
+        $TMPRPMS = "$TOPDIR/RPMS/$target_cpu";
     }
-    my $TMPRPMS = "$TOPDIR/RPMS/$build_arch";
     chomp $TMPRPMS;
 
+    print "TMPRPMS $TMPRPMS\n";
+
     for my $myrpm ( <$TMPRPMS/*.rpm> ) {
-        print "$myrpm\n";
+        print "Created $myrpm\n" if ($verbose2);
+        my ($myrpm_name, $myrpm_arch) = (split ' ', get_rpm_name_arch($myrpm));
+        move($myrpm, $RPMS);
+        if ($myrpm_arch eq $target_cpu) {
+            $packages_info{$myrpm_name}{'rpm_exist'} = 1;
+        }
+        else {
+            $packages_info{$myrpm_name}{'rpm_exist32'} = 1;
+        }
     }
 }
 
@@ -368,10 +414,16 @@ sub install_rpm
     my $cmd;
     my $res = 0;
     my $sig = 0;
+    my $package;
 
     my $version = $main_packages{$packages_info{$name}{'parent'}}{'version'};
     my $release = $main_packages{$packages_info{$name}{'parent'}}{'release'};
-    my $package = "$RPMS/$name-$version-$release.$build_arch.rpm";
+    if ($build32) {
+        $package = "$RPMS/$name-$version-$release.$target_cpu32.rpm";
+    }
+    else {
+        $package = "$RPMS/$name-$version-$release.$target_cpu.rpm";
+    }
 
     if (not -f $package) {
         print "$package does not exist\n";
@@ -380,32 +432,14 @@ sub install_rpm
     $cmd .= " rpm -i";
     $cmd .= " $package";
 
-    print "$cmd\n" if ($verbose);
-    if ($use_fork) {
-        my $mypid = fork();
-        die "Failed to fork: $!" if not defined $mypid;
-        if ( not $mypid ) {
-            system("$cmd > $ofedlogs/$name.rpminstall.log 2>&1");
-            exit($?);
-        }
-        waitpid ( $mypid, 0 );
-        $res = $? >> 8;
-        $sig = $? & 127;
-        if ($sig or $res) {
-            print "Failed to install $name RPM\n";
-            print "See $ofedlogs/$name.rpminstall.log\n";
-            exit 1;
-        }
-    }
-    else {
-        system("$cmd > $ofedlogs/$name.rpminstall.log 2>&1");
-        $res = $? >> 8;
-        $sig = $? & 127;
-        if ($sig or $res) {
-            print "Failed to install $name RPM\n";
-            print "See $ofedlogs/$name.rpminstall.log\n";
-            exit 1;
-        }
+    print "Running $cmd\n" if ($verbose);
+    system("$cmd > $ofedlogs/$name.rpminstall.log 2>&1");
+    $res = $? >> 8;
+    $sig = $? & 127;
+    if ($sig or $res) {
+        print "Failed to install $name RPM\n";
+        print "See $ofedlogs/$name.rpminstall.log\n";
+        exit 1;
     }
 }
 
@@ -415,20 +449,53 @@ sub print_package_info
     for my $key ( keys %main_packages ) {
         print "$key:\n";
         print "======================================\n";
-    my %pack = %{$main_packages{$key}};
+        my %pack = %{$main_packages{$key}};
         for my $subkey ( keys %pack ) {
-        if ( $subkey eq "subpackage" ) {
-            print "$subkey: ";
-            for my $i ( 0 .. $#{ $pack{$subkey} } ) {
-                print $pack{$subkey}[$i] . ' ';
-            }
-            print "\n";
-        }
-        else {
-                    print $subkey . ' = ' . $pack{$subkey} . "\n";
-        }
+            print $subkey . ' = ' . $pack{$subkey} . "\n";
         }
         print "\n";
+    }
+}
+
+sub is_installed
+{
+    my $res = 0;
+    my $name = shift @_;
+    
+    system("rpm -q $name > /dev/null 2>&1");
+    $res = $? >> 8;
+
+    return not $res;
+}
+
+sub uninstall
+{
+    my $res = 0;
+    my $sig = 0;
+    my $cnt = 0;
+    system("ofed_uninstall.sh > $ofedlogs/ofed_uninstall.log 2>&1");
+    $res = $? >> 8;
+    $sig = $? & 127;
+    if ($sig or $res) {
+        my $cmd = "rpm -e --allmatches";
+        for my $package (@all_packages) {
+            if (is_installed($package)) {
+                $cmd .= " $package";
+                $cnt ++;
+            }
+        }
+        if ($cnt) {
+            print "Uninstalling the previous version of $PACKAGE\n";
+            print "Running $cmd\n" if ($verbose);
+            system("$cmd >> $ofedlogs/ofed_uninstall.log 2>&1");
+            $res = $? >> 8;
+            $sig = $? & 127;
+            if ($sig or $res) {
+                print "Failed to uninstall the previous installation\n";
+                print "See $ofedlogs/ofed_uninstall.log\n";
+                exit 1;
+            }
+        }
     }
 }
 
@@ -439,13 +506,26 @@ for my $srcrpm ( <$SRPMS*> ) {
     set_cfg ($srcrpm);
 }
 
-# add_subpackage('libibverbs', 'devel');
-# add_subpackage('libibverbs', 'utils');
-# print_package_info;
-
-select_package();
+set_existing_rpms();
+select_packages();
 resolve_dependencies();
 print_selected();
 
-build_rpm("libibverbs");
-install_rpm("libibverbs");
+# Uninstall the previous installations
+uninstall();
+
+# Build and install selected RPMs
+for my $package ( @selected_packages) {
+    if ( (not $build32 and not $packages_info{$package}{'rpm_exist'}) or 
+         ($build32 and not $packages_info{$package}{'rpm_exist32'}) ) {
+        my $parent = $packages_info{$package}{'parent'};
+        build_rpm($parent);
+    }
+
+    if ( (not $build32 and not $packages_info{$package}{'rpm_exist'}) or 
+         ($build32 and not $packages_info{$package}{'rpm_exist32'}) ) {
+        print "$package was not created\n";
+        exit 1;
+    }
+    install_rpm($package); 
+}
