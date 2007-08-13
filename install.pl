@@ -37,7 +37,8 @@ use File::Copy;
 
 sub usage
 {
-   print "\n Usage: $0 [-c <packages config_file>] [-net <network config_file>]\n";
+   print "\n Usage: $0 [-c <packages config_file>] [-n|--net <network config_file>]\n";
+   print "\n           [-k|--kernel <kernel version>]\n";
    print "\n";
 }
 
@@ -56,14 +57,33 @@ my @selected_modules_by_user = ();
 my @selected_kernel_modules = ();
 
 # List of all available packages sorted following dependencies
-my @kernel_packages = ("kernel-ib", "kernel-ib-devel");
+my @kernel_packages = ("kernel-ib", "kernel-ib-devel", "ib-bonding", "ib-bonding-debuginfo");
 my @basic_kernel_modules = ("core", "mthca", "mlx4", "ipoib");
 my @kernel_modules = (@basic_kernel_modules, "sdp", "srp");
 
 my $kernel_configure_options;
 
-my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static", "libibverbs-utils", "libibverbs-debuginfo",
-            "libmthca", "libmthca-devel-static", "libmthca-debuginfo");
+my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static", 
+                     "libibverbs-utils", "libibverbs-debuginfo",
+                     "libmthca", "libmthca-devel-static", "libmthca-debuginfo", 
+                     "libmlx4", "libmlx4-devel-static", "libmlx4-debuginfo",
+                     "libehca", "libehca-devel-static", "libehca-debuginfo",
+                     "libcxgb3", "libcxgb3-devel", "libcxgb3-debuginfo",
+                     "libipathverbs", "libipathverbs-devel", "libipathverbs-debuginfo",
+                     "libibcm", "libibcm-devel", "libibcm-debuginfo",
+                     "libibcommon", "libibcommon-devel", "libibcommon-debuginfo",
+                     "libibumad", "libibumad-devel", "libibumad-debuginfo",
+                     "libibmad", "libibmad-devel", "libibmad-debuginfo",
+                     "librdmacm", "librdmacm-devel", "librdmacm-debuginfo",
+                     "libsdp", "libsdp-devel", "libsdp-debuginfo",
+                     "opensm", "perftest", "mstflint", "tvflash",
+                     "qlvnictools", "sdpnetstat", "srptools", "rds-tools",
+                     "ibutils", "infiniband-diags",
+                     "open-iscsi-generic",
+                     "ofed-docs", "ofed-scripts",
+                     "mpi-selector", "mvapich", "mvapich2", "openmpi", "mpitests",
+                     );
+
 # all_packages is required to save ordered (following dependencies) list of
 # packages. Hash does not saves the order
 my @all_packages = (@kernel_packages, @user_packages);
@@ -108,7 +128,7 @@ my %kernel_modules_info = (
         );
 
 my %packages_info = (
-        
+        # Kernel packages
         'ofa_kernel' =>
             { name => "ofa_kernel", parent => "ofa_kernel",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -125,7 +145,17 @@ my %packages_info = (
             available => 1, mode => "kernel", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [], },
-
+        'ib-bonding' =>
+            { name => "ib-bonding", parent => "ib-bonding",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "kernel", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [], ofa_req_inst => [], },
+        'ib-bonding-debuginfo' =>
+            { name => "ib-bonding-debuginfo", parent => "ib-bonding",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "kernel", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [], ofa_req_inst => [], },
+        # User space libraries
         'libibverbs' =>
             { name => "libibverbs", parent => "libibverbs",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -155,6 +185,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => ["libibverbs"], },
+
         'libmthca' =>
             { name => "libmthca", parent => "libmthca",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -173,6 +204,159 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
             ofa_req_inst => ["libibverbs", "libmthca"], },
+
+        'libmlx4' =>
+            { name => "libmlx4", parent => "libmlx4",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
+            ofa_req_inst => ["libibverbs"], },
+        'libmlx4-devel-static' =>
+            { name => "libmlx4-devel-static", parent => "libmlx4",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libmlx4"], },
+        'libmlx4-debuginfo' =>
+            { name => "libmlx4-debuginfo", parent => "libmlx4",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libmlx4"], },
+
+        'libehca' =>
+            { name => "libehca", parent => "libehca",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs"],
+            ofa_req_inst => ["libibverbs"], },
+        'libehca-devel-static' =>
+            { name => "libehca-devel-static", parent => "libehca",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libehca"], },
+        'libehca-debuginfo' =>
+            { name => "libehca-debuginfo", parent => "libehca",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libehca"], },
+
+        'libcxgb3' =>
+            { name => "libcxgb3", parent => "libcxgb3",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
+            ofa_req_inst => ["libibverbs"], },
+        'libcxgb3-devel' =>
+            { name => "libcxgb3-devel", parent => "libcxgb3",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libcxgb3"], },
+        'libcxgb3-debuginfo' =>
+            { name => "libcxgb3-debuginfo", parent => "libcxgb3",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libcxgb3"], },
+
+        'libipathverbs' =>
+            { name => "libipathverbs", parent => "libipathverbs",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
+            ofa_req_inst => ["libibverbs"], },
+        'libipathverbs-devel' =>
+            { name => "libipathverbs-devel", parent => "libipathverbs",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libipathverbs"], },
+        'libipathverbs-debuginfo' =>
+            { name => "libipathverbs-debuginfo", parent => "libipathverbs",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libipathverbs"], },
+
+        'libibcm' =>
+            { name => "libibcm", parent => "libibcm",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs"],
+            ofa_req_inst => ["libibverbs"], },
+        'libibcm-devel' =>
+            { name => "libibcm-devel", parent => "libibcm",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libibcm"], },
+        'libibcm-debuginfo' =>
+            { name => "libibcm-debuginfo", parent => "libibcm",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libibcm"], },
+        # Management
+        'libibcommon' =>
+            { name => "libibcommon", parent => "libibcommon",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs"],
+            ofa_req_inst => ["libibverbs"], },
+        'libibcommon-devel' =>
+            { name => "libibcommon-devel", parent => "libibcommon",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libibcommon"], },
+        'libibcommon-debuginfo' =>
+            { name => "libibcommon-debuginfo", parent => "libibcommon",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libibcommon"], },
+
+        'libibumad' =>
+            { name => "libibumad", parent => "libibumad",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs"],
+            ofa_req_inst => ["libibverbs"], },
+        'libibumad-devel' =>
+            { name => "libibumad-devel", parent => "libibumad",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libibumad"], },
+        'libibumad-debuginfo' =>
+            { name => "libibumad-debuginfo", parent => "libibumad",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libibumad"], },
+
+        'libibmad' =>
+            { name => "libibmad", parent => "libibmad",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs", "libibumad-devel"],
+            ofa_req_inst => ["libibverbs", "libibumad"], },
+        'libibmad-devel' =>
+            { name => "libibmad-devel", parent => "libibmad",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libibmad"], },
+        'libibmad-debuginfo' =>
+            { name => "libibmad-debuginfo", parent => "libibmad",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libibmad"], },
+
         );
 
 my @hidden_packages = ("open-iscsi");
@@ -215,6 +399,9 @@ mkpath([$TOPDIR . '/BUILD' ,$TOPDIR . '/RPMS',$TOPDIR . '/SOURCES',$TOPDIR . '/S
 my $ofedlogs = "/tmp/$PACKAGE.$$.logs";
 mkpath([$ofedlogs]);
 
+my $prefix ='/usr';
+chomp $prefix;
+
 my $target_cpu  = `rpm --eval '%{_target_cpu}'`;
 chomp $target_cpu;
 
@@ -250,8 +437,10 @@ while ( $#ARGV >= 0 ) {
     if ( $cmd_flag eq "-c" ) {
         $config = shift(@ARGV);
         $interactive = 0;
-    } elsif ( $cmd_flag eq "-net" ) {
+    } elsif ( $cmd_flag eq "-n" or $cmd_flag eq "--net" ) {
         $config_net = shift(@ARGV);
+    } elsif ( $cmd_flag eq "-k" or $cmd_flag eq "--kernel" ) {
+        $kernel = shift(@ARGV);
     } elsif ( $cmd_flag eq "-v" ) {
         $verbose = 1;
     } elsif ( $cmd_flag eq "-vv" ) {
@@ -262,6 +451,9 @@ while ( $#ARGV >= 0 ) {
         exit 1;
     }
 }
+
+my $kernel_rel = $kernel;
+$kernel_rel =~ s/-/_/;
 
 sub getch
 {
@@ -372,6 +564,10 @@ sub select_packages
             my ($package,$selected) = (split '=', $_);
             chomp $package;
             chomp $selected;
+            if (not $packages_info{$package}{'parent'}) {
+               print "Unsupported package: $package\n";
+               next;
+            }
             if ($package eq "build32") {
                 $build32 = 1 if ($selected);
                 next;
@@ -440,29 +636,38 @@ sub print_selected
 
 sub build_kernel_rpm
 {
+    my $name = shift @_;
     my $cmd;
     my $res = 0;
     my $sig = 0;
     my $TMPRPMS;
-    my $name = "ofa_kernel";
-
-    for my $module ( @selected_kernel_modules ) {
-        print "module $module\n";
-        if ($module eq "core") {
-            $kernel_configure_options .= " --with-core-mod --with-user_mad-mod --with-user_access-mod --with-addr_trans-mod";
-        }
-        elsif ($module eq "ipath") {
-            $kernel_configure_options .= " --with-ipath_inf-mod";
-        }
-        else {
-            $kernel_configure_options .= " --with-$module-mod";
-        }
-    }
 
     $cmd = "rpmbuild --rebuild --define '_topdir $TOPDIR'";
-    $cmd .= " --define 'configure_options $kernel_configure_options'";
-    $cmd .= " --define 'build_kernel_ib 1'";
-    $cmd .= " --define 'build_kernel_ib_devel 1'";
+
+    if ($name eq 'ofa_kernel') {
+        for my $module ( @selected_kernel_modules ) {
+            print "module $module\n";
+            if ($module eq "core") {
+                $kernel_configure_options .= " --with-core-mod --with-user_mad-mod --with-user_access-mod --with-addr_trans-mod";
+            }
+            elsif ($module eq "ipath") {
+                $kernel_configure_options .= " --with-ipath_inf-mod";
+            }
+            else {
+                $kernel_configure_options .= " --with-$module-mod";
+            }
+        }
+
+        $cmd .= " --define 'configure_options $kernel_configure_options'";
+        $cmd .= " --define 'build_kernel_ib 1'";
+        $cmd .= " --define 'build_kernel_ib_devel 1'";
+    }
+    elsif ($name eq 'ib-bonding') {
+        $cmd .= " --define 'KVERSION $kernel'";
+        $cmd .= " --define '_release $kernel_rel'";
+        $cmd .= " --define '_prefix $prefix'";
+    }
+
     $cmd .= " $main_packages{$name}{'srpmpath'}";
 
     print "Running $cmd\n" if ($verbose);
@@ -478,7 +683,7 @@ sub build_kernel_rpm
     $TMPRPMS = "$TOPDIR/RPMS/$target_cpu";
     chomp $TMPRPMS;
 
-    print "TMPRPMS $TMPRPMS\n";
+    print "TMPRPMS $TMPRPMS\n" if ($verbose);
 
     for my $myrpm ( <$TMPRPMS/*.rpm> ) {
         print "Created $myrpm\n" if ($verbose2);
@@ -526,6 +731,7 @@ sub build_rpm
         $cmd = "rpmbuild --rebuild --define '_topdir $TOPDIR'";
         $cmd .= " --define '_target_cpu $target_cpu32'";
         $cmd .= " --define '_target $target_cpu32-linux'";
+        $cmd .= " --define '_prefix $prefix'";
         $cmd .= " --define '_lib lib'";
         $cmd .= " --define '__arch_install_post %{nil}'";
         $cmd .= " --define 'optflags -O2 -g -m32'";
@@ -561,8 +767,6 @@ sub install_kernel_rpm
 
     my $version = $main_packages{$packages_info{$name}{'parent'}}{'version'};
     # my $release = $main_packages{$packages_info{$name}{'parent'}}{'release'};
-    my $kernel_rel = $kernel;
-    $kernel_rel =~ s/-/_/;
     my $release = $kernel_rel;
 
     my $package = "$RPMS/$name-$version-$release.$target_cpu.rpm";
@@ -728,15 +932,14 @@ for my $package ( @selected_packages) {
     }
     else {
         # kernel modules
-        if ($package eq "kernel-ib" or $package eq "kernel-ib-devel") {
-            if (not $packages_info{$package}{'rpm_exist'}) {
-                build_kernel_rpm();
-            }
-            if (not $packages_info{$package}{'rpm_exist'}) {
-                print "$package was not created\n";
-                exit 1;
-            }
-            install_kernel_rpm($package);
+        if (not $packages_info{$package}{'rpm_exist'}) {
+            my $parent = $packages_info{$package}{'parent'};
+            build_kernel_rpm($parent);
         }
+        if (not $packages_info{$package}{'rpm_exist'}) {
+            print "$package was not created\n";
+            exit 1;
+        }
+        install_kernel_rpm($package);
     }
 }
