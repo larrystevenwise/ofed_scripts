@@ -184,7 +184,7 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => ["libibverbs"], },
+            ofa_req_inst => [], },
 
         'libmthca' =>
             { name => "libmthca", parent => "libmthca",
@@ -203,7 +203,7 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libmthca"], },
+            ofa_req_inst => [], },
 
         'libmlx4' =>
             { name => "libmlx4", parent => "libmlx4",
@@ -222,7 +222,7 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libmlx4"], },
+            ofa_req_inst => [], },
 
         'libehca' =>
             { name => "libehca", parent => "libehca",
@@ -241,7 +241,7 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libehca"], },
+            ofa_req_inst => [], },
 
         'libcxgb3' =>
             { name => "libcxgb3", parent => "libcxgb3",
@@ -260,7 +260,7 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libcxgb3"], },
+            ofa_req_inst => [], },
 
         'libipathverbs' =>
             { name => "libipathverbs", parent => "libipathverbs",
@@ -279,7 +279,7 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libipathverbs"], },
+            ofa_req_inst => [], },
 
         'libibcm' =>
             { name => "libibcm", parent => "libibcm",
@@ -298,7 +298,7 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libibcm"], },
+            ofa_req_inst => [], },
         # Management
         'libibcommon' =>
             { name => "libibcommon", parent => "libibcommon",
@@ -317,7 +317,7 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libibcommon"], },
+            ofa_req_inst => [], },
 
         'libibumad' =>
             { name => "libibumad", parent => "libibumad",
@@ -336,28 +336,258 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libibumad"], },
+            ofa_req_inst => [], },
 
         'libibmad' =>
             { name => "libibmad", parent => "libibmad",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs", "libibumad-devel"],
+            dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
             ofa_req_inst => ["libibverbs", "libibumad"], },
         'libibmad-devel' =>
             { name => "libibmad-devel", parent => "libibmad",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libibmad"], },
+            dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
+            ofa_req_inst => ["libibmad", "libibumad-devel"], },
         'libibmad-debuginfo' =>
             { name => "libibmad-debuginfo", parent => "libibmad",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libibmad"], },
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
 
+        'opensm' =>
+            { name => "opensm", parent => "opensm",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+        'opensm-devel' =>
+            { name => "opensm-devel", parent => "opensm",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+        'opensm-debuginfo' =>
+            { name => "opensm-debuginfo", parent => "opensm",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'librdmacm' =>
+            { name => "librdmacm", parent => "librdmacm",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+        'librdmacm-devel' =>
+            { name => "librdmacm-devel", parent => "librdmacm",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+        'librdmacm-debuginfo' =>
+            { name => "librdmacm-debuginfo", parent => "librdmacm",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'libsdp' =>
+            { name => "libsdp", parent => "libsdp",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+        'libsdp-devel' =>
+            { name => "libsdp-devel", parent => "libsdp",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+        'libsdp-debuginfo' =>
+            { name => "libsdp-debuginfo", parent => "libsdp",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'perftest' =>
+            { name => "perftest", parent => "perftest",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+        'perftest-debuginfo' =>
+            { name => "perftest-debuginfo", parent => "perftest",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'mstflint' =>
+            { name => "mstflint", parent => "mstflint",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+        'mstflint-debuginfo' =>
+            { name => "mstflint-debuginfo", parent => "mstflint",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'tvflash' =>
+            { name => "tvflash", parent => "tvflash",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+        'tvflash-debuginfo' =>
+            { name => "tvflash-debuginfo", parent => "tvflash",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'qlvnictools' =>
+            { name => "qlvnictools", parent => "qlvnictools",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+        'qlvnictools-debuginfo' =>
+            { name => "qlvnictools-debuginfo", parent => "qlvnictools",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'sdpnetstat' =>
+            { name => "sdpnetstat", parent => "sdpnetstat",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+        'sdpnetstat-debuginfo' =>
+            { name => "sdpnetstat-debuginfo", parent => "sdpnetstat",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'srptools' =>
+            { name => "srptools", parent => "srptools",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+        'srptools-debuginfo' =>
+            { name => "srptools-debuginfo", parent => "srptools",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'rds-tools' =>
+            { name => "rds-tools", parent => "rds-tools",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+        'rds-tools-debuginfo' =>
+            { name => "rds-tools-debuginfo", parent => "rds-tools",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'ibutils' =>
+            { name => "ibutils", parent => "ibutils",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+        'ibutils-debuginfo' =>
+            { name => "ibutils-debuginfo", parent => "ibutils",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'infiniband-diags' =>
+            { name => "infiniband-diags", parent => "infiniband-diags",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+        'infiniband-diags-debuginfo' =>
+            { name => "infiniband-diags-debuginfo", parent => "infiniband-diags",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'mpi-selector' =>
+            { name => "mpi-selector", parent => "mpi-selector",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'mvapich' =>
+            { name => "mvapich", parent => "mvapich",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'mvapich2' =>
+            { name => "mvapich2", parent => "mvapich2",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'openmpi' =>
+            { name => "openmpi", parent => "openmpi",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'mpitests' =>
+            { name => "mpitests", parent => "mpitests",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'open-iscsi-generic' =>
+            { name => "open-iscsi-generic", parent => "open-iscsi-generic",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'ofed-docs' =>
+            { name => "ofed-docs", parent => "ofed-docs",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
+
+        'ofed-scripts' =>
+            { name => "ofed-scripts", parent => "ofed-scripts",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [], },
         );
+
 
 my @hidden_packages = ("open-iscsi");
 my $build32 = 0;
@@ -522,7 +752,6 @@ sub select_packages
             print "Install $package? [y/N]:";
             $ans = getch();
             if ( $ans eq 'Y' or $ans eq 'y' ) {
-                $packages_info{$package}{'selected'} = 1;
                 print CONFIG "$package=y\n";
                 push (@selected_by_user, $package);
 
@@ -533,13 +762,12 @@ sub select_packages
                         $ans = getch();
                         if ( $ans eq 'Y' or $ans eq 'y' ) {
                             push (@selected_modules_by_user, $module);
-                	    print CONFIG "$module=y\n";
+                	        print CONFIG "$module=y\n";
                         }
                     }
                 }
             }
             else {
-                $packages_info{$package}{'selected'} = 0;
                 print CONFIG "$package=n\n";
             }
         }
@@ -564,17 +792,19 @@ sub select_packages
             my ($package,$selected) = (split '=', $_);
             chomp $package;
             chomp $selected;
-            if (not $packages_info{$package}{'parent'}) {
-               print "Unsupported package: $package\n";
-               next;
-            }
+
             if ($package eq "build32") {
                 $build32 = 1 if ($selected);
                 next;
             }
 
+            if (not $packages_info{$package}{'parent'}) {
+               print "Unsupported package: $package\n";
+               next;
+            }
+
             if ( $selected eq 'y' ) {
-                $packages_info{$package}{'selected'} = 1;
+                # $packages_info{$package}{'selected'} = 1;
                 push (@selected_by_user, $package);
                 print "select_package: selected $package\n" if ($verbose);
             }
@@ -585,27 +815,39 @@ sub select_packages
 
 }
 
+sub select_dependent
+{
+    my $package = shift @_;
+
+    if (not $packages_info{$package}{'rpm_exist'}) {
+        for my $req ( @{ $packages_info{$package}{'ofa_req_build'} } ) {
+            print "resolve_dependencies: $package requires $req for rpmbuild\n" if ($verbose2);
+            if (not $packages_info{$req}{'selected'}) {
+                select_dependent($req);
+            }
+        }
+    }
+
+    for my $req ( @{ $packages_info{$package}{'ofa_req_inst'} } ) {
+        print "resolve_dependencies: $package requires $req for rpm install\n" if ($verbose2);
+        if (not $packages_info{$req}{'selected'}) {
+            select_dependent($req);
+        }
+    }
+
+    if (not $packages_info{$package}{'selected'}) {
+        $packages_info{$package}{'selected'} = 1;
+        push (@selected_packages, $package);
+        print "select_dependent: Selected package $package\n" if ($verbose);
+    }
+
+}
+
 sub resolve_dependencies
 {
     for my $package ( @selected_by_user ) {
             # Get the list of dependencies
-            if (not $packages_info{$package}{'rpm_exist'}) {
-                for my $req ( @{ $packages_info{$package}{'ofa_req_build'} } ) {
-                    print "resolve_dependencies: $package requires $req for rpmbuild\n" if ($verbose2);
-                    if (not $packages_info{$req}{'selected'}) {
-                        $packages_info{$req}{'selected'} = 1;
-                        push (@selected_packages, $req);
-                    }
-                }
-            }
-            for my $req ( @{ $packages_info{$package}{'ofa_req_inst'} } ) {
-                print "resolve_dependencies: $package requires $req for rpm install\n" if ($verbose2);
-                if (not $packages_info{$req}{'selected'}) {
-                    $packages_info{$req}{'selected'} = 1;
-                    push (@selected_packages, $req);
-                }
-            }
-            push (@selected_packages, $package);
+            select_dependent($package);
         }
 
     for my $module ( @selected_modules_by_user ) {
@@ -718,7 +960,7 @@ sub build_rpm
     $TMPRPMS = "$TOPDIR/RPMS/$target_cpu";
     chomp $TMPRPMS;
 
-    print "TMPRPMS $TMPRPMS\n";
+    print "TMPRPMS $TMPRPMS\n" if ($verbose);
 
     for my $myrpm ( <$TMPRPMS/*.rpm> ) {
         print "Created $myrpm\n" if ($verbose2);
@@ -914,12 +1156,13 @@ print_selected();
 uninstall();
 
 # Build and install selected RPMs
-
+print "Build and install selected_packages: @selected_packages\n";
 for my $package ( @selected_packages) {
     if ($packages_info{$package}{'mode'} eq "user") {
         if ( (not $build32 and not $packages_info{$package}{'rpm_exist'}) or 
              ($build32 and not $packages_info{$package}{'rpm_exist32'}) ) {
             my $parent = $packages_info{$package}{'parent'};
+            print "Build $parent RPM\n" if ($verbose);
             build_rpm($parent);
         }
 
@@ -928,18 +1171,21 @@ for my $package ( @selected_packages) {
             print "$package was not created\n";
             exit 1;
         }
+        print "Install $package RPM\n" if ($verbose);
         install_rpm($package);
     }
     else {
         # kernel modules
         if (not $packages_info{$package}{'rpm_exist'}) {
             my $parent = $packages_info{$package}{'parent'};
+            print "Build $parent RPM\n" if ($verbose);
             build_kernel_rpm($parent);
         }
         if (not $packages_info{$package}{'rpm_exist'}) {
             print "$package was not created\n";
             exit 1;
         }
+        print "Install $package RPM\n" if ($verbose);
         install_kernel_rpm($package);
     }
 }
