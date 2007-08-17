@@ -43,7 +43,7 @@ sub usage
    print "\n Usage: $0 [-c <packages config_file>] [-n|--net <network config_file>]";
    print "\n           [-p|--print-available <kernel version>]";
    print "\n           [-k|--kernel <kernel version>]";
-   print RESET . "\n\n";
+   print RESET "\n\n";
 }
 
 $| = 1;
@@ -54,16 +54,20 @@ my $KEY_ESC=27;
 my $KEY_CNTL_C=3;
 my $KEY_ENTER=13;
 
-my $INSTALL_CHOICE;
+my $BASIC = 1;
+my $HPC = 2;
+my $ALL = 3;
+my $CUSTOM = 4;
 
 my $interactive = 1;
-my $verbose = 0;
+my $verbose = 1;
 my $verbose2 = 0;
 my $verbose3 = 0;
 
 my $print_available = 0;
 
 my $clear_string = `clear`;
+my $upgrade_open_iscsi = 0;
 
 my $distro;
 
@@ -137,10 +141,13 @@ my @selected_kernel_modules = ();
 
 # List of all available packages sorted following dependencies
 my @kernel_packages = ("kernel-ib", "kernel-ib-devel", "ib-bonding", "ib-bonding-debuginfo");
-my @basic_kernel_modules = ("core", "mthca", "mlx4", "ipoib");
-my @kernel_modules = (@basic_kernel_modules, "sdp", "srp");
+my @basic_kernel_modules = ("core", "mthca", "mlx4", "cxgb3", "ehca", "ipath", "ipoib");
+my @ulp_modules = ("sdp", "srp", "rds", "vnic", "iser");
+my @kernel_modules = (@basic_kernel_modules, @ulp_modules);
 
 my $kernel_configure_options;
+
+my @misc_packages = ("ofed-docs", "ofed-scripts");
 
 my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static", 
                      "libibverbs-utils", "libibverbs-debuginfo",
@@ -153,7 +160,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "libibcommon", "libibcommon-devel", "libibcommon-debuginfo",
                      "libibumad", "libibumad-devel", "libibumad-debuginfo",
                      "libibmad", "libibmad-devel", "libibmad-debuginfo",
-                     "librdmacm", "librdmacm-devel", "librdmacm-debuginfo",
+                     "librdmacm", "librdmacm-utils", "librdmacm-devel", "librdmacm-debuginfo",
                      "libsdp", "libsdp-devel", "libsdp-debuginfo",
                      "opensm", "opensm-libs", "opensm-devel", "opensm-debuginfo", "opensm-static",
                      "perftest", "mstflint", "tvflash",
@@ -162,6 +169,17 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "ofed-docs", "ofed-scripts",
                      "mpi-selector", "mvapich", "mvapich2", "openmpi", "mpitests",
                      );
+
+my @basic_kernel_packages = ("kernel-ib");
+my @basic_user_packages = ("libibverbs", "libibverbs-utils", "libmthca", "libmlx4",
+                            "libehca", "libcxgb3", @misc_packages);
+
+my @hpc_kernel_packages = ("kernel-ib", "ib-bonding");
+my @hpc_kernel_modules = (@basic_kernel_modules);
+my @hpc_user_packages = (@basic_user_packages, "librdmacm",
+                        "librdmacm-utils", "dapl", "dapl-utils",
+                        "infiniband-diags", "ibutils", "mpi-selector",
+                        "mvapich", "mvapich2", "openmpi", "mpitests");
 
 # all_packages is required to save ordered (following dependencies) list of
 # packages. Hash does not saves the order
@@ -200,7 +218,7 @@ my %kernel_modules_info = (
             included_in_rpm => 0, requires => ["core", "ipoib"], },
         'iser' =>
             { name => "iser", available => 1, selected => 0,
-            included_in_rpm => 0, requires => ["core", "ipoib"], },
+            included_in_rpm => 0, requires => ["core", "ipoib"], ofa_req_inst => ["open-iscsi-generic"] },
         'vnic' =>
             { name => "vnic", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
@@ -318,21 +336,21 @@ my %packages_info = (
             { name => "libehca", parent => "libehca",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs"],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
             ofa_req_inst => ["libibverbs"],
             install32 => 1, exception => 0 },
         'libehca-devel-static' =>
             { name => "libehca-devel-static", parent => "libehca",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
             ofa_req_inst => ["libibverbs", "libehca"],
             install32 => 1, exception => 0 },
         'libehca-debuginfo' =>
             { name => "libehca-debuginfo", parent => "libehca",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
 
@@ -518,6 +536,13 @@ my %packages_info = (
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => ["librdmacm"],
             install32 => 1, exception => 0 },
+        'librdmacm-utils' =>
+            { name => "librdmacm-utils", parent => "librdmacm",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => ["librdmacm"],
+            install32 => 0, exception => 0 },
         'librdmacm-debuginfo' =>
             { name => "librdmacm-debuginfo", parent => "librdmacm",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -983,37 +1008,11 @@ sub show_menu
 # Select package for installation
 sub select_packages
 {
+    my $cnt = 0;
     if ($interactive) {
-        my $inp;
-        my $ok = 0;
-        my $max_inp;
-
-        while (! $ok) {
-            $max_inp = show_menu("main");
-            $inp = getch();
-
-            if ($inp =~ m/[qQ]/ || $inp =~ m/[Xx]/ ) {
-                die "Exiting\n";
-            }
-            if (ord($inp) == $KEY_ENTER) {
-                next;
-            }
-            if ($inp =~ m/[0123456789abcdefABCDEF]/)
-            {
-                $inp = hex($inp);
-            }
-            if ($inp < 1 || $inp > $max_inp)
-            {
-                print "Invalid choice...Try again\n";
-                next;
-            }
-            $ok = 1;
-        }
-
-        if ($inp == 1) {
-        }
-        elsif ($inp == 2) {
-            $ok = 0;
+            my $ok = 0;
+            my $inp;
+            my $max_inp;
             while (! $ok) {
                 $max_inp = show_menu("select");
                 $inp = getch();
@@ -1034,17 +1033,46 @@ sub select_packages
                 }
                 $ok = 1;
             }
-            if ($inp == 1) {
-                # BASIC packages
+            if ($inp == $BASIC) {
+                for my $package (@basic_user_packages, @basic_kernel_packages) {
+                    next if (not $packages_info{$package}{'available'});
+                    push (@selected_by_user, $package);
+                    print CONFIG "$package=y\n";
+                    $cnt ++;
+                }
+                for my $module ( @basic_kernel_modules ) {
+                    next if (not $kernel_modules_info{$module}{'available'});
+                    push (@selected_modules_by_user, $module);
+                    print CONFIG "$module=y\n";
+                }
             }
-            elsif ($inp == 2) {
-                # HPC packages
+            elsif ($inp == $HPC) {
+                for my $package ( @hpc_user_packages, @hpc_kernel_packages ) {
+                    next if (not $packages_info{$package}{'available'});
+                    push (@selected_by_user, $package);
+                    print CONFIG "$package=y\n";
+                    $cnt ++;
+                }
+                for my $module ( @hpc_kernel_modules ) {
+                    next if (not $kernel_modules_info{$module}{'available'});
+                    push (@selected_modules_by_user, $module);
+                    print CONFIG "$module=y\n";
+                }
             }
-            elsif ($inp == 3) {
-                # All packages
+            elsif ($inp == $ALL) {
+                for my $package ( @all_packages ) {
+                    next if (not $packages_info{$package}{'available'});
+                    push (@selected_by_user, $package);
+                    print CONFIG "$package=y\n";
+                    $cnt ++;
+                }
+                for my $module ( @kernel_modules ) {
+                    next if (not $kernel_modules_info{$module}{'available'});
+                    push (@selected_modules_by_user, $module);
+                    print CONFIG "$module=y\n";
+                }
             }
-            elsif ($inp == 4) {
-                # Custom installation
+            elsif ($inp == $CUSTOM) {
                 my $ans;
                 open(CONFIG, "+>$config") || die "Can't open $config: $!";;
                 flock CONFIG, $LOCK_EXCLUSIVE;
@@ -1055,16 +1083,31 @@ sub select_packages
                     if ( $ans eq 'Y' or $ans eq 'y' ) {
                         print CONFIG "$package=y\n";
                         push (@selected_by_user, $package);
+                        $cnt ++;
 
                         if ($package eq "kernel-ib") {
                             # Select kernel modules to be installed
                             for my $module ( @kernel_modules ) {
                                 next if (not $kernel_modules_info{$module}{'available'});
-                                print "Install $module module? [y/N]:";
-                                $ans = getch();
-                                if ( $ans eq 'Y' or $ans eq 'y' ) {
-                                    push (@selected_modules_by_user, $module);
-                                    print CONFIG "$module=y\n";
+                                if ($module eq "iser") {
+                                    print "Install $module module? (open-iscsi will also be installed) [y/N]:";
+                                    $ans = getch();
+                                    if ( $ans eq 'Y' or $ans eq 'y' ) {
+                                        push (@selected_modules_by_user, $module);
+                                        print CONFIG "$module=y\n";
+                                        check_open_iscsi();
+                                        if ($upgrade_open_iscsi) {
+                                            print CONFIG "upgrade_open_iscsi=yes\n";
+                                        }
+                                    }
+                                }
+                                else {
+                                    print "Install $module module? [y/N]:";
+                                    $ans = getch();
+                                    if ( $ans eq 'Y' or $ans eq 'y' ) {
+                                        push (@selected_modules_by_user, $module);
+                                        print CONFIG "$module=y\n";
+                                    }
                                 }
                             }
                         }
@@ -1093,14 +1136,6 @@ sub select_packages
                 }
                 print CONFIG "prefix=$prefix\n";
             }
-        }
-        elsif ($inp == 3) {
-        }
-        elsif ($inp == 4) {
-        }
-        elsif ($inp == 5) {
-        }
-
     }
     else {
         open(CONFIG, "$config") || die "Can't open $config: $!";
@@ -1123,9 +1158,26 @@ sub select_packages
                 next;
             }
 
+            if ($package eq "upgrade_open_iscsi") {
+                if ($selected =~ m/[Yy]|[Yy][Ee][Ss]/) {
+                    $upgrade_open_iscsi = 1;
+                }
+                next;
+            }
             if (not $packages_info{$package}{'parent'}) {
-               print "Unsupported package: $package\n";
-               next;
+                my $modules = "@kernel_modules";
+                chomp $modules;
+                $modules =~ s/ /|/g;
+                if ($package =~ m/$modules/) {
+                    if ( $selected eq 'y' ) {
+                        push (@selected_modules_by_user, $package);
+                        next;
+                    }
+                }
+                else {
+                   print "Unsupported package: $package\n";
+                   next;
+                }
             }
 
             if (not $packages_info{$package}{'available'} and $selected eq 'y') {
@@ -1135,13 +1187,24 @@ sub select_packages
 
             if ( $selected eq 'y' ) {
                 push (@selected_by_user, $package);
-                print "select_package: selected $package\n" if ($verbose);
+                print "select_package: selected $package\n" if ($verbose2);
+                $cnt ++;
             }
+        }
+
+        # Check open-iscsi package if iser module selected for installation
+        my $tmp = "@selected_modules_by_user";
+        $tmp =~ s/ /|/g;
+        chomp $tmp;
+        if ("iser" =~ m/$tmp/) {
+            check_open_iscsi();
         }
     }
     flock CONFIG, $UNLOCK;
     close(CONFIG);
 
+    
+    return $cnt;
 }
 
 sub select_dependent
@@ -1187,6 +1250,9 @@ sub resolve_dependencies
                 push (@selected_kernel_modules, $req);
             }
         }
+        for my $req ( @{ $kernel_modules_info{$module}{'ofa_req_inst'} } ) {
+            select_dependent($req);
+        }
         push (@selected_kernel_modules, $module);
     }
 }
@@ -1203,6 +1269,36 @@ sub print_selected
         print "32-bit binaries/libraries will be created\n";
     }
     print "\n";
+}
+
+sub check_open_iscsi
+{
+    my $oiscsi_name = $packages_info{'open-iscsi-generic'}{'name'};
+    if (is_installed($oiscsi_name)) {
+        my $vendor = `rpm --queryformat "[%{VENDOR}]" -q $oiscsi_name`;
+        print "open-iscsi name $oiscsi_name vendor: $vendor\n" if ($verbose3);
+        if ($vendor !~ m/Voltaire/) {
+            if ($interactive) {
+                print BLUE "In order to install iSER $oiscsi_name package should be upgraded.\n";
+                print BLUE "Do you want to upgrade $oiscsi_name? [y/N]: ", RESET;
+                my $ans = getch();
+                if ( $ans eq 'Y' or $ans eq 'y' ) {
+                    $upgrade_open_iscsi = 1;
+                }
+                else {
+                    print RED "Please uninstall $oiscsi_name before installing $PACKAGE with iSER support.", RESET "\n";
+                    exit 1;
+                }
+            }
+            else {
+                if (not $upgrade_open_iscsi) {
+                    print RED "Please uninstall $oiscsi_name before installing $PACKAGE with iSER support.", RESET "\n";
+                    print RED "  Or put \"upgrade_open_iscsi=yes\" in the $config:", RESET "\n";
+                    exit 1;
+                }
+            }
+        }
+    }
 }
 
 sub build_kernel_rpm
@@ -1246,15 +1342,15 @@ sub build_kernel_rpm
     $res = $? >> 8;
     $sig = $? & 127;
     if ($sig or $res) {
-        print RED "Failed to build $name RPM", RESET . "\n";
-        print RED "See $ofedlogs/$name.rpmbuild.log", RESET . "\n";
+        print RED "Failed to build $name RPM", RESET "\n";
+        print RED "See $ofedlogs/$name.rpmbuild.log", RESET "\n";
         exit 1;
     }
 
     $TMPRPMS = "$TOPDIR/RPMS/$target_cpu";
     chomp $TMPRPMS;
 
-    print "TMPRPMS $TMPRPMS\n" if ($verbose);
+    print "TMPRPMS $TMPRPMS\n" if ($verbose2);
 
     for my $myrpm ( <$TMPRPMS/*.rpm> ) {
         print "Created $myrpm\n" if ($verbose2);
@@ -1282,15 +1378,15 @@ sub build_rpm
         $res = $? >> 8;
         $sig = $? & 127;
         if ($sig or $res) {
-            print RED "Failed to build $name RPM", RESET . "\n";
-            print RED "See $ofedlogs/$name.rpmbuild.log", RESET . "\n";
+            print RED "Failed to build $name RPM", RESET "\n";
+            print RED "See $ofedlogs/$name.rpmbuild.log", RESET "\n";
             exit 1;
         }
 
         $TMPRPMS = "$TOPDIR/RPMS/$target_cpu";
         chomp $TMPRPMS;
 
-        print "TMPRPMS $TMPRPMS\n" if ($verbose);
+        print "TMPRPMS $TMPRPMS\n" if ($verbose2);
 
         for my $myrpm ( <$TMPRPMS/*.rpm> ) {
             print "Created $myrpm\n" if ($verbose2);
@@ -1316,8 +1412,8 @@ sub build_rpm
         $res = $? >> 8;
         $sig = $? & 127;
         if ($sig or $res) {
-            print RED "Failed to build $name RPM", RESET . "\n";
-            print RED "See $ofedlogs/$name.rpmbuild.log", RESET . "\n";
+            print RED "Failed to build $name RPM", RESET "\n";
+            print RED "See $ofedlogs/$name.rpmbuild.log", RESET "\n";
             exit 1;
         }
 
@@ -1346,7 +1442,7 @@ sub install_kernel_rpm
     my $package = "$RPMS/$name-$version-$release.$target_cpu.rpm";
 
     if (not -f $package) {
-        print RED "$package does not exist", RESET . "\n";
+        print RED "$package does not exist", RESET "\n";
         exit 1;
     }
 
@@ -1358,8 +1454,8 @@ sub install_kernel_rpm
     $res = $? >> 8;
     $sig = $? & 127;
     if ($sig or $res) {
-        print RED "Failed to install $name RPM", RESET . "\n";
-        print RED "See $ofedlogs/$name.rpminstall.log", RESET . "\n";
+        print RED "Failed to install $name RPM", RESET "\n";
+        print RED "See $ofedlogs/$name.rpminstall.log", RESET "\n";
         exit 1;
     }
 }
@@ -1379,7 +1475,7 @@ sub install_rpm
     $package = "$RPMS/$name-$version-$release.$target_cpu.rpm";
 
     if (not -f $package) {
-        print RED "$package does not exist", RESET . "\n";
+        print RED "$package does not exist", RESET "\n";
         exit 1;
     }
     $cmd = "rpm -iv";
@@ -1390,15 +1486,15 @@ sub install_rpm
     $res = $? >> 8;
     $sig = $? & 127;
     if ($sig or $res) {
-        print RED "Failed to install $name RPM", RESET . "\n";
-        print RED "See $ofedlogs/$name.rpminstall.log", RESET . "\n";
+        print RED "Failed to install $name RPM", RESET "\n";
+        print RED "See $ofedlogs/$name.rpminstall.log", RESET "\n";
         exit 1;
     }
 
     if ($build32 and $packages_info{$name}{'install32'}) {
         $package = "$RPMS/$name-$version-$release.$target_cpu32.rpm";
         if (not -f $package) {
-            print RED "$package does not exist", RESET . "\n";
+            print RED "$package does not exist", RESET "\n";
             # exit 1;
         }
         $cmd = "rpm -iv";
@@ -1409,8 +1505,8 @@ sub install_rpm
         $res = $? >> 8;
         $sig = $? & 127;
         if ($sig or $res) {
-            print RED "Failed to install $name RPM", RESET . "\n";
-            print RED "See $ofedlogs/$name.rpminstall.log", RESET . "\n";
+            print RED "Failed to install $name RPM", RESET "\n";
+            print RED "See $ofedlogs/$name.rpminstall.log", RESET "\n";
             exit 1;
         }
     }
@@ -1446,7 +1542,7 @@ sub uninstall
     my $res = 0;
     my $sig = 0;
     my $cnt = 0;
-    system("ofed_uninstall.sh > $ofedlogs/ofed_uninstall.log 2>&1");
+    system("yes | ofed_uninstall.sh > $ofedlogs/ofed_uninstall.log 2>&1");
     $res = $? >> 8;
     $sig = $? & 127;
     if ($sig or $res) {
@@ -1464,100 +1560,180 @@ sub uninstall
             $res = $? >> 8;
             $sig = $? & 127;
             if ($sig or $res) {
-                print RED "Failed to uninstall the previous installation", RESET . "\n";
-                print RED "See $ofedlogs/ofed_uninstall.log", RESET . "\n";
+                print RED "Failed to uninstall the previous installation", RESET "\n";
+                print RED "See $ofedlogs/ofed_uninstall.log", RESET "\n";
                 exit 1;
             }
+        }
+    }
+}
+
+sub install
+{
+    # Build and install selected RPMs
+    for my $package ( @selected_packages) {
+        if ($packages_info{$package}{'mode'} eq "user") {
+            if (not $packages_info{$package}{'exception'}) {
+                if ( (not $packages_info{$package}{'rpm_exist'}) or 
+                     ($build32 and $packages_info{$package}{'install32'} and 
+                      not $packages_info{$package}{'rpm_exist32'}) ) {
+                    my $parent = $packages_info{$package}{'parent'};
+                    print "Build $parent RPM\n" if ($verbose);
+                    build_rpm($parent);
+                }
+    
+                if ( (not $packages_info{$package}{'rpm_exist'}) or 
+                     ($build32 and $packages_info{$package}{'install32'} and 
+                      not $packages_info{$package}{'rpm_exist32'}) ) {
+                    print RED "$package was not created", RESET "\n";
+                    exit 1;
+                }
+                print "Install $package RPM:\n" if ($verbose);
+                install_rpm($package);
+            }
+            else {
+                if ($package eq "open-iscsi-generic") {
+                    my $real_name = $packages_info{$package}{'name'};
+                    if (not $packages_info{$real_name}{'rpm_exist'}) {
+                        my $parent = $packages_info{$real_name}{'parent'};
+                        print "Build $parent RPM\n" if ($verbose);
+                        build_rpm($parent);
+                    }
+                    if (not $packages_info{$real_name}{'rpm_exist'}) {
+                        print RED "$real_name was not created", RESET "\n";
+                        exit 1;
+                    }
+                    print "Install $real_name RPM:\n" if ($verbose);
+                    install_rpm($real_name);
+                }
+            }
+        }
+        else {
+            # kernel modules
+            if (not $packages_info{$package}{'rpm_exist'}) {
+                my $parent = $packages_info{$package}{'parent'};
+                print "Build $parent RPM\n" if ($verbose);
+                build_kernel_rpm($parent);
+            }
+            if (not $packages_info{$package}{'rpm_exist'}) {
+                print RED "$package was not created", RESET "\n";
+                exit 1;
+            }
+            print "Install $package RPM:\n" if ($verbose);
+            install_kernel_rpm($package);
         }
     }
 }
 
 ### MAIN AREA ###
-if ($print_available) {
-    set_availability();
-    for my $package ( @all_packages, @hidden_packages) {
-        next if (not $packages_info{$package}{'available'});
-        if ($package eq "kernel-ib") {
-            print "Kernel modules: ";
-            for my $module ( @kernel_modules ) {
-                next if (not $kernel_modules_info{$module}{'available'});
-                print $module . ' ';
+sub main
+{
+    if ($print_available) {
+        set_availability();
+        for my $package ( @all_packages, @hidden_packages) {
+            next if (not $packages_info{$package}{'available'});
+            if ($package eq "kernel-ib") {
+                print "Kernel modules: ";
+                for my $module ( @kernel_modules ) {
+                    next if (not $kernel_modules_info{$module}{'available'});
+                    print $module . ' ';
+                }
+                print "\nOther packages: ";
             }
-            print "\nOther packages: ";
+            print $package . ' ';
         }
-        print $package . ' ';
+        print "\n";
+        exit 0;
     }
-    print "\n";
-    exit 0;
-}
+    
+    my $num_selected = 0;
 
-print BLUE "Detected Linux Distribution: $distro", RESET . "\n" if ($verbose);
-# Set RPMs info for available source RPMs
-for my $srcrpm ( <$SRPMS*> ) {
-    set_cfg ($srcrpm);
-}
-
-set_existing_rpms();
-set_availability();
-select_packages();
-resolve_dependencies();
-print_selected();
-
-# Uninstall the previous installations
-uninstall();
-
-# Build and install selected RPMs
-print "Build and install selected_packages: @selected_packages\n";
-for my $package ( @selected_packages) {
-    if ($packages_info{$package}{'mode'} eq "user") {
-        if (not $packages_info{$package}{'exception'}) {
-            if ( (not $packages_info{$package}{'rpm_exist'}) or 
-                 ($build32 and $packages_info{$package}{'install32'} and 
-                  not $packages_info{$package}{'rpm_exist32'}) ) {
-                my $parent = $packages_info{$package}{'parent'};
-                print "Build $parent RPM\n" if ($verbose);
-                build_rpm($parent);
+    if ($interactive) {
+        my $inp;
+        my $ok = 0;
+        my $max_inp;
+    
+        while (! $ok) {
+            $max_inp = show_menu("main");
+            $inp = getch();
+    
+            if ($inp =~ m/[qQ]/ || $inp =~ m/[Xx]/ ) {
+                die "Exiting\n";
             }
-
-            if ( (not $packages_info{$package}{'rpm_exist'}) or 
-                 ($build32 and $packages_info{$package}{'install32'} and 
-                  not $packages_info{$package}{'rpm_exist32'}) ) {
-                print RED "$package was not created", RESET . "\n";
-                exit 1;
+            if (ord($inp) == $KEY_ENTER) {
+                next;
             }
-            print "Install $package RPM\n" if ($verbose);
-            install_rpm($package);
+            if ($inp =~ m/[0123456789abcdefABCDEF]/)
+            {
+                $inp = hex($inp);
+            }
+            if ($inp < 1 || $inp > $max_inp)
+            {
+                print "Invalid choice...Try again\n";
+                next;
+            }
+            $ok = 1;
         }
-        else {
-            if ($package eq "open-iscsi-generic") {
-                my $real_name = $packages_info{$package}{'name'};
-                print "open-iscsi-generic real name: $real_name rpm_exist: $packages_info{$real_name}{'rpm_exist'}\n";
-                if (not $packages_info{$real_name}{'rpm_exist'}) {
-                    my $parent = $packages_info{$real_name}{'parent'};
-                    print "Build $parent RPM\n" if ($verbose);
-                    build_rpm($parent);
-                }
-                if (not $packages_info{$real_name}{'rpm_exist'}) {
-                    print RED "$real_name was not created", RESET . "\n";
-                    exit 1;
-                }
-                print "Install $real_name RPM\n" if ($verbose);
-                install_rpm($real_name);
-            }
+    
+        if ($inp == 1) {
+            return 0;
         }
+        elsif ($inp == 2) {
+            for my $srcrpm ( <$SRPMS*> ) {
+                set_cfg ($srcrpm);
+            }
+            
+            # Set RPMs info for available source RPMs
+            set_existing_rpms();
+            set_availability();
+            $num_selected = select_packages();
+            resolve_dependencies();
+            print_selected();
+        }
+        elsif ($inp == 3) {
+            return 0;
+        }
+        elsif ($inp == 4) {
+            return 0;
+        }
+        elsif ($inp == 5) {
+            uninstall();
+            exit 0;
+        }
+    
     }
     else {
-        # kernel modules
-        if (not $packages_info{$package}{'rpm_exist'}) {
-            my $parent = $packages_info{$package}{'parent'};
-            print "Build $parent RPM\n" if ($verbose);
-            build_kernel_rpm($parent);
+        for my $srcrpm ( <$SRPMS*> ) {
+            set_cfg ($srcrpm);
         }
-        if (not $packages_info{$package}{'rpm_exist'}) {
-            print RED "$package was not created", RESET . "\n";
-            exit 1;
-        }
-        print "Install $package RPM\n" if ($verbose);
-        install_kernel_rpm($package);
+        
+        # Set RPMs info for available source RPMs
+        set_existing_rpms();
+        set_availability();
+        $num_selected = select_packages();
+        resolve_dependencies();
+        print_selected();
     }
+    
+    if (not $num_selected) {
+        print RED "$num_selected packages selected. Exiting...", RESET "\n";
+        exit 1;
+    }
+    print BLUE "Detected Linux Distribution: $distro", RESET "\n" if ($verbose);
+    
+    # Uninstall the previous installations
+    uninstall();
+    install();
+    print GREEN "\nInstallation finished successfully...", RESET;
+    if ($interactive) {
+        getch();
+    }
+    else {
+        print "\n";
+    }
+}
+
+while (1) {
+    main();
+    exit 0 if (not $interactive);
 }
