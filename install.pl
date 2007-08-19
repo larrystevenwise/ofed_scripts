@@ -149,6 +149,12 @@ my $kernel_configure_options;
 
 my @misc_packages = ("ofed-docs", "ofed-scripts");
 
+my @mpi_packages = ( "mpi-selector",
+                     "mvapich_gcc", "mvapich_pgi", "mvapich_intel", "mvapich_pathscale", 
+                     "mvapich2_gcc", "mvapich2_pgi", "mvapich2_intel", "mvapich2_pathscale", 
+                     "openmpi_gcc", "openmpi_pgi", "openmpi_intel", "openmpi_pathscale", 
+                     "mpitests",
+                    );
 my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static", 
                      "libibverbs-utils", "libibverbs-debuginfo",
                      "libmthca", "libmthca-devel-static", "libmthca-debuginfo", 
@@ -166,8 +172,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "perftest", "mstflint", "tvflash",
                      "qlvnictools", "sdpnetstat", "srptools", "rds-tools",
                      "ibutils", "infiniband-diags",
-                     "ofed-docs", "ofed-scripts",
-                     "mpi-selector", "mvapich", "mvapich2", "openmpi", "mpitests",
+                     "ofed-docs", "ofed-scripts", @mpi_packages
                      );
 
 my @basic_kernel_packages = ("kernel-ib");
@@ -178,8 +183,7 @@ my @hpc_kernel_packages = ("kernel-ib", "ib-bonding");
 my @hpc_kernel_modules = (@basic_kernel_modules);
 my @hpc_user_packages = (@basic_user_packages, "librdmacm",
                         "librdmacm-utils", "dapl", "dapl-utils",
-                        "infiniband-diags", "ibutils", "mpi-selector",
-                        "mvapich", "mvapich2", "openmpi", "mpitests");
+                        "infiniband-diags", "ibutils", @mpi_packages);
 
 # all_packages is required to save ordered (following dependencies) list of
 # packages. Hash does not saves the order
@@ -726,7 +730,35 @@ my %packages_info = (
         'mvapich' =>
             { name => "mvapich", parent => "mvapich",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+        'mvapich_gcc' =>
+            { name => "mvapich_gcc", parent => "mvapich",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+        'mvapich_pgi' =>
+            { name => "mvapich_pgi", parent => "mvapich",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+        'mvapich_intel' =>
+            { name => "mvapich_intel", parent => "mvapich",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+        'mvapich_pathscale' =>
+            { name => "mvapich_pathscale", parent => "mvapich",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
@@ -734,7 +766,35 @@ my %packages_info = (
         'mvapich2' =>
             { name => "mvapich2", parent => "mvapich2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+        'mvapich2_gcc' =>
+            { name => "mvapich2_gcc", parent => "mvapich2",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+        'mvapich2_pgi' =>
+            { name => "mvapich2_pgi", parent => "mvapich2",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+        'mvapich2_intel' =>
+            { name => "mvapich2_intel", parent => "mvapich2",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+        'mvapich2_pathscale' =>
+            { name => "mvapich2_pathscale", parent => "mvapich2",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
@@ -742,7 +802,35 @@ my %packages_info = (
         'openmpi' =>
             { name => "openmpi", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+        'openmpi_gcc' =>
+            { name => "openmpi_gcc", parent => "openmpi",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+        'openmpi_pgi' =>
+            { name => "openmpi_pgi", parent => "openmpi",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+        'openmpi_intel' =>
+            { name => "openmpi_intel", parent => "openmpi",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+        'openmpi_pathscale' =>
+            { name => "openmpi_pathscale", parent => "openmpi",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
@@ -806,9 +894,26 @@ my @hidden_packages = ("open-iscsi-generic", "ibvexdmtools");
 
 my %MPI_SUPPORTED_COMPILERS = (gcc => 0, pgi => 0, intel => 0, pathscale => 0);
 
-# for  my $key ( keys %MPI_SUPPORTED_COMPILERS ) {
-#   print $key . ' = ' . $MPI_SUPPORTED_COMPILERS{$key} . "\n";
-# }
+my %gcc = ('gcc' => 0, 'gfortran' => 0, 'g77' => 0, 'g++' => 0);
+my %pathscale = ('pathcc' => 0, 'pathCC' => 0, 'pathf90' => 0);
+my %pgi = ('pgf77' => 0, 'pgf90' => 0, 'pgCC' => 0); 
+my %intel = ('icc' => 0, 'icpc' => 0, 'ifort' => 0); 
+
+# mvapich2 environment
+my $mvapich2_conf_impl = "ofa";
+my $mvapich2_conf_romio = 1;
+my $mvapich2_conf_shared_libs = 1;
+my $mvapich2_conf_multithread = 0;
+my $mvapich2_conf_ckpt = 0;
+my $mvapich2_conf_blcr_home;
+my $mvapich2_conf_vcluster;
+my $mvapich2_conf_io_bus;
+my $mvapich2_conf_link_speed;
+my $mvapich2_conf_dapl_provider;
+my $mvapich2_comp_env;
+my $mvapich2_dat_lib;
+my $mvapich2_dat_include;
+my $mvapich2_conf_done = 0;
 
 while ( $#ARGV >= 0 ) {
 
@@ -898,6 +1003,56 @@ sub get_rpm_info
     return `rpm --queryformat "[%{NAME}] [%{VERSION}] [%{RELEASE}] [%{DESCRIPTION}]" -qp @_`;
 }
 
+# Check whether compiler $1 exist
+sub set_compilers
+{
+    if (`which gcc 2> /dev/null`) {
+        $gcc{'gcc'} = 1;
+    }
+    if (`which g77 2> /dev/null`) {
+        $gcc{'g77'} = 1;
+    }
+    if (`which g++ 2> /dev/null`) {
+        $gcc{'g++'} = 1;
+    }
+    if (`which gfortran 2> /dev/null`) {
+        $gcc{'gfortran'} = 1;
+    }
+
+    if (`which pathcc 2> /dev/null`) {
+        $pathscale{'pathcc'} = 1;
+    }
+    if (`which pathCC 2> /dev/null`) {
+        $pathscale{'pathCC'} = 1;
+    }
+    if (`which pathf90 2> /dev/null`) {
+        $pathscale{'pathf90'} = 1;
+    }
+
+    if (`which pgcc 2> /dev/null`) {
+        $pgi{'pgcc'} = 1;
+    }
+    if (`which pgCC 2> /dev/null`) {
+        $pgi{'pgCC'} = 1;
+    }
+    if (`which pgf77 2> /dev/null`) {
+        $pgi{'pgf77'} = 1;
+    }
+    if (`which pgf90 2> /dev/null`) {
+        $pgi{'pgf90'} = 1;
+    }
+
+    if (`which icc 2> /dev/null`) {
+        $intel{'icc'} = 1;
+    }
+    if (`which icpc 2> /dev/null`) {
+        $intel{'icpc'} = 1;
+    }
+    if (`which ifort 2> /dev/null`) {
+        $intel{'ifort'} = 1;
+    }
+}
+
 sub set_cfg
 {
     my $srpm_full_path = shift @_;
@@ -954,6 +1109,36 @@ sub set_availability
             $packages_info{'ibvexdmtools'}{'available'} = 1;
             $packages_info{'qlvnictools'}{'available'} = 1;
             $packages_info{'qlvnictools-debuginfo'}{'available'} = 1;
+    }
+
+    # mvapich, mvapich2 and openmpi
+    if ($gcc{'gcc'}) {
+        if ($gcc{'g77'} or $gcc{'gfortran'}) {
+            $packages_info{'mvapich_gcc'}{'available'} = 1;
+            $packages_info{'mvapich2_gcc'}{'available'} = 1;
+        }
+        $packages_info{'openmpi_gcc'}{'available'} = 1;
+    }
+    if ($pathscale{'pathcc'}) {
+        if ($pathscale{'pathCC'} and $pathscale{'pathf90'}) {
+            $packages_info{'mvapich_pathscale'}{'available'} = 1;
+            $packages_info{'mvapich2_pathscale'}{'available'} = 1;
+        }
+        $packages_info{'openmpi_pathscale'}{'available'} = 1;
+    }
+    if ($pgi{'pgcc'}) {
+        if ($pgi{'pgf77'} and $pgi{'pgf90'}) {
+            $packages_info{'mvapich_pgi'}{'available'} = 1;
+            $packages_info{'mvapich2_pgi'}{'available'} = 1;
+        }
+        $packages_info{'openmpi_pgi'}{'available'} = 1;
+    }
+    if ($intel{'icc'}) {
+        if ($intel{'icpc'} and $intel{'ifort'}) {
+            $packages_info{'mvapich_intel'}{'available'} = 1;
+            $packages_info{'mvapich2_intel'}{'available'} = 1;
+        }
+        $packages_info{'openmpi_intel'}{'available'} = 1;
     }
 }
 
@@ -1301,6 +1486,11 @@ sub check_open_iscsi
     }
 }
 
+sub set_mpi_env
+{
+
+}
+
 sub build_kernel_rpm
 {
     my $name = shift @_;
@@ -1369,17 +1559,247 @@ sub build_rpm
     my $sig = 0;
     my $TMPRPMS;
 
+    my $parent = $packages_info{$name}{'parent'};
+    print "Build $parent RPM\n" if ($verbose);
+
     if (not $packages_info{$name}{'rpm_exist'}) {
         $cmd = "rpmbuild --rebuild --define '_topdir $TOPDIR'";
-        $cmd .= " $main_packages{$name}{'srpmpath'}";
+
+        if ( $parent eq "mvapich") {
+            my $compiler = (split('_', $name))[1];
+            $cmd .= " --define '_name $name'";
+            $cmd .= " --define 'compiler $compiler'";
+            $cmd .= " --define 'openib_prefix $prefix'";
+            $cmd .= " --define 'mpi_selector $prefix/bin/mpi-selector'";
+            $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$packages_info{$parent}{'version'}'";
+        }
+        elsif ($parent eq "mvapich2") {
+            my $compiler = (split('_', $name))[1];
+            $cmd .= " --define '_name $name'";
+            $cmd .= " --define 'impl $mvapich2_conf_impl'";
+
+            if ($compiler eq "gcc") {
+                if ($gcc{'gfortran'}) {
+                    if ($arch eq "ppc64") {
+                        $mvapich2_comp_env = 'CC="gcc -m64" CXX="g++ -m64" F77="gfortran -m64" F90="gfortran -m64"';
+                    }
+                    else {
+                        $mvapich2_comp_env = "CC=gcc CXX=g++ F77=gfortran F90=gfortran";
+                    }
+                }
+                if ($gcc{'g77'}) {
+                    if ($arch eq "ppc64") {
+                        $mvapich2_comp_env = 'CC="gcc -m64" CXX="g++ -m64" F77="g77 -m64" F90=/bin/false';
+                    }
+                    else {
+                        $mvapich2_comp_env = "CC=gcc CXX=g++ F77=g77 F90=/bin/false";
+                    }
+                }
+            }
+            elsif ($compiler eq "pathscale") {
+                $mvapich2_comp_env = "CC=pathcc CXX=pathCC F77=pathf90 F90=pathf90";
+                # On i686 the PathScale compiler requires -g optimization
+                # for MVAPICH2 in the shared library configuration.
+                if ($arch eq "i686" and $mvapich2_conf_shared_libs) {
+                    $mvapich2_comp_env .= " OPT_FLAG=-g";
+                }
+            }
+            elsif ($compiler eq "pgi") {
+                $mvapich2_comp_env = "CC=pgcc CXX=pgCC F77=pgf77 F90=pgf90";
+            }
+            elsif ($compiler eq "intel") {
+                if ($mvapich2_conf_shared_libs) {
+                    # The -i-dynamic flag is required for MVAPICH2 in the shared
+                    # library configuration.
+                    $mvapich2_comp_env = 'CC="icc -i-dynamic" CXX="icpc -i-dynamic" F77="ifort -i-dynamic" F90="ifort -i-dynamic"';
+                }
+                else {
+                    $mvapich2_comp_env = "CC=icc CXX=icpc F77=ifort F90=ifort";
+                }
+            }
+
+            if ($mvapich2_conf_impl eq "ofa") {
+                print BLUE "Building the MVAPICH2 RPM in the OFA configuration. Please wait...", RESET "\n" if ($verbose);
+                if ($mvapich2_conf_ckpt) {
+                    $cmd .= " --define 'multithread 0'";
+                    $cmd .= " --define 'rdma_cm 0'";
+                    $cmd .= " --define 'blcr_home $mvapich2_conf_blcr_home'";
+                }
+                else {
+                    $cmd .= " --define 'multithread $mvapich2_conf_multithread'";
+                    $cmd .= " --define 'rdma_cm 1'";
+                }
+                $cmd .= " --define 'ckpt $mvapich2_conf_ckpt'";
+            }
+            elsif ($mvapich2_conf_impl eq "udapl") {
+                print BLUE "Building the MVAPICH2 RPM in the uDAPL configuration. Please wait...", RESET "\n" if ($verbose);
+                if (-d "$prefix/lib64") {
+                    $mvapich2_dat_lib = "$prefix/lib64";
+                }
+                if (-d "$prefix/lib") {
+                    $mvapich2_dat_lib = "$prefix/lib";
+                }
+                else {
+                    print RED "Could not find a proper uDAPL lib directory.", RESET "\n";
+                    exit 1;
+                }
+                if (-d "$prefix/include") {
+                    $mvapich2_dat_include = "$prefix/include";
+                }
+                else {
+                    print RED "Could not find a proper uDAPL include directory.", RESET "\n";
+                    exit 1;
+                }
+                $cmd .= " --define 'multithread $mvapich2_conf_multithread'";
+                $cmd .= " --define 'vcluster $mvapich2_conf_vcluster'";
+                $cmd .= " --define 'io_bus $mvapich2_conf_io_bus'";
+                $cmd .= " --define 'link_speed $mvapich2_conf_link_speed'";
+                $cmd .= " --define 'dapl_provider $mvapich2_conf_dapl_provider'";
+                $cmd .= " --define 'dat_lib $mvapich2_dat_lib'";
+                $cmd .= " --define 'dat_include $mvapich2_dat_include'";
+            }
+
+            $cmd .= " --define 'open_ib_home $prefix'";
+            $cmd .= " --define 'shared_libs $mvapich2_conf_shared_libs'";
+            $cmd .= " --define 'romio $mvapich2_conf_romio'";
+            $cmd .= " --define 'comp_env $mvapich2_comp_env'";
+            $cmd .= " --define 'auto_req 0'";
+            $cmd .= " --define 'mpi_selector $prefix/bin/mpi-selector'";
+            $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$packages_info{$parent}{'version'}'";
+            $cmd .= " --define 'ofa_build 0'";
+        }
+        elsif ($parent eq "openmpi") {
+            my $compiler = (split('_', $name))[1];
+            my $openmpi_comp_env;
+            my $use_default_rpm_opt_flags = 1;
+            my $openmpi_ldflags;
+            my $openmpi_wrapper_cxx_flags;
+            my $openmpi_lib;
+            
+            if ($compiler eq "gcc") {
+                $openmpi_comp_env = "CC=gcc";
+                if ($gcc{'g++'}) {
+                    $openmpi_comp_env .= " CXX=g++";
+                }
+                else {
+                    $openmpi_comp_env .= " --disable-mpi-cxx";
+                }
+                if ($gcc{'gfortran'}) {
+                    $openmpi_comp_env .= " F77=gfortran FC=gfortran";
+                }
+                elsif ($gcc{'g77'}) {
+                    $openmpi_comp_env .= " F77=g77 --disable-mpi-f90";
+                }
+                else {
+                    $openmpi_comp_env .= " --disable-mpi-f77 --disable-mpi-f90";
+                }
+            }
+            elsif ($compiler eq "pathscale") {
+                $openmpi_comp_env = "CC=pathcc";
+                if ($pathscale{'pathCC'}) {
+                    $openmpi_comp_env .= " CXX=pathCC";
+                }
+                else {
+                    $openmpi_comp_env .= " --disable-mpi-cxx";
+                }
+                if ($pathscale{'pathf90'}) {
+                    $openmpi_comp_env .= " F77=pathf90 FC=pathf90";
+                }
+                else {
+                    $openmpi_comp_env .= " --disable-mpi-f77 --disable-mpi-f90";
+                }
+                # On fedora6 and redhat5 the pathscale compiler fails with default $RPM_OPT_FLAGS
+                if ($distro eq "fedora6" or $distro eq "redhat5") {
+                    $use_default_rpm_opt_flags = 0;
+                }
+            }
+            elsif ($compiler eq "pgi") {
+                $openmpi_comp_env = "CC=pgcc";
+                $use_default_rpm_opt_flags = 0;
+                if ($pgi{'pgCC'}) {
+                    $openmpi_comp_env .= " CXX=pgCC";
+                    # See http://www.pgroup.com/userforum/viewtopic.php?p=2371
+                    $openmpi_wrapper_cxx_flags .= " -fpic";
+                }
+                else {
+                    $openmpi_comp_env .= " --disable-mpi-cxx";
+                }
+                if ($pgi{'pgf77'}) {
+                    $openmpi_comp_env .= " F77=pgf77";
+                }
+                else {
+                    $openmpi_comp_env .= " --disable-mpi-f77";
+                }
+                if ($pgi{'pgf90'}) {
+                    # *Must* put in FCFLAGS=-O2 so that -g doesn't get
+                    # snuck in there (pgi 6.2-5 has a problem with
+                    # modules and -g).
+                    $openmpi_comp_env .= " FC=pgf90 FCFLAGS=-O2";
+                }
+                else {
+                    $openmpi_comp_env .= " --disable-mpi-f90";
+                }
+            }
+            elsif ($compiler eq "intel") {
+                $openmpi_comp_env = "CC=icc";
+                if ($intel{'icpc'}) {
+                    $openmpi_comp_env .= " CXX=icpc";
+                }
+                else {
+                    $openmpi_comp_env .= " --disable-mpi-cxx";
+                }
+                if ($intel{'ifort'}) {
+                    $openmpi_comp_env .= "  F77=ifort FC=ifort";
+                }
+                else {
+                    $openmpi_comp_env .= " --disable-mpi-f77 --disable-mpi-f90";
+                }
+            }
+
+            if ($arch eq "ppc64") {
+                # In the ppc64 case, add -m64 to all the relevant
+                # flags because it's not the default.  Also
+                # unconditionally add $OMPI_RPATH because even if
+                # it's blank, it's ok because there are other
+                # options added into the ldflags so the overall
+                # string won't be blank.
+                $openmpi_comp_env .= ' CFLAGS="-m64 -O2" CXXFLAGS="-m64 -O2" FCFLAGS="-m64 -O2" FFLAGS="-m64 -O2"';
+                $openmpi_comp_env .= ' --with-wrapper-ldflags="-g -O2 -m64 -L/usr/lib64" --with-wrapper-cflags=-m64';
+                $openmpi_comp_env .= ' --with-wrapper-cxxflags=-m64 --with-wrapper-fflags=-m64 --with-wrapper-fcflags=-m64';
+                $openmpi_wrapper_cxx_flags .= " -m64";
+            }
+
+            $openmpi_comp_env .= " --enable-mpirun-prefix-by-default";
+            if ($openmpi_wrapper_cxx_flags) {
+                $openmpi_comp_env .= " --with-wrapper-cxxflags=$openmpi_wrapper_cxx_flags";
+            }
+
+            $cmd .= " --define '_name $name'";
+            $cmd .= " --define 'mpi_selector $prefix/bin/mpi-selector'";
+            $cmd .= " --define 'ofed 0'";
+            $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$packages_info{$parent}{'version'}'";
+            $cmd .= " --define '_defaultdocdir $prefix/mpi/$compiler/$parent-$packages_info{$parent}{'version'}'";
+            $cmd .= " --define '_mandir %{_prefix}/share/man'";
+            $cmd .= " --define 'mflags -j 4'";
+            $cmd .= " --define 'configure_options $openmpi_ldflags --with-openib=$prefix --with-openib-libdir=$prefix/$openmpi_lib $openmpi_comp_env'";
+            $cmd .= " --define 'use_default_rpm_opt_flags $use_default_rpm_opt_flags'";
+        }
+        else {
+            $cmd .= "--define '_prefix $prefix'";
+        }
+
+        $cmd .= " $main_packages{$parent}{'srpmpath'}";
 
         print "Running $cmd\n" if ($verbose);
-        system("$cmd > $ofedlogs/$name.rpmbuild.log 2>&1");
+        open(LOG, "+>$ofedlogs/$parent.rpmbuild.log");
+        print LOG "Running $cmd\n" if ($verbose);
+        close LOG;
+        system("$cmd >> $ofedlogs/$parent.rpmbuild.log 2>&1");
         $res = $? >> 8;
         $sig = $? & 127;
         if ($sig or $res) {
-            print RED "Failed to build $name RPM", RESET "\n";
-            print RED "See $ofedlogs/$name.rpmbuild.log", RESET "\n";
+            print RED "Failed to build $parent RPM", RESET "\n";
+            print RED "See $ofedlogs/$parent.rpmbuild.log", RESET "\n";
             exit 1;
         }
 
@@ -1405,15 +1825,18 @@ sub build_rpm
         $cmd .= " --define '_lib lib'";
         $cmd .= " --define '__arch_install_post %{nil}'";
         $cmd .= " --define 'optflags -O2 -g -m32'";
-        $cmd .= " $main_packages{$name}{'srpmpath'}";
+        $cmd .= " $main_packages{$parent}{'srpmpath'}";
 
         print "Running $cmd\n" if ($verbose);
-        system("$cmd > $ofedlogs/$name.rpmbuild.log 2>&1");
+        open(LOG, "+>$ofedlogs/$parent.rpmbuild32bit.log");
+        print LOG "Running $cmd\n" if ($verbose);
+        close LOG;
+        system("$cmd >> $ofedlogs/$parent.rpmbuild32bit.log 2>&1");
         $res = $? >> 8;
         $sig = $? & 127;
         if ($sig or $res) {
-            print RED "Failed to build $name RPM", RESET "\n";
-            print RED "See $ofedlogs/$name.rpmbuild.log", RESET "\n";
+            print RED "Failed to build $parent RPM", RESET "\n";
+            print RED "See $ofedlogs/$parent.rpmbuild32bit.log", RESET "\n";
             exit 1;
         }
 
@@ -1577,9 +2000,7 @@ sub install
                 if ( (not $packages_info{$package}{'rpm_exist'}) or 
                      ($build32 and $packages_info{$package}{'install32'} and 
                       not $packages_info{$package}{'rpm_exist32'}) ) {
-                    my $parent = $packages_info{$package}{'parent'};
-                    print "Build $parent RPM\n" if ($verbose);
-                    build_rpm($parent);
+                    build_rpm($package);
                 }
     
                 if ( (not $packages_info{$package}{'rpm_exist'}) or 
@@ -1595,9 +2016,7 @@ sub install
                 if ($package eq "open-iscsi-generic") {
                     my $real_name = $packages_info{$package}{'name'};
                     if (not $packages_info{$real_name}{'rpm_exist'}) {
-                        my $parent = $packages_info{$real_name}{'parent'};
-                        print "Build $parent RPM\n" if ($verbose);
-                        build_rpm($parent);
+                        build_rpm($real_name);
                     }
                     if (not $packages_info{$real_name}{'rpm_exist'}) {
                         print RED "$real_name was not created", RESET "\n";
@@ -1685,6 +2104,7 @@ sub main
             
             # Set RPMs info for available source RPMs
             set_existing_rpms();
+            set_compilers();
             set_availability();
             $num_selected = select_packages();
             resolve_dependencies();
@@ -1709,6 +2129,7 @@ sub main
         
         # Set RPMs info for available source RPMs
         set_existing_rpms();
+        set_compilers();
         set_availability();
         $num_selected = select_packages();
         resolve_dependencies();
