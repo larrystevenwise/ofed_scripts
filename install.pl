@@ -149,12 +149,19 @@ my $kernel_configure_options;
 
 my @misc_packages = ("ofed-docs", "ofed-scripts");
 
+my @mpitests_packages = (
+                     "mpitests_mvapich_gcc", "mpitests_mvapich_pgi", "mpitests_mvapich_intel", "mpitests_mvapich_pathscale", 
+                     "mpitests_mvapich2_gcc", "mpitests_mvapich2_pgi", "mpitests_mvapich2_intel", "mpitests_mvapich2_pathscale", 
+                     "mpitests_openmpi_gcc", "mpitests_openmpi_pgi", "mpitests_openmpi_intel", "mpitests_openmpi_pathscale" 
+                    );
+
 my @mpi_packages = ( "mpi-selector",
                      "mvapich_gcc", "mvapich_pgi", "mvapich_intel", "mvapich_pathscale", 
                      "mvapich2_gcc", "mvapich2_pgi", "mvapich2_intel", "mvapich2_pathscale", 
                      "openmpi_gcc", "openmpi_pgi", "openmpi_intel", "openmpi_pathscale", 
-                     "mpitests",
+                     @mpitests_packages
                     );
+
 my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static", 
                      "libibverbs-utils", "libibverbs-debuginfo",
                      "libmthca", "libmthca-devel-static", "libmthca-debuginfo", 
@@ -739,28 +746,28 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
+            ofa_req_inst => ["mpi-selector", "libibverbs", "libibcommon", "libibumad"],
             install32 => 0, exception => 0 },
         'mvapich_pgi' =>
             { name => "mvapich_pgi", parent => "mvapich",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
+            ofa_req_inst => ["mpi-selector", "libibverbs", "libibcommon", "libibumad"],
             install32 => 0, exception => 0 },
         'mvapich_intel' =>
             { name => "mvapich_intel", parent => "mvapich",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
+            ofa_req_inst => ["mpi-selector", "libibverbs", "libibcommon", "libibumad"],
             install32 => 0, exception => 0 },
         'mvapich_pathscale' =>
             { name => "mvapich_pathscale", parent => "mvapich",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
+            ofa_req_inst => ["mpi-selector", "libibverbs", "libibcommon", "libibumad"],
             install32 => 0, exception => 0 },
 
         'mvapich2' =>
@@ -775,28 +782,28 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
+            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad"],
             install32 => 0, exception => 0 },
         'mvapich2_pgi' =>
             { name => "mvapich2_pgi", parent => "mvapich2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
+            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad"],
             install32 => 0, exception => 0 },
         'mvapich2_intel' =>
             { name => "mvapich2_intel", parent => "mvapich2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
+            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad"],
             install32 => 0, exception => 0 },
         'mvapich2_pathscale' =>
             { name => "mvapich2_pathscale", parent => "mvapich2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
+            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad"],
             install32 => 0, exception => 0 },
 
         'openmpi' =>
@@ -811,36 +818,123 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
+            ofa_req_inst => ["mpi-selector"],
             install32 => 0, exception => 0 },
         'openmpi_pgi' =>
             { name => "openmpi_pgi", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
+            ofa_req_inst => ["mpi-selector"],
             install32 => 0, exception => 0 },
         'openmpi_intel' =>
             { name => "openmpi_intel", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
+            ofa_req_inst => ["mpi-selector"],
             install32 => 0, exception => 0 },
         'openmpi_pathscale' =>
             { name => "openmpi_pathscale", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
+            ofa_req_inst => ["mpi-selector"],
             install32 => 0, exception => 0 },
 
         'mpitests' =>
             { name => "mpitests", parent => "mpitests",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+
+        'mpitests_mvapich_gcc' =>
+            { name => "mpitests_mvapich_gcc", parent => "mpitests",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["mvapich_gcc", "libibumad-devel", "librdmacm-devel"],
+            ofa_req_inst => ["mvapich_gcc"],
+            install32 => 0, exception => 0 },
+        'mpitests_mvapich_pgi' =>
+            { name => "mpitests_mvapich_pgi", parent => "mpitests",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["mvapich_pgi", "libibumad-devel", "librdmacm-devel"],
+            ofa_req_inst => ["mvapich_pgi"],
+            install32 => 0, exception => 0 },
+        'mpitests_mvapich_pathscale' =>
+            { name => "mpitests_mvapich_pathscale", parent => "mpitests",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["mvapich_pathscale", "libibumad-devel", "librdmacm-devel"],
+            ofa_req_inst => ["mvapich_pathscale"],
+            install32 => 0, exception => 0 },
+        'mpitests_mvapich_intel' =>
+            { name => "mpitests_mvapich_intel", parent => "mpitests",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["mvapich_intel", "libibumad-devel", "librdmacm-devel"],
+            ofa_req_inst => ["mvapich_intel"],
+            install32 => 0, exception => 0 },
+
+        'mpitests_mvapich2_gcc' =>
+            { name => "mpitests_mvapich2_gcc", parent => "mpitests",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["mvapich2_gcc", "libibumad-devel", "librdmacm-devel"],
+            ofa_req_inst => ["mvapich2_gcc"],
+            install32 => 0, exception => 0 },
+        'mpitests_mvapich2_pgi' =>
+            { name => "mpitests_mvapich2_pgi", parent => "mpitests",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["mvapich2_pgi", "libibumad-devel", "librdmacm-devel"],
+            ofa_req_inst => ["mvapich2_pgi"],
+            install32 => 0, exception => 0 },
+        'mpitests_mvapich2_pathscale' =>
+            { name => "mpitests_mvapich2_pathscale", parent => "mpitests",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["mvapich2_pathscale", "libibumad-devel", "librdmacm-devel"],
+            ofa_req_inst => ["mvapich2_pathscale"],
+            install32 => 0, exception => 0 },
+        'mpitests_mvapich2_intel' =>
+            { name => "mpitests_mvapich2_intel", parent => "mpitests",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["mvapich2_intel", "libibumad-devel", "librdmacm-devel"],
+            ofa_req_inst => ["mvapich2_intel"],
+            install32 => 0, exception => 0 },
+
+        'mpitests_openmpi_gcc' =>
+            { name => "mpitests_openmpi_gcc", parent => "mpitests",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["openmpi_gcc", "libibumad-devel", "librdmacm-devel"],
+            ofa_req_inst => ["openmpi_gcc"],
+            install32 => 0, exception => 0 },
+        'mpitests_openmpi_pgi' =>
+            { name => "mpitests_openmpi_pgi", parent => "mpitests",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["openmpi_pgi", "libibumad-devel", "librdmacm-devel"],
+            ofa_req_inst => ["openmpi_pgi"],
+            install32 => 0, exception => 0 },
+        'mpitests_openmpi_pathscale' =>
+            { name => "mpitests_openmpi_pathscale", parent => "mpitests",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["openmpi_pathscale", "libibumad-devel", "librdmacm-devel"],
+            ofa_req_inst => ["openmpi_pathscale"],
+            install32 => 0, exception => 0 },
+        'mpitests_openmpi_intel' =>
+            { name => "mpitests_openmpi_intel", parent => "mpitests",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["openmpi_intel", "libibumad-devel", "librdmacm-devel"],
+            ofa_req_inst => ["openmpi_intel"],
             install32 => 0, exception => 0 },
 
         'open-iscsi-generic' =>
@@ -906,7 +1000,7 @@ my $mvapich2_conf_shared_libs = 1;
 my $mvapich2_conf_multithread = 0;
 my $mvapich2_conf_ckpt = 0;
 my $mvapich2_conf_blcr_home;
-my $mvapich2_conf_vcluster;
+my $mvapich2_conf_vcluster = "small";
 my $mvapich2_conf_io_bus;
 my $mvapich2_conf_link_speed;
 my $mvapich2_conf_dapl_provider;
@@ -1077,6 +1171,8 @@ sub set_cfg
 # Set packages availability depending OS/Kernel/arch
 sub set_availability
 {
+    set_compilers();
+
     # Ehca
     if ($arch =~ m/ppc64|powerpc/ and
             $kernel =~ m/2.6.1[6-9]|2.6.2[0-9]|2.6.9-55/) {
@@ -1116,29 +1212,41 @@ sub set_availability
         if ($gcc{'g77'} or $gcc{'gfortran'}) {
             $packages_info{'mvapich_gcc'}{'available'} = 1;
             $packages_info{'mvapich2_gcc'}{'available'} = 1;
+            $packages_info{'mpitests_mvapich_gcc'}{'available'} = 1;
+            $packages_info{'mpitests_mvapich2_gcc'}{'available'} = 1;
         }
         $packages_info{'openmpi_gcc'}{'available'} = 1;
+        $packages_info{'mpitests_openmpi_gcc'}{'available'} = 1;
     }
     if ($pathscale{'pathcc'}) {
         if ($pathscale{'pathCC'} and $pathscale{'pathf90'}) {
             $packages_info{'mvapich_pathscale'}{'available'} = 1;
             $packages_info{'mvapich2_pathscale'}{'available'} = 1;
+            $packages_info{'mpitests_mvapich_pathscale'}{'available'} = 1;
+            $packages_info{'mpitests_mvapich2_pathscale'}{'available'} = 1;
         }
         $packages_info{'openmpi_pathscale'}{'available'} = 1;
+        $packages_info{'mpitests_openmpi_pathscale'}{'available'} = 1;
     }
     if ($pgi{'pgcc'}) {
         if ($pgi{'pgf77'} and $pgi{'pgf90'}) {
             $packages_info{'mvapich_pgi'}{'available'} = 1;
             $packages_info{'mvapich2_pgi'}{'available'} = 1;
+            $packages_info{'mpitests_mvapich_pgi'}{'available'} = 1;
+            $packages_info{'mpitests_mvapich2_pgi'}{'available'} = 1;
         }
         $packages_info{'openmpi_pgi'}{'available'} = 1;
+        $packages_info{'mpitests_openmpi_pgi'}{'available'} = 1;
     }
     if ($intel{'icc'}) {
         if ($intel{'icpc'} and $intel{'ifort'}) {
             $packages_info{'mvapich_intel'}{'available'} = 1;
             $packages_info{'mvapich2_intel'}{'available'} = 1;
+            $packages_info{'mpitests_mvapich_intel'}{'available'} = 1;
+            $packages_info{'mpitests_mvapich2_intel'}{'available'} = 1;
         }
         $packages_info{'openmpi_intel'}{'available'} = 1;
+        $packages_info{'mpitests_openmpi_intel'}{'available'} = 1;
     }
 }
 
@@ -1156,6 +1264,158 @@ sub set_existing_rpms
             print "$rpm_name 32-bit RPM exist\n" if ($verbose2);
         }
     }
+}
+
+sub mvapich2_config
+{
+    my $ans;
+    my $done;
+
+    if ($mvapich2_conf_done) {
+        return;
+    }
+
+    if (not $interactive) {
+        $mvapich2_conf_done = 1;
+        return;
+    }
+
+    print "\nPlease choose an implementation of MVAPICH2:\n\n";
+    print "1) OFA (IB and iWARP)\n";
+    print "2) uDAPL\n";
+    $done = 0;
+    while (not $done) {
+        print "Implementation [1]: ";
+        $ans = getch();
+        if (ord($ans) == $KEY_ENTER or $ans eq "1") {
+            $mvapich2_conf_impl = "ofa";
+            $done = 1;
+        }
+        elsif ($ans eq "2") {
+            $mvapich2_conf_impl = "udapl";
+            $done = 1;
+        }
+        else {
+            $done = 0;
+        }
+    }
+
+    print "\nEnable ROMIO support [Y/n]: ";
+    $ans = getch();
+    if ($ans =~ m/Nn/) {
+        $mvapich2_conf_romio = 0;
+    }
+    else {
+        $mvapich2_conf_romio = 1;
+    }
+
+    print "\nEnable shared library support [Y/n]: ";
+    $ans = getch();
+    if ($ans =~ m/Nn/) {
+        $mvapich2_conf_shared_libs = 0;
+    }
+    else {
+        $mvapich2_conf_shared_libs = 1;
+    }
+
+    print "\nMultithread support should only be enabled only if thread safety is required.";
+    print "\nThere may be a slight performance penalty for single threaded only use.";
+
+    print "\nEnable multithread support [y/N]: ";
+    $ans = getch();
+    if ($ans =~ m/Yy/) {
+        $mvapich2_conf_multithread = 1;
+    }
+    else {
+        $mvapich2_conf_multithread = 0;
+    }
+
+    # OFA specific options.
+    if ($mvapich2_conf_impl eq "ofa" and not $mvapich2_conf_multithread) {
+        $done = 0;
+        while (not $done) {
+            print "\nEnable Checkpoint-Restart support [y/N]: ";
+            $ans = getch();
+            if ($ans =~ m/[Yy]/) {
+                $mvapich2_conf_ckpt = 1;
+                print "\nBLCR installation directory [or nothing if not installed]: ";
+                my $tmp = <STDIN>;
+                if (-d "$tmp") {
+                    $mvapich2_conf_blcr_home = $tmp;
+                    $done = 1;
+                }
+                else {
+                    print RED "\nBLCR installation directory not found.", RESET "\n";
+                }
+            }
+            else {
+                $mvapich2_conf_ckpt = 0;
+                $done = 1;
+            }
+        }
+    }
+    else {
+        $mvapich2_conf_ckpt = 0;
+    }
+
+    # uDAPL specific options.
+    if ($mvapich2_conf_impl eq "udapl") {
+        print "\nCluster size:\n\n1) Small\n2) Medium\n3) Large\n";
+        $done = 0;
+        while (not $done) {
+            print "Cluster size [1]: ";
+            $ans = getch();
+            if (ord($ans) == $KEY_ENTER or $ans eq "1") {
+                $mvapich2_conf_vcluster = "small";
+                $done = 1;
+            }
+            elsif ($ans eq "2") {
+                $mvapich2_conf_vcluster = "medium";
+                $done = 1;
+            }
+            elsif ($ans eq "3") {
+                $mvapich2_conf_vcluster = "large";
+                $done = 1;
+            }
+        }
+
+        print "\nI/O Bus:\n\n1) PCI-Express\n2) PCI-X\n";
+        $done = 0;
+        while (not $done) {
+            print "I/O Bus [1]: ";
+            $ans = getch();
+            if (ord($ans) == $KEY_ENTER or $ans eq "1") {
+                $mvapich2_conf_io_bus = "pci-ex";
+                $done = 1;
+            }
+            elsif ($ans eq "2") {
+                $mvapich2_conf_io_bus = "pci-x";
+                $done = 1;
+            }
+        }
+
+        if ($mvapich2_conf_io_bus eq "pci-ex") {
+            print "\nLink Speed:\n\n1) SDR\n2) DDR\n";
+            $done = 0;
+            while (not $done) {
+                print "Link Speed [1]: ";
+                $ans = getch();
+                if (ord($ans) == $KEY_ENTER or $ans eq "1") {
+                    $mvapich2_conf_link_speed = "sdr";
+                    $done = 1;
+                }
+                elsif ($ans eq "2") {
+                    $mvapich2_conf_link_speed = "ddr";
+                    $done = 1;
+                }
+            }
+        }
+        else {
+            $mvapich2_conf_link_speed = "sdr";
+        }
+
+    }
+    $mvapich2_conf_done = 1;
 }
 
 sub show_menu
@@ -1425,6 +1685,10 @@ sub resolve_dependencies
     for my $package ( @selected_by_user ) {
             # Get the list of dependencies
             select_dependent($package);
+
+            if ($package =~ /mvapich2_*/) {
+                    mvapich2_config();
+            }
         }
 
     for my $module ( @selected_modules_by_user ) {
@@ -1560,7 +1824,7 @@ sub build_rpm
     my $TMPRPMS;
 
     my $parent = $packages_info{$name}{'parent'};
-    print "Build $parent RPM\n" if ($verbose);
+    print "Build $name RPM\n" if ($verbose);
 
     if (not $packages_info{$name}{'rpm_exist'}) {
         $cmd = "rpmbuild --rebuild --define '_topdir $TOPDIR'";
@@ -1571,7 +1835,7 @@ sub build_rpm
             $cmd .= " --define 'compiler $compiler'";
             $cmd .= " --define 'openib_prefix $prefix'";
             $cmd .= " --define 'mpi_selector $prefix/bin/mpi-selector'";
-            $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$packages_info{$parent}{'version'}'";
+            $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
         }
         elsif ($parent eq "mvapich2") {
             my $compiler = (split('_', $name))[1];
@@ -1665,7 +1929,7 @@ sub build_rpm
             $cmd .= " --define 'comp_env $mvapich2_comp_env'";
             $cmd .= " --define 'auto_req 0'";
             $cmd .= " --define 'mpi_selector $prefix/bin/mpi-selector'";
-            $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$packages_info{$parent}{'version'}'";
+            $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
             $cmd .= " --define 'ofa_build 0'";
         }
         elsif ($parent eq "openmpi") {
@@ -1777,12 +2041,20 @@ sub build_rpm
             $cmd .= " --define '_name $name'";
             $cmd .= " --define 'mpi_selector $prefix/bin/mpi-selector'";
             $cmd .= " --define 'ofed 0'";
-            $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$packages_info{$parent}{'version'}'";
-            $cmd .= " --define '_defaultdocdir $prefix/mpi/$compiler/$parent-$packages_info{$parent}{'version'}'";
+            $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
+            $cmd .= " --define '_defaultdocdir $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
             $cmd .= " --define '_mandir %{_prefix}/share/man'";
             $cmd .= " --define 'mflags -j 4'";
             $cmd .= " --define 'configure_options $openmpi_ldflags --with-openib=$prefix --with-openib-libdir=$prefix/$openmpi_lib $openmpi_comp_env'";
             $cmd .= " --define 'use_default_rpm_opt_flags $use_default_rpm_opt_flags'";
+        }
+        elsif ($parent eq "mpitests") {
+            my $mpi = (split('_', $name))[1];
+            my $compiler = (split('_', $name))[2];
+
+            $cmd .= " --define '_name $name'";
+            $cmd .= " --define 'root_path /'";
+            $cmd .= " --define 'path_to_mpihome $prefix/mpi/$compiler/$mpi-$main_packages{$mpi}{'version'}'";
         }
         else {
             $cmd .= "--define '_prefix $prefix'";
@@ -1792,7 +2064,7 @@ sub build_rpm
 
         print "Running $cmd\n" if ($verbose);
         open(LOG, "+>$ofedlogs/$parent.rpmbuild.log");
-        print LOG "Running $cmd\n" if ($verbose);
+        print LOG "Running $cmd\n";
         close LOG;
         system("$cmd >> $ofedlogs/$parent.rpmbuild.log 2>&1");
         $res = $? >> 8;
@@ -1829,7 +2101,7 @@ sub build_rpm
 
         print "Running $cmd\n" if ($verbose);
         open(LOG, "+>$ofedlogs/$parent.rpmbuild32bit.log");
-        print LOG "Running $cmd\n" if ($verbose);
+        print LOG "Running $cmd\n";
         close LOG;
         system("$cmd >> $ofedlogs/$parent.rpmbuild32bit.log 2>&1");
         $res = $? >> 8;
@@ -1979,6 +2251,9 @@ sub uninstall
         if ($cnt) {
             print "Uninstalling the previous version of $PACKAGE\n";
             print "Running $cmd\n" if ($verbose);
+            open (LOG, "+>$ofedlogs/ofed_uninstall.log");
+            print LOG "Running $cmd\n";
+            close LOG;
             system("$cmd >> $ofedlogs/ofed_uninstall.log 2>&1");
             $res = $? >> 8;
             $sig = $? & 127;
@@ -2104,7 +2379,6 @@ sub main
             
             # Set RPMs info for available source RPMs
             set_existing_rpms();
-            set_compilers();
             set_availability();
             $num_selected = select_packages();
             resolve_dependencies();
@@ -2129,7 +2403,6 @@ sub main
         
         # Set RPMs info for available source RPMs
         set_existing_rpms();
-        set_compilers();
         set_availability();
         $num_selected = select_packages();
         resolve_dependencies();
