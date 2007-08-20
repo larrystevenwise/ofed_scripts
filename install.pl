@@ -1003,7 +1003,7 @@ my $mvapich2_conf_blcr_home;
 my $mvapich2_conf_vcluster = "small";
 my $mvapich2_conf_io_bus;
 my $mvapich2_conf_link_speed;
-my $mvapich2_conf_dapl_provider;
+my $mvapich2_conf_dapl_provider = "ib0";
 my $mvapich2_comp_env;
 my $mvapich2_dat_lib;
 my $mvapich2_dat_include;
@@ -1414,8 +1414,31 @@ sub mvapich2_config
             $mvapich2_conf_link_speed = "sdr";
         }
 
+        print "\nDefault DAPL provider [ib0]: ";
+        $ans = <STDIN>;
+        if ($ans) {
+            $mvapich2_conf_dapl_provider = $ans;
+        }
     }
     $mvapich2_conf_done = 1;
+
+    open(CONFIG, ">>$config") || die "Can't open $config: $!";;
+    flock CONFIG, $LOCK_EXCLUSIVE;
+
+    print CONFIG "mvapich2_conf_impl=$mvapich2_conf_impl\n";
+    print CONFIG "mvapich2_conf_romio=$mvapich2_conf_romio\n";
+    print CONFIG "mvapich2_conf_shared_libs=$mvapich2_conf_shared_libs\n";
+    print CONFIG "mvapich2_conf_multithread=$mvapich2_conf_multithread\n";
+
+    print CONFIG "mvapich2_conf_ckpt=$mvapich2_conf_ckpt\n";
+    print CONFIG "mvapich2_conf_blcr_home=$mvapich2_conf_blcr_home\n" if ($mvapich2_conf_blcr_home);
+    print CONFIG "mvapich2_conf_vcluster=$mvapich2_conf_vcluster\n";
+    print CONFIG "mvapich2_conf_io_bus=$mvapich2_conf_io_bus\n" if ($mvapich2_conf_io_bus);
+    print CONFIG "mvapich2_conf_link_speed=$mvapich2_conf_link_speed\n" if ($mvapich2_conf_link_speed);
+    print CONFIG "mvapich2_conf_dapl_provider=$mvapich2_conf_dapl_provider\n" if ($mvapich2_conf_dapl_provider);
+
+    flock CONFIG, $UNLOCK;
+    close(CONFIG);
 }
 
 sub show_menu
@@ -1454,6 +1477,8 @@ sub show_menu
 sub select_packages
 {
     my $cnt = 0;
+    open(CONFIG, "+>$config") || die "Can't open $config: $!";;
+    flock CONFIG, $LOCK_EXCLUSIVE;
     if ($interactive) {
             my $ok = 0;
             my $inp;
@@ -1519,8 +1544,6 @@ sub select_packages
             }
             elsif ($inp == $CUSTOM) {
                 my $ans;
-                open(CONFIG, "+>$config") || die "Can't open $config: $!";;
-                flock CONFIG, $LOCK_EXCLUSIVE;
                 for my $package ( @all_packages ) {
                     next if (not $packages_info{$package}{'available'});
                     print "Install $package? [y/N]:";
@@ -1583,8 +1606,6 @@ sub select_packages
             }
     }
     else {
-        open(CONFIG, "$config") || die "Can't open $config: $!";
-        flock CONFIG, $LOCK_EXCLUSIVE;
         while(<CONFIG>) {
             next if (m@^\s+$|^#.*@);
             my ($package,$selected) = (split '=', $_);
@@ -1609,6 +1630,39 @@ sub select_packages
                 }
                 next;
             }
+
+            # mvapich2 configuration environment
+            if ($package eq "mvapich2_conf_impl") {
+                $mvapich2_conf_impl = $selected;
+            }
+            elsif ($package eq "mvapich2_conf_romio") {
+                $mvapich2_conf_romio = $selected;
+            }
+            elsif ($package eq "mvapich2_conf_shared_libs") {
+                $mvapich2_conf_shared_libs = $selected;
+            }
+            elsif ($package eq "mvapich2_conf_multithread") {
+                $mvapich2_conf_multithread = $selected;
+            }
+            elsif ($package eq "mvapich2_conf_ckpt") {
+                $mvapich2_conf_ckpt = $selected;
+            }
+            elsif ($package eq "mvapich2_conf_blcr_home") {
+                $mvapich2_conf_blcr_home = $selected;
+            }
+            elsif ($package eq "mvapich2_conf_vcluster") {
+                $mvapich2_conf_vcluster = $selected;
+            }
+            elsif ($package eq "mvapich2_conf_io_bus") {
+                $mvapich2_conf_io_bus = $selected;
+            }
+            elsif ($package eq "mvapich2_conf_link_speed") {
+                $mvapich2_conf_link_speed = $selected;
+            }
+            elsif ($package eq "mvapich2_conf_dapl_provider") {
+                $mvapich2_conf_dapl_provider = $selected;
+            }
+
             if (not $packages_info{$package}{'parent'}) {
                 my $modules = "@kernel_modules";
                 chomp $modules;
