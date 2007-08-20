@@ -2111,7 +2111,7 @@ sub build_rpm
             $cmd .= " --define 'path_to_mpihome $prefix/mpi/$compiler/$mpi-$main_packages{$mpi}{'version'}'";
         }
         else {
-            $cmd .= "--define '_prefix $prefix'";
+            $cmd .= " --define '_prefix $prefix'";
         }
 
         $cmd .= " $main_packages{$parent}{'srpmpath'}";
@@ -2424,6 +2424,16 @@ sub main
         }
     
         if ($inp == 1) {
+            if (-e "$CWD/docs/${PACKAGE}_Installation_Guide.txt") {
+                system("less $CWD/docs/${PACKAGE}_Installation_Guide.txt");
+            }
+            elsif (-e "$CWD/README.txt") {
+                system("less $CWD/README.txt");
+            }
+            else {
+                print RED "$CWD/docs/${PACKAGE}_Installation_Guide.txt does not exist...", RESET;
+            }
+
             return 0;
         }
         elsif ($inp == 2) {
@@ -2439,6 +2449,18 @@ sub main
             print_selected();
         }
         elsif ($inp == 3) {
+            my $cnt = 0;
+            for my $package ( @all_packages, @hidden_packages) {
+                if (is_installed($package)) {
+                    print "$package\n";
+                    $cnt ++;
+                }
+            }
+            if (not $cnt) {
+                print "\nThere is no $PACKAGE software installed\n";
+            }
+            print GREEN "\nPress any key to continue...", RESET;
+            getch();
             return 0;
         }
         elsif ($inp == 4) {
