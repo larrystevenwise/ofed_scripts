@@ -37,15 +37,6 @@ use Term::ANSIColor qw(:constants);
 # use Cwd;
 
 
-sub usage
-{
-   print BLUE;
-   print "\n Usage: $0 [-c <packages config_file>] [-n|--net <network config_file>]";
-   print "\n           [-p|--print-available <kernel version>]";
-   print "\n           [-k|--kernel <kernel version>]";
-   print RESET "\n\n";
-}
-
 $| = 1;
 my $LOCK_EXCLUSIVE = 2;
 my $UNLOCK         = 8;
@@ -76,6 +67,8 @@ my $arch = `uname -m`;
 chomp $arch;
 my $kernel = `uname -r`;
 chomp $kernel;
+my $kernel_sources = "/lib/modules/$kernel/build";
+chomp $kernel_sources;
 
 my $PACKAGE     = 'OFED';
 
@@ -139,6 +132,16 @@ my @selected_by_user = ();
 my @selected_modules_by_user = ();
 my @selected_kernel_modules = ();
 
+sub usage
+{
+   print BLUE;
+   print "\n Usage: $0 [-c <packages config_file>] [-n|--net <network config_file>]";
+   print "\n           [-p|--print-available <kernel version>]";
+   print "\n           [-k|--kernel <kernel version>]. Default $kernel";
+   print "\n           [-s|--kernel-sources <path to the kernel sources>]. Default $kernel_sources";
+   print RESET "\n\n";
+}
+
 # List of all available packages sorted following dependencies
 my @kernel_packages = ("kernel-ib", "kernel-ib-devel", "ib-bonding", "ib-bonding-debuginfo");
 my @basic_kernel_modules = ("core", "mthca", "mlx4", "cxgb3", "ehca", "ipath", "ipoib");
@@ -146,6 +149,7 @@ my @ulp_modules = ("sdp", "srp", "rds", "vnic", "iser");
 my @kernel_modules = (@basic_kernel_modules, @ulp_modules);
 
 my $kernel_configure_options;
+my $user_configure_options;
 
 my @misc_packages = ("ofed-docs", "ofed-scripts");
 
@@ -303,7 +307,7 @@ my %packages_info = (
             { name => "libmthca", parent => "libmthca",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs"],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
             ofa_req_inst => ["libibverbs"],
             install32 => 1, exception => 0 },
         'libmthca-devel-static' =>
@@ -1020,6 +1024,8 @@ while ( $#ARGV >= 0 ) {
         $config_net = shift(@ARGV);
     } elsif ( $cmd_flag eq "-k" or $cmd_flag eq "--kernel" ) {
         $kernel = shift(@ARGV);
+    } elsif ( $cmd_flag eq "-s" or $cmd_flag eq "--kernel-sources" ) {
+        $kernel_sources = shift(@ARGV);
     } elsif ( $cmd_flag eq "-p" or $cmd_flag eq "--print-available" ) {
         $print_available = 1;
     } elsif ( $cmd_flag eq "-v" ) {
@@ -1038,7 +1044,7 @@ while ( $#ARGV >= 0 ) {
 }
 
 my $kernel_rel = $kernel;
-$kernel_rel =~ s/-/_/;
+$kernel_rel =~ s/-/_/g;
 
 # Set Linux Distribution
 if ( -f "/etc/SuSE-release" ) {
@@ -1477,135 +1483,137 @@ sub show_menu
 sub select_packages
 {
     my $cnt = 0;
-    open(CONFIG, "+>$config") || die "Can't open $config: $!";;
-    flock CONFIG, $LOCK_EXCLUSIVE;
     if ($interactive) {
-            my $ok = 0;
-            my $inp;
-            my $max_inp;
-            while (! $ok) {
-                $max_inp = show_menu("select");
-                $inp = getch();
-                if ($inp =~ m/[qQ]/ || $inp =~ m/[Xx]/ ) {
-                    die "Exiting\n";
-                }
-                if (ord($inp) == $KEY_ENTER) {
-                    next;
-                }
-                if ($inp =~ m/[0123456789abcdefABCDEF]/)
-                {
-                    $inp = hex($inp);
-                }
-                if ($inp < 1 || $inp > $max_inp)
-                {
-                    print "Invalid choice...Try again\n";
-                    next;
-                }
-                $ok = 1;
+        open(CONFIG, ">>$config") || die "Can't open $config: $!";;
+        flock CONFIG, $LOCK_EXCLUSIVE;
+        my $ok = 0;
+        my $inp;
+        my $max_inp;
+        while (! $ok) {
+            $max_inp = show_menu("select");
+            $inp = getch();
+            if ($inp =~ m/[qQ]/ || $inp =~ m/[Xx]/ ) {
+                die "Exiting\n";
             }
-            if ($inp == $BASIC) {
-                for my $package (@basic_user_packages, @basic_kernel_packages) {
-                    next if (not $packages_info{$package}{'available'});
-                    push (@selected_by_user, $package);
+            if (ord($inp) == $KEY_ENTER) {
+                next;
+            }
+            if ($inp =~ m/[0123456789abcdefABCDEF]/)
+            {
+                $inp = hex($inp);
+            }
+            if ($inp < 1 || $inp > $max_inp)
+            {
+                print "Invalid choice...Try again\n";
+                next;
+            }
+            $ok = 1;
+        }
+        if ($inp == $BASIC) {
+            for my $package (@basic_user_packages, @basic_kernel_packages) {
+                next if (not $packages_info{$package}{'available'});
+                push (@selected_by_user, $package);
+                print CONFIG "$package=y\n";
+                $cnt ++;
+            }
+            for my $module ( @basic_kernel_modules ) {
+                next if (not $kernel_modules_info{$module}{'available'});
+                push (@selected_modules_by_user, $module);
+                print CONFIG "$module=y\n";
+            }
+        }
+        elsif ($inp == $HPC) {
+            for my $package ( @hpc_user_packages, @hpc_kernel_packages ) {
+                next if (not $packages_info{$package}{'available'});
+                push (@selected_by_user, $package);
+                print CONFIG "$package=y\n";
+                $cnt ++;
+            }
+            for my $module ( @hpc_kernel_modules ) {
+                next if (not $kernel_modules_info{$module}{'available'});
+                push (@selected_modules_by_user, $module);
+                print CONFIG "$module=y\n";
+            }
+        }
+        elsif ($inp == $ALL) {
+            for my $package ( @all_packages ) {
+                next if (not $packages_info{$package}{'available'});
+                push (@selected_by_user, $package);
+                print CONFIG "$package=y\n";
+                $cnt ++;
+            }
+            for my $module ( @kernel_modules ) {
+                next if (not $kernel_modules_info{$module}{'available'});
+                push (@selected_modules_by_user, $module);
+                print CONFIG "$module=y\n";
+            }
+        }
+        elsif ($inp == $CUSTOM) {
+            my $ans;
+            for my $package ( @all_packages ) {
+                next if (not $packages_info{$package}{'available'});
+                print "Install $package? [y/N]:";
+                $ans = getch();
+                if ( $ans eq 'Y' or $ans eq 'y' ) {
                     print CONFIG "$package=y\n";
-                    $cnt ++;
-                }
-                for my $module ( @basic_kernel_modules ) {
-                    next if (not $kernel_modules_info{$module}{'available'});
-                    push (@selected_modules_by_user, $module);
-                    print CONFIG "$module=y\n";
-                }
-            }
-            elsif ($inp == $HPC) {
-                for my $package ( @hpc_user_packages, @hpc_kernel_packages ) {
-                    next if (not $packages_info{$package}{'available'});
                     push (@selected_by_user, $package);
-                    print CONFIG "$package=y\n";
                     $cnt ++;
-                }
-                for my $module ( @hpc_kernel_modules ) {
-                    next if (not $kernel_modules_info{$module}{'available'});
-                    push (@selected_modules_by_user, $module);
-                    print CONFIG "$module=y\n";
-                }
-            }
-            elsif ($inp == $ALL) {
-                for my $package ( @all_packages ) {
-                    next if (not $packages_info{$package}{'available'});
-                    push (@selected_by_user, $package);
-                    print CONFIG "$package=y\n";
-                    $cnt ++;
-                }
-                for my $module ( @kernel_modules ) {
-                    next if (not $kernel_modules_info{$module}{'available'});
-                    push (@selected_modules_by_user, $module);
-                    print CONFIG "$module=y\n";
-                }
-            }
-            elsif ($inp == $CUSTOM) {
-                my $ans;
-                for my $package ( @all_packages ) {
-                    next if (not $packages_info{$package}{'available'});
-                    print "Install $package? [y/N]:";
-                    $ans = getch();
-                    if ( $ans eq 'Y' or $ans eq 'y' ) {
-                        print CONFIG "$package=y\n";
-                        push (@selected_by_user, $package);
-                        $cnt ++;
 
-                        if ($package eq "kernel-ib") {
-                            # Select kernel modules to be installed
-                            for my $module ( @kernel_modules ) {
-                                next if (not $kernel_modules_info{$module}{'available'});
-                                if ($module eq "iser") {
-                                    print "Install $module module? (open-iscsi will also be installed) [y/N]:";
-                                    $ans = getch();
-                                    if ( $ans eq 'Y' or $ans eq 'y' ) {
-                                        push (@selected_modules_by_user, $module);
-                                        print CONFIG "$module=y\n";
-                                        check_open_iscsi();
-                                        if ($upgrade_open_iscsi) {
-                                            print CONFIG "upgrade_open_iscsi=yes\n";
-                                        }
+                    if ($package eq "kernel-ib") {
+                        # Select kernel modules to be installed
+                        for my $module ( @kernel_modules ) {
+                            next if (not $kernel_modules_info{$module}{'available'});
+                            if ($module eq "iser") {
+                                print "Install $module module? (open-iscsi will also be installed) [y/N]:";
+                                $ans = getch();
+                                if ( $ans eq 'Y' or $ans eq 'y' ) {
+                                    push (@selected_modules_by_user, $module);
+                                    print CONFIG "$module=y\n";
+                                    check_open_iscsi();
+                                    if ($upgrade_open_iscsi) {
+                                        print CONFIG "upgrade_open_iscsi=yes\n";
                                     }
                                 }
-                                else {
-                                    print "Install $module module? [y/N]:";
-                                    $ans = getch();
-                                    if ( $ans eq 'Y' or $ans eq 'y' ) {
-                                        push (@selected_modules_by_user, $module);
-                                        print CONFIG "$module=y\n";
-                                    }
+                            }
+                            else {
+                                print "Install $module module? [y/N]:";
+                                $ans = getch();
+                                if ( $ans eq 'Y' or $ans eq 'y' ) {
+                                    push (@selected_modules_by_user, $module);
+                                    print CONFIG "$module=y\n";
                                 }
                             }
                         }
                     }
-                    else {
-                        print CONFIG "$package=n\n";
-                    }
                 }
-                if ($arch eq "x86_64" or $arch eq "ppc64") {
-                    print "Install 32-bit packages? [y/N]:";
-                    $ans = getch();
-                    if ( $ans eq 'Y' or $ans eq 'y' ) {
-                        $build32 = 1;
-                        print CONFIG "build32=1\n";
-                    }
-                    else {
-                        $build32 = 0;
-                        print CONFIG "build32=0\n";
-                    }
+                else {
+                    print CONFIG "$package=n\n";
                 }
-                print "Please enter the $PACKAGE installation directory: [$prefix]:";
-                $ans = <STDIN>;
-                chomp $ans;
-                if ($ans) {
-                    $prefix = $ans;
-                }
-                print CONFIG "prefix=$prefix\n";
             }
+            if ($arch eq "x86_64" or $arch eq "ppc64") {
+                print "Install 32-bit packages? [y/N]:";
+                $ans = getch();
+                if ( $ans eq 'Y' or $ans eq 'y' ) {
+                    $build32 = 1;
+                    print CONFIG "build32=1\n";
+                }
+                else {
+                    $build32 = 0;
+                    print CONFIG "build32=0\n";
+                }
+            }
+            print "Please enter the $PACKAGE installation directory: [$prefix]:";
+            $ans = <STDIN>;
+            chomp $ans;
+            if ($ans) {
+                $prefix = $ans;
+            }
+            print CONFIG "prefix=$prefix\n";
+        }
     }
     else {
+        open(CONFIG, "$config") || die "Can't open $config: $!";;
+        flock CONFIG, $LOCK_EXCLUSIVE;
         while(<CONFIG>) {
             next if (m@^\s+$|^#.*@);
             my ($package,$selected) = (split '=', $_);
@@ -1629,6 +1637,14 @@ sub select_packages
                     $upgrade_open_iscsi = 1;
                 }
                 next;
+            }
+
+            if ($package eq "kernel_configure_options") {
+                $kernel_configure_options = $selected;
+            }
+
+            if ($package eq "user_configure_options") {
+                $user_configure_options = $selected;
             }
 
             # mvapich2 configuration environment
@@ -1706,6 +1722,38 @@ sub select_packages
     return $cnt;
 }
 
+sub module_in_rpm
+{
+    my $module = shift @_;
+    my $ret = 1;
+
+    my $name = 'kernel-ib';
+    my $version = $main_packages{$packages_info{$name}{'parent'}}{'version'};
+    my $release = $kernel_rel;
+
+    my $package = "$RPMS/$name-$version-$release.$target_cpu.rpm";
+
+    if (not -f $package) {
+        print "is_module_in_rpm: $package not found\n";
+        return 1;
+    }
+
+    print "is_module_in_rpm: rpm -qlp $package\n";
+    open(LIST, "rpm -qlp $package |") or die "Can't run 'rpm -qlp $package': $!\n";
+    while (<LIST>) {
+        if (/$module[a-z_]*.ko/) {
+            print "is_module_in_rpm: $module $_\n";
+            $ret = 0;
+            last;
+        }
+    }
+    close LIST;
+
+    print "$module not in $package\n" if ($ret);
+
+    return $ret;
+}
+
 sub select_dependent
 {
     my $package = shift @_;
@@ -1734,6 +1782,23 @@ sub select_dependent
 
 }
 
+sub select_dependent_module
+{
+    my $module = shift @_;
+
+    for my $req ( @{ $kernel_modules_info{$module}{'requires'} } ) {
+        print "select_dependent_module: $module requires $req for rpmbuild\n" if ($verbose2);
+        if (not $kernel_modules_info{$req}{'selected'}) {
+            select_dependent_module($req);
+        }
+    }
+    if (not $kernel_modules_info{$module}{'selected'}) {
+        $kernel_modules_info{$module}{'selected'} = 1;
+        push (@selected_kernel_modules, $module);
+        print "select_dependent_module: Selected module $module\n" if ($verbose2);
+    }
+}
+
 sub resolve_dependencies
 {
     for my $package ( @selected_by_user ) {
@@ -1746,17 +1811,22 @@ sub resolve_dependencies
         }
 
     for my $module ( @selected_modules_by_user ) {
-        for my $req ( @{ $kernel_modules_info{$module}{'requires'} } ) {
-            print "resolve_dependencies: $module requires $req for rpmbuild\n" if ($verbose2);
-            if (not $kernel_modules_info{$req}{'selected'}) {
-                $kernel_modules_info{$req}{'selected'} = 1;
-                push (@selected_kernel_modules, $req);
+        if ($module eq "ehca" and not -d "$kernel_sources/include/asm-ppc") {
+            print RED "\nTo install ib_ehca module please ensure that $kernel_sources/include/ contains directory asm-ppc.", RESET;
+            print RED "\nPlease install the kernel.src.rpm from redhat and copy the directory and the files into $kernel_sources/include/", RESET;
+            print "\nThen rerun this Script\n";
+            exit 1;
+        }
+        select_dependent_module($module);
+    }
+
+    if ($packages_info{'kernel-ib'}{'rpm_exist'}) {
+        for my $module (@selected_kernel_modules) {
+            if (module_in_rpm($module)) {
+                $packages_info{'kernel-ib'}{'rpm_exist'} = 0;
+                last;
             }
         }
-        for my $req ( @{ $kernel_modules_info{$module}{'ofa_req_inst'} } ) {
-            select_dependent($req);
-        }
-        push (@selected_kernel_modules, $module);
     }
 }
 
@@ -1804,11 +1874,6 @@ sub check_open_iscsi
     }
 }
 
-sub set_mpi_env
-{
-
-}
-
 sub build_kernel_rpm
 {
     my $name = shift @_;
@@ -1820,6 +1885,9 @@ sub build_kernel_rpm
     $cmd = "rpmbuild --rebuild --define '_topdir $TOPDIR'";
 
     if ($name eq 'ofa_kernel') {
+        $kernel_configure_options .= " --kernel-version=$kernel";
+        $kernel_configure_options .= " --kernel-sources=$kernel_sources";
+
         for my $module ( @selected_kernel_modules ) {
             print "module $module\n";
             if ($module eq "core") {
@@ -2112,6 +2180,10 @@ sub build_rpm
         }
         else {
             $cmd .= " --define '_prefix $prefix'";
+        }
+
+        if ($user_configure_options) {
+            $cmd .= " --define 'configure_options $user_configure_options'";
         }
 
         $cmd .= " $main_packages{$parent}{'srpmpath'}";
