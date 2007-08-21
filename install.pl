@@ -1735,6 +1735,8 @@ sub select_packages
             }
         }
         else {
+            open(CONFIG, ">>$config") || die "Can't open $config: $!";;
+            flock CONFIG, $LOCK_EXCLUSIVE;
             if ($install_option eq 'all') {
                 for my $package ( @all_packages ) {
                     next if (not $packages_info{$package}{'available'});
