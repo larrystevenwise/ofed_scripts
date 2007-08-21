@@ -262,12 +262,12 @@ my %packages_info = (
         'ib-bonding' =>
             { name => "ib-bonding", parent => "ib-bonding",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "kernel", dist_req_build => [],
+            available => 0, mode => "kernel", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [], ofa_req_inst => [], },
         'ib-bonding-debuginfo' =>
             { name => "ib-bonding-debuginfo", parent => "ib-bonding",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "kernel", dist_req_build => [],
+            available => 0, mode => "kernel", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [], ofa_req_inst => [], },
         # User space libraries
         'libibverbs' =>
@@ -1231,6 +1231,12 @@ sub set_availability
             $packages_info{'ibvexdmtools'}{'available'} = 1;
             $packages_info{'qlvnictools'}{'available'} = 1;
             $packages_info{'qlvnictools-debuginfo'}{'available'} = 1;
+    }
+
+    # ib-bonding
+    if ($kernel =~ m/2.6.9-34|2.6.9-42|2.6.9-55|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5|fc6/) {
+            $packages_info{'ib-bonding'}{'available'} = 1;
+            $packages_info{'ib-bonding-debuginfo'}{'available'} = 1;
     }
 
     # mvapich, mvapich2 and openmpi
