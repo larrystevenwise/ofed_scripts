@@ -43,7 +43,7 @@ ARCH=$(uname -m)
 
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES kernel-ib kernel-ib-devel ipoibtools"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libopensm libopensm-devel libosmcomp libosmcomp-devel libosmvendor libosmvendor-devel"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES openib-diags ib-bonding"
+IB_ALL_PACKAGES="$IB_ALL_PACKAGES openib-diags ib-bonding ib-bonding-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libibverbs libibverbs-devel libibverbs-devel-static"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libibverbs-utils libibverbs-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libmthca libmthca-devel-static libmthca-debuginfo"
