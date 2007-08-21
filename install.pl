@@ -135,7 +135,9 @@ my @selected_kernel_modules = ();
 sub usage
 {
    print BLUE;
-   print "\n Usage: $0 [-c <packages config_file>] [-n|--net <network config_file>]";
+   print "\n Usage: $0 [-c <packages config_file>|--all|--hpc|--basic] [-n|--net <network config_file>]\n";
+   print "\n           -c|--config <packages config_file>. Example of the config file can be found under docs.";
+   print "\n           --all|--hpc|--basic Install all,hpc or basic packages correspondently";
    print "\n           [-p|--print-available <kernel version>]";
    print "\n           [-k|--kernel <kernel version>]. Default $kernel";
    print "\n           [-s|--kernel-sources <path to the kernel sources>]. Default $kernel_sources";
@@ -1013,13 +1015,17 @@ my $mvapich2_dat_lib;
 my $mvapich2_dat_include;
 my $mvapich2_conf_done = 0;
 
+my $config_given = 0;
+my $install_option;
+
 while ( $#ARGV >= 0 ) {
 
    my $cmd_flag = shift(@ARGV);
 
-    if ( $cmd_flag eq "-c" ) {
+    if ( $cmd_flag eq "-c" or $cmd_flag eq "--config" ) {
         $config = shift(@ARGV);
         $interactive = 0;
+        $config_given = 1;
     } elsif ( $cmd_flag eq "-n" or $cmd_flag eq "--net" ) {
         $config_net = shift(@ARGV);
     } elsif ( $cmd_flag eq "-k" or $cmd_flag eq "--kernel" ) {
@@ -1028,6 +1034,15 @@ while ( $#ARGV >= 0 ) {
         $kernel_sources = shift(@ARGV);
     } elsif ( $cmd_flag eq "-p" or $cmd_flag eq "--print-available" ) {
         $print_available = 1;
+    } elsif ( $cmd_flag eq "--all" ) {
+        $interactive = 0;
+        $install_option = 'all';
+    } elsif ( $cmd_flag eq "--hpc" ) {
+        $interactive = 0;
+        $install_option = 'hpc';
+    } elsif ( $cmd_flag eq "--basic" ) {
+        $interactive = 0;
+        $install_option = 'basic';
     } elsif ( $cmd_flag eq "-v" ) {
         $verbose = 1;
     } elsif ( $cmd_flag eq "-vv" ) {
@@ -1041,6 +1056,11 @@ while ( $#ARGV >= 0 ) {
         &usage();
         exit 1;
     }
+}
+
+if ($config_given and $install_option) {
+    print RED "\nError: '-c' option can't be used with '--all|--hpc|--basic'", RESET "\n";
+    exit 1;
 }
 
 my $kernel_rel = $kernel;
@@ -1612,98 +1632,145 @@ sub select_packages
         }
     }
     else {
-        open(CONFIG, "$config") || die "Can't open $config: $!";;
-        flock CONFIG, $LOCK_EXCLUSIVE;
-        while(<CONFIG>) {
-            next if (m@^\s+$|^#.*@);
-            my ($package,$selected) = (split '=', $_);
-            chomp $package;
-            chomp $selected;
+        if ($config_given) {
+            open(CONFIG, "$config") || die "Can't open $config: $!";;
+            flock CONFIG, $LOCK_EXCLUSIVE;
+            while(<CONFIG>) {
+                next if (m@^\s+$|^#.*@);
+                my ($package,$selected) = (split '=', $_);
+                chomp $package;
+                chomp $selected;
 
-            print "$package=$selected\n" if ($verbose3);
+                print "$package=$selected\n" if ($verbose3);
 
-            if ($package eq "build32") {
-                $build32 = 1 if ($selected);
-                next;
-            }
-
-            if ($package eq "prefix") {
-                $prefix = $selected;
-                next;
-            }
-
-            if ($package eq "upgrade_open_iscsi") {
-                if ($selected =~ m/[Yy]|[Yy][Ee][Ss]/) {
-                    $upgrade_open_iscsi = 1;
+                if ($package eq "build32") {
+                    $build32 = 1 if ($selected);
+                    next;
                 }
-                next;
-            }
 
-            if ($package eq "kernel_configure_options") {
-                $kernel_configure_options = $selected;
-            }
+                if ($package eq "prefix") {
+                    $prefix = $selected;
+                    next;
+                }
 
-            if ($package eq "user_configure_options") {
-                $user_configure_options = $selected;
-            }
+                if ($package eq "upgrade_open_iscsi") {
+                    if ($selected =~ m/[Yy]|[Yy][Ee][Ss]/) {
+                        $upgrade_open_iscsi = 1;
+                    }
+                    next;
+                }
 
-            # mvapich2 configuration environment
-            if ($package eq "mvapich2_conf_impl") {
-                $mvapich2_conf_impl = $selected;
-            }
-            elsif ($package eq "mvapich2_conf_romio") {
-                $mvapich2_conf_romio = $selected;
-            }
-            elsif ($package eq "mvapich2_conf_shared_libs") {
-                $mvapich2_conf_shared_libs = $selected;
-            }
-            elsif ($package eq "mvapich2_conf_multithread") {
-                $mvapich2_conf_multithread = $selected;
-            }
-            elsif ($package eq "mvapich2_conf_ckpt") {
-                $mvapich2_conf_ckpt = $selected;
-            }
-            elsif ($package eq "mvapich2_conf_blcr_home") {
-                $mvapich2_conf_blcr_home = $selected;
-            }
-            elsif ($package eq "mvapich2_conf_vcluster") {
-                $mvapich2_conf_vcluster = $selected;
-            }
-            elsif ($package eq "mvapich2_conf_io_bus") {
-                $mvapich2_conf_io_bus = $selected;
-            }
-            elsif ($package eq "mvapich2_conf_link_speed") {
-                $mvapich2_conf_link_speed = $selected;
-            }
-            elsif ($package eq "mvapich2_conf_dapl_provider") {
-                $mvapich2_conf_dapl_provider = $selected;
-            }
+                if ($package eq "kernel_configure_options") {
+                    $kernel_configure_options = $selected;
+                }
 
-            if (not $packages_info{$package}{'parent'}) {
-                my $modules = "@kernel_modules";
-                chomp $modules;
-                $modules =~ s/ /|/g;
-                if ($package =~ m/$modules/) {
-                    if ( $selected eq 'y' ) {
-                        push (@selected_modules_by_user, $package);
-                        next;
+                if ($package eq "user_configure_options") {
+                    $user_configure_options = $selected;
+                }
+
+                # mvapich2 configuration environment
+                if ($package eq "mvapich2_conf_impl") {
+                    $mvapich2_conf_impl = $selected;
+                }
+                elsif ($package eq "mvapich2_conf_romio") {
+                    $mvapich2_conf_romio = $selected;
+                }
+                elsif ($package eq "mvapich2_conf_shared_libs") {
+                    $mvapich2_conf_shared_libs = $selected;
+                }
+                elsif ($package eq "mvapich2_conf_multithread") {
+                    $mvapich2_conf_multithread = $selected;
+                }
+                elsif ($package eq "mvapich2_conf_ckpt") {
+                    $mvapich2_conf_ckpt = $selected;
+                }
+                elsif ($package eq "mvapich2_conf_blcr_home") {
+                    $mvapich2_conf_blcr_home = $selected;
+                }
+                elsif ($package eq "mvapich2_conf_vcluster") {
+                    $mvapich2_conf_vcluster = $selected;
+                }
+                elsif ($package eq "mvapich2_conf_io_bus") {
+                    $mvapich2_conf_io_bus = $selected;
+                }
+                elsif ($package eq "mvapich2_conf_link_speed") {
+                    $mvapich2_conf_link_speed = $selected;
+                }
+                elsif ($package eq "mvapich2_conf_dapl_provider") {
+                    $mvapich2_conf_dapl_provider = $selected;
+                }
+
+                if (not $packages_info{$package}{'parent'}) {
+                    my $modules = "@kernel_modules";
+                    chomp $modules;
+                    $modules =~ s/ /|/g;
+                    if ($package =~ m/$modules/) {
+                        if ( $selected eq 'y' ) {
+                            push (@selected_modules_by_user, $package);
+                            next;
+                        }
+                    }
+                    else {
+                       print "Unsupported package: $package\n";
+                       next;
                     }
                 }
-                else {
-                   print "Unsupported package: $package\n";
-                   next;
+
+                if (not $packages_info{$package}{'available'} and $selected eq 'y') {
+                    print "$package is not available on this platform\n";
+                    next;
+                }
+
+                if ( $selected eq 'y' ) {
+                    push (@selected_by_user, $package);
+                    print "select_package: selected $package\n" if ($verbose2);
+                    $cnt ++;
                 }
             }
-
-            if (not $packages_info{$package}{'available'} and $selected eq 'y') {
-                print "$package is not available on this platform\n";
-                next;
+        }
+        else {
+            if ($install_option eq 'all') {
+                for my $package ( @all_packages ) {
+                    next if (not $packages_info{$package}{'available'});
+                    push (@selected_by_user, $package);
+                    print CONFIG "$package=y\n";
+                    $cnt ++;
+                }
+                for my $module ( @kernel_modules ) {
+                    next if (not $kernel_modules_info{$module}{'available'});
+                    push (@selected_modules_by_user, $module);
+                    print CONFIG "$module=y\n";
+                }
             }
-
-            if ( $selected eq 'y' ) {
-                push (@selected_by_user, $package);
-                print "select_package: selected $package\n" if ($verbose2);
-                $cnt ++;
+            elsif ($install_option eq 'hpc') {
+                for my $package ( @hpc_user_packages, @hpc_kernel_packages ) {
+                    next if (not $packages_info{$package}{'available'});
+                    push (@selected_by_user, $package);
+                    print CONFIG "$package=y\n";
+                    $cnt ++;
+                }
+                for my $module ( @hpc_kernel_modules ) {
+                    next if (not $kernel_modules_info{$module}{'available'});
+                    push (@selected_modules_by_user, $module);
+                    print CONFIG "$module=y\n";
+                }
+            }
+            elsif ($install_option eq 'basic') {
+                for my $package (@basic_user_packages, @basic_kernel_packages) {
+                    next if (not $packages_info{$package}{'available'});
+                    push (@selected_by_user, $package);
+                    print CONFIG "$package=y\n";
+                    $cnt ++;
+                }
+                for my $module ( @basic_kernel_modules ) {
+                    next if (not $kernel_modules_info{$module}{'available'});
+                    push (@selected_modules_by_user, $module);
+                    print CONFIG "$module=y\n";
+                }
+            }
+            else {
+                print RED "\nUnsupported installation option: $install_option", RESET "\n";
+                exit 1;
             }
         }
 
