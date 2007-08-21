@@ -2335,6 +2335,10 @@ sub install_kernel_rpm
     }
 
     $cmd = "rpm -iv";
+    if ($distro eq "SuSE") {
+        # W/A for ksym dependencies on SuSE
+        $cmd .= " --nodeps";
+    }
     $cmd .= " $package";
 
     print "Running $cmd\n" if ($verbose);
