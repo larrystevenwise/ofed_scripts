@@ -1280,6 +1280,15 @@ sub set_availability
         $packages_info{'openmpi_intel'}{'available'} = 1;
         $packages_info{'mpitests_openmpi_intel'}{'available'} = 1;
     }
+
+    # debuginfo RPM currently are not supported on SuSE
+    if ($distro eq 'SuSE') {
+        for my $package (@all_packages) {
+            if ($package =~ m/-debuginfo/) {
+                $packages_info{$package}{'available'} = 0;
+            }
+        }
+    }
 }
 
 # Set rpm_exist parameter for existing RPMs
