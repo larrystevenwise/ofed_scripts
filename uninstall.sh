@@ -41,7 +41,7 @@ STACK_PREFIX=/usr
 
 ARCH=$(uname -m)
 
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES kernel-ib kernel-ib-devel ipoibtools"
+IB_ALL_PACKAGES="$IB_ALL_PACKAGES kernel-ib kernel-ib-devel ipoibtools "
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libopensm libopensm-devel libosmcomp libosmcomp-devel libosmvendor libosmvendor-devel"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES openib-diags ib-bonding ib-bonding-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libibverbs libibverbs-devel libibverbs-devel-static"
@@ -59,7 +59,7 @@ IB_ALL_PACKAGES="$IB_ALL_PACKAGES librdmacm librdmacm-utils librdmacm-devel libr
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libsdp libsdp-devel libsdp-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES opensm opensm-libs opensm-devel opensm-debuginfo opensm-static"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES perftest mstflint tvflash"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES qlvnictools sdpnetstat srptools rds-tools"
+IB_ALL_PACKAGES="$IB_ALL_PACKAGES qlvnictools ibvexdmtools sdpnetstat srptools rds-tools"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibutils infiniband-diags"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES ofed-docs ofed-scripts"
 
