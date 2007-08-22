@@ -143,7 +143,8 @@ sub usage
    print "\n                                And create corresponding ofed.conf file.";
    print "\n           -k|--kernel <kernel version>. Default on this system: $kernel";
    print "\n           -s|--kernel-sources <path to the kernel sources>. Default on this system: $kernel_sources";
-   print "\n           -v|-vv|-vvv. Set verbosity level";
+   print "\n           --build32        Build 32-bit libraries. Relevant for x86_64 and ppc64 platforms";
+   print "\n           -v|-vv|-vvv.     Set verbosity level";
    print "\n           -q. Set quiet - no messages will be printed";
    print "\n\n           --all|--hpc|--basic Install all,hpc or basic packages correspondently";
    print RESET "\n\n";
@@ -1052,6 +1053,8 @@ while ( $#ARGV >= 0 ) {
     } elsif ( $cmd_flag eq "--basic" ) {
         $interactive = 0;
         $install_option = 'basic';
+    } elsif ( $cmd_flag eq "--build32" ) {
+        $build32 = 1;
     } elsif ( $cmd_flag eq "-q" ) {
         $quiet = 1;
     } elsif ( $cmd_flag eq "-v" ) {
