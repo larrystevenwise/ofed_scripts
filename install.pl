@@ -2613,6 +2613,7 @@ sub main
         flock CONFIG, $UNLOCK;
         close(CONFIG);
         print "\n";
+        print GREEN "Created $config", RESET "\n";
         exit 0;
     }
     
@@ -2720,8 +2721,9 @@ sub main
     # Uninstall the previous installations
     uninstall();
     install();
-    print GREEN "\nInstallation finished successfully...", RESET;
+    print GREEN "\nInstallation finished successfully.", RESET;
     if ($interactive) {
+        print GREEN "\nPress any key to continue...", RESET;
         getch();
     }
     else {
