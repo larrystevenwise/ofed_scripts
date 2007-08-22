@@ -247,7 +247,7 @@ my %packages_info = (
             { name => "ofa_kernel", parent => "ofa_kernel",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "kernel", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [], ofa_req_inst => [], },
+            dist_req_inst => [], ofa_req_build => [], ofa_req_inst => [], configure_options => '' },
         'kernel-ib' =>
             { name => "kernel-ib", parent => "ofa_kernel",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -263,7 +263,7 @@ my %packages_info = (
             { name => "ib-bonding", parent => "ib-bonding",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "kernel", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [], ofa_req_inst => [], },
+            dist_req_inst => [], ofa_req_build => [], ofa_req_inst => [], configure_options => '' },
         'ib-bonding-debuginfo' =>
             { name => "ib-bonding-debuginfo", parent => "ib-bonding",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -275,7 +275,7 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [], ofa_req_inst => [], 
-            install32 => 1, exception => 0 },
+            install32 => 1, exception => 0, configure_options => '' },
         'libibverbs-devel' =>
             { name => "libibverbs-devel", parent => "libibverbs",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -311,7 +311,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
             ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0 },
+            install32 => 1, exception => 0, configure_options => '' },
         'libmthca-devel-static' =>
             { name => "libmthca-devel-static", parent => "libmthca",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -333,7 +333,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
             ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0 },
+            install32 => 1, exception => 0, configure_options => '' },
         'libmlx4-devel-static' =>
             { name => "libmlx4-devel-static", parent => "libmlx4",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -355,7 +355,7 @@ my %packages_info = (
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
             ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0 },
+            install32 => 1, exception => 0, configure_options => '' },
         'libehca-devel-static' =>
             { name => "libehca-devel-static", parent => "libehca",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -377,7 +377,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
             ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0 },
+            install32 => 1, exception => 0, configure_options => '' },
         'libcxgb3-devel' =>
             { name => "libcxgb3-devel", parent => "libcxgb3",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -399,7 +399,7 @@ my %packages_info = (
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
             ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0 },
+            install32 => 1, exception => 0, configure_options => '' },
         'libipathverbs-devel' =>
             { name => "libipathverbs-devel", parent => "libipathverbs",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -421,7 +421,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs"],
             ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0 },
+            install32 => 1, exception => 0, configure_options => '' },
         'libibcm-devel' =>
             { name => "libibcm-devel", parent => "libibcm",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -443,7 +443,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs"],
             ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0 },
+            install32 => 1, exception => 0, configure_options => '' },
         'libibcommon-devel' =>
             { name => "libibcommon-devel", parent => "libibcommon",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -465,7 +465,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs"],
             ofa_req_inst => ["libibverbs", "libibcommon"],
-            install32 => 1, exception => 0 },
+            install32 => 1, exception => 0, configure_options => '' },
         'libibumad-devel' =>
             { name => "libibumad-devel", parent => "libibumad",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -487,7 +487,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
             ofa_req_inst => ["libibverbs", "libibumad"],
-            install32 => 1, exception => 0 },
+            install32 => 1, exception => 0, configure_options => '' },
         'libibmad-devel' =>
             { name => "libibmad-devel", parent => "libibmad",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -509,7 +509,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => ["opensm-libs"],
-            install32 => 0, exception => 0 },
+            install32 => 0, exception => 0, configure_options => '' },
         'opensm-devel' =>
             { name => "opensm-devel", parent => "opensm",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -545,7 +545,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => ["libibverbs", "libibverbs-devel"],
-            install32 => 1, exception => 0 },
+            install32 => 1, exception => 0, configure_options => '' },
         'librdmacm-devel' =>
             { name => "librdmacm-devel", parent => "librdmacm",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -574,7 +574,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
-            install32 => 1, exception => 0 },
+            install32 => 1, exception => 0, configure_options => '' },
         'libsdp-devel' =>
             { name => "libsdp-devel", parent => "libsdp",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -596,7 +596,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
             ofa_req_inst => ["libibverbs", "librdmacm"],
-            install32 => 0, exception => 1 },
+            install32 => 0, exception => 1, configure_options => '' },
         'perftest-debuginfo' =>
             { name => "perftest-debuginfo", parent => "perftest",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -611,7 +611,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
-            install32 => 0, exception => 1 },
+            install32 => 0, exception => 1, configure_options => '' },
         'mstflint-debuginfo' =>
             { name => "mstflint-debuginfo", parent => "mstflint",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -626,7 +626,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
-            install32 => 0, exception => 1 },
+            install32 => 0, exception => 1, configure_options => '' },
         'tvflash-debuginfo' =>
             { name => "tvflash-debuginfo", parent => "tvflash",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -641,14 +641,14 @@ my %packages_info = (
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
-            install32 => 0, exception => 0 },
+            install32 => 0, exception => 0, configure_options => '' },
         'qlvnictools' =>
             { name => "qlvnictools", parent => "qlvnictools",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => ["ibvexdmtools"],
-            install32 => 0, exception => 0 },
+            install32 => 0, exception => 0, configure_options => '' },
         'qlvnictools-debuginfo' =>
             { name => "qlvnictools-debuginfo", parent => "qlvnictools",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -663,7 +663,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
-            install32 => 0, exception => 0 },
+            install32 => 0, exception => 0, configure_options => '' },
         'sdpnetstat-debuginfo' =>
             { name => "sdpnetstat-debuginfo", parent => "sdpnetstat",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -678,7 +678,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => ["libibcommon", "libibumad", "libibverbs"],
-            install32 => 0, exception => 0 },
+            install32 => 0, exception => 0, configure_options => '' },
         'srptools-debuginfo' =>
             { name => "srptools-debuginfo", parent => "srptools",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -693,7 +693,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
-            install32 => 0, exception => 0 },
+            install32 => 0, exception => 0, configure_options => '' },
         'rds-tools-debuginfo' =>
             { name => "rds-tools-debuginfo", parent => "rds-tools",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -708,7 +708,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["opensm-libs", "opensm-devel"],
             ofa_req_inst => ["libibcommon", "libibumad", "opensm-libs"],
-            install32 => 0, exception => 0 },
+            install32 => 0, exception => 0, configure_options => '' },
         'ibutils-debuginfo' =>
             { name => "ibutils-debuginfo", parent => "ibutils",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -723,7 +723,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["opensm-devel"],
             ofa_req_inst => ["libibcommon", "libibumad", "libibmad", "opensm-libs"],
-            install32 => 0, exception => 0 },
+            install32 => 0, exception => 0, configure_options => '' },
         'infiniband-diags-debuginfo' =>
             { name => "infiniband-diags-debuginfo", parent => "infiniband-diags",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -738,7 +738,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
-            install32 => 0, exception => 0 },
+            install32 => 0, exception => 0, configure_options => '' },
 
         'mvapich' =>
             { name => "mvapich", parent => "mvapich",
@@ -746,7 +746,7 @@ my %packages_info = (
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
-            install32 => 0, exception => 0 },
+            install32 => 0, exception => 0, configure_options => '' },
         'mvapich_gcc' =>
             { name => "mvapich_gcc", parent => "mvapich",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -782,7 +782,7 @@ my %packages_info = (
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
-            install32 => 0, exception => 0 },
+            install32 => 0, exception => 0, configure_options => '' },
         'mvapich2_gcc' =>
             { name => "mvapich2_gcc", parent => "mvapich2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -818,7 +818,7 @@ my %packages_info = (
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
-            install32 => 0, exception => 0 },
+            install32 => 0, exception => 0, configure_options => '' },
         'openmpi_gcc' =>
             { name => "openmpi_gcc", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -854,7 +854,7 @@ my %packages_info = (
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
-            install32 => 0, exception => 0 },
+            install32 => 0, exception => 0, configure_options => '' },
 
         'mpitests_mvapich_gcc' =>
             { name => "mpitests_mvapich_gcc", parent => "mpitests",
@@ -949,7 +949,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
-            install32 => 0, exception => 1 },
+            install32 => 0, exception => 1, configure_options => '' },
         'open-iscsi' =>
             { name => "open-iscsi", parent => "open-iscsi-generic",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -1677,42 +1677,60 @@ sub select_packages
 
                 if ($package eq "kernel_configure_options") {
                     $kernel_configure_options = $selected;
+                    next;
                 }
 
                 if ($package eq "user_configure_options") {
                     $user_configure_options = $selected;
+                    next;
+                }
+
+                if ($package =~ m/configure_options/) {
+                    my $pack_name = (split '_', $_)[0];
+                    $packages_info{$pack_name}{'configure_options'} = $selected;
+                    next;
                 }
 
                 # mvapich2 configuration environment
                 if ($package eq "mvapich2_conf_impl") {
                     $mvapich2_conf_impl = $selected;
+                    next;
                 }
                 elsif ($package eq "mvapich2_conf_romio") {
                     $mvapich2_conf_romio = $selected;
+                    next;
                 }
                 elsif ($package eq "mvapich2_conf_shared_libs") {
                     $mvapich2_conf_shared_libs = $selected;
+                    next;
                 }
                 elsif ($package eq "mvapich2_conf_multithread") {
                     $mvapich2_conf_multithread = $selected;
+                    next;
                 }
                 elsif ($package eq "mvapich2_conf_ckpt") {
                     $mvapich2_conf_ckpt = $selected;
+                    next;
                 }
                 elsif ($package eq "mvapich2_conf_blcr_home") {
                     $mvapich2_conf_blcr_home = $selected;
+                    next;
                 }
                 elsif ($package eq "mvapich2_conf_vcluster") {
                     $mvapich2_conf_vcluster = $selected;
+                    next;
                 }
                 elsif ($package eq "mvapich2_conf_io_bus") {
                     $mvapich2_conf_io_bus = $selected;
+                    next;
                 }
                 elsif ($package eq "mvapich2_conf_link_speed") {
                     $mvapich2_conf_link_speed = $selected;
+                    next;
                 }
                 elsif ($package eq "mvapich2_conf_dapl_provider") {
                     $mvapich2_conf_dapl_provider = $selected;
+                    next;
                 }
 
                 if (not $packages_info{$package}{'parent'}) {
@@ -1917,8 +1935,8 @@ sub resolve_dependencies
 # Print the list of selected packages
 sub print_selected
 {
-    print "\nBelow is the list of ${PACKAGE} packages that you have chosen
-    \r(some may have been added by the installer due to package dependencies):\n\n";
+    print GREEN "\nBelow is the list of ${PACKAGE} packages that you have chosen
+    \r(some may have been added by the installer due to package dependencies):\n", RESET "\n";
     for my $package ( @selected_packages ) {
         print "$package\n";
     }
@@ -1971,6 +1989,7 @@ sub build_kernel_rpm
     if ($name eq 'ofa_kernel') {
         $kernel_configure_options .= " --kernel-version=$kernel";
         $kernel_configure_options .= " --kernel-sources=$kernel_sources";
+        $kernel_configure_options .= " $packages_info{'ofa_kernel'}{'configure_options'}";
 
         for my $module ( @selected_kernel_modules ) {
             print "module $module\n";
@@ -2040,6 +2059,9 @@ sub build_rpm
             $cmd .= " --define '_name $name'";
             $cmd .= " --define 'compiler $compiler'";
             $cmd .= " --define 'openib_prefix $prefix'";
+            if ($packages_info{'mvapich'}{'configure_options'}) {
+                $cmd .= " --define 'configure_options $packages_info{'mvapich'}{'configure_options'}'";
+            }
             $cmd .= " --define 'mpi_selector $prefix/bin/mpi-selector'";
             $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
         }
@@ -2129,6 +2151,9 @@ sub build_rpm
                 $cmd .= " --define 'dat_include $mvapich2_dat_include'";
             }
 
+            if ($packages_info{'mvapich2'}{'configure_options'}) {
+                $cmd .= " --define 'configure_options $packages_info{'mvapich2'}{'configure_options'}'";
+            }
             $cmd .= " --define 'open_ib_home $prefix'";
             $cmd .= " --define 'shared_libs $mvapich2_conf_shared_libs'";
             $cmd .= " --define 'romio $mvapich2_conf_romio'";
@@ -2251,7 +2276,7 @@ sub build_rpm
             $cmd .= " --define '_defaultdocdir $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
             $cmd .= " --define '_mandir %{_prefix}/share/man'";
             $cmd .= " --define 'mflags -j 4'";
-            $cmd .= " --define 'configure_options $openmpi_ldflags --with-openib=$prefix --with-openib-libdir=$prefix/$openmpi_lib $openmpi_comp_env'";
+            $cmd .= " --define 'configure_options $packages_info{'openmpi'}{'configure_options'} $openmpi_ldflags --with-openib=$prefix --with-openib-libdir=$prefix/$openmpi_lib $openmpi_comp_env'";
             $cmd .= " --define 'use_default_rpm_opt_flags $use_default_rpm_opt_flags'";
         }
         elsif ($parent eq "mpitests") {
@@ -2267,7 +2292,7 @@ sub build_rpm
         }
 
         if ($user_configure_options) {
-            $cmd .= " --define 'configure_options $user_configure_options'";
+            $cmd .= " --define 'configure_options $packages_info{$parent}{'configure_options'} $user_configure_options'";
         }
 
         $cmd .= " $main_packages{$parent}{'srpmpath'}";
