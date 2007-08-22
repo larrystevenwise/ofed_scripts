@@ -115,11 +115,16 @@ my $target_cpu  = `rpm --eval '%{_target_cpu}'`;
 chomp $target_cpu;
 
 my $target_cpu32;
-if (-f "/etc/SuSE-release") {
-    $target_cpu32 = 'i586';
+if ($arch eq "x86_64") {
+    if (-f "/etc/SuSE-release") {
+        $target_cpu32 = 'i586';
+    }
+    else {
+        $target_cpu32 = 'i686';
+    }
 }
-else {
-    $target_cpu32 = 'i686';
+elsif ($arch eq "ppc64") {
+    $target_cpu32 = 'ppc';
 }
 chomp $target_cpu32;
 
@@ -148,6 +153,18 @@ sub usage
    print "\n           -q. Set quiet - no messages will be printed";
    print "\n\n           --all|--hpc|--basic Install all,hpc or basic packages correspondently";
    print RESET "\n\n";
+}
+
+my $sysfsutils;
+my $sysfsutils_devel;
+
+if ($distro eq "SuSE" or $distro eq "redhat" or $distro eq "fedora") {
+    $sysfsutils = "sysfsutils";
+    $sysfsutils_devel = "sysfsutils-devel";
+}
+else {
+    $sysfsutils = "libsysfs";
+    $sysfsutils_devel = "libsysfs-devel";
 }
 
 # List of all available packages sorted following dependencies
@@ -279,7 +296,7 @@ my %packages_info = (
         'libibverbs' =>
             { name => "libibverbs", parent => "libibverbs",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => ["gcc_3.3.3", "glibc-devel","libstdc++"],
             dist_req_inst => [], ofa_req_build => [], ofa_req_inst => [], 
             install32 => 1, exception => 0, configure_options => '' },
         'libibverbs-devel' =>
@@ -614,7 +631,7 @@ my %packages_info = (
         'mstflint' =>
             { name => "mstflint", parent => "mstflint",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => ["libstdc++-devel"],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 1, configure_options => '' },
@@ -711,8 +728,8 @@ my %packages_info = (
         'ibutils' =>
             { name => "ibutils", parent => "ibutils",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["opensm-libs", "opensm-devel"],
+            available => 1, mode => "user", dist_req_build => ["tcl_8.4", "tcl-devel_8.4", "tk", "libstdc++-devel"],
+            dist_req_inst => ["tcl_8.4", "tk", "libstdc++"], ofa_req_build => ["opensm-libs", "opensm-devel"],
             ofa_req_inst => ["libibcommon", "libibumad", "opensm-libs"],
             install32 => 0, exception => 0, configure_options => '' },
         'ibutils-debuginfo' =>
@@ -749,8 +766,8 @@ my %packages_info = (
         'mvapich' =>
             { name => "mvapich", parent => "mvapich",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
+            available => 0, mode => "user", dist_req_build => ["libstdc++-devel"],
+            dist_req_inst => ["libstdc++"], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
         'mvapich_gcc' =>
@@ -785,8 +802,8 @@ my %packages_info = (
         'mvapich2' =>
             { name => "mvapich2", parent => "mvapich2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
+            available => 0, mode => "user", dist_req_build => [$sysfsutils, $sysfsutils_devel, "libstdc++-devel"],
+            dist_req_inst => ["libstdc++"], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
         'mvapich2_gcc' =>
@@ -821,8 +838,8 @@ my %packages_info = (
         'openmpi' =>
             { name => "openmpi", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
+            available => 0, mode => "user", dist_req_build => [$sysfsutils, $sysfsutils_devel, "libstdc++-devel"],
+            dist_req_inst => ["libstdc++"], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
         'openmpi_gcc' =>
@@ -1145,6 +1162,12 @@ sub getch
 sub get_rpm_name_arch
 {
     return `rpm --queryformat "[%{NAME}] [%{ARCH}]" -qp @_`;
+}
+
+# Get RPM name and version of the INSTALLED package
+sub get_rpm_version
+{
+    return `rpm --queryformat "[%{VERSION}]\n" -q @_ | uniq`;
 }
 
 sub get_rpm_info
@@ -1962,6 +1985,101 @@ sub resolve_dependencies
     }
 }
 
+sub check_linux_dependencies
+{
+    for my $package ( @selected_packages ) {
+        # Check rpmbuild requirements
+        if (not $packages_info{$package}{'rpm_exist'}) {
+            for my $req ( @{ $packages_info{$package}{'dist_req_build'} } ) {
+                my ($req_name, $req_version) = (split ('_',$req));
+                if (not is_installed($req_name)) {
+                    print RED "$req_name rpm is required to build $package", RESET "\n";
+                    exit 1;
+                }
+                if ($req_version) {
+                    my $inst_version = get_rpm_version($req_name);
+                    chomp $inst_version;
+                    print "check_linux_dependencies: $req_name installed version $inst_version, required $req_version\n" if ($verbose3);
+                    if ($inst_version lt $req_version) {
+                        print RED "$req_name-$req_version rpm is required to build $package", RESET "\n";
+                        exit 1;
+                    }
+                }
+            }
+            if ($build32) {
+                if (not -f "/usr/lib/crt1.o") {
+                    print RED "glibc-devel 32bit is required to build 32-bit libraries.", RESET "\n";
+                    exit 1;
+                }
+                if ($arch eq "ppc64") {
+                    my @libstdc32 = </usr/lib/libstdc++.so.*>;
+                    if ($package eq "mstflint") {
+                        if (not $#libstdc32) {
+                            print RED "libstdc++ 32bit is required to build mstflint.", RESET "\n";
+                            exit 1;
+                        }
+                    }
+                    elsif ($package eq "openmpi") {
+                        my @libsysfs = </usr/lib/libsysfs.so>;
+                        if (not $#libstdc32) {
+                            print RED "libstdc++-devel 32bit is required to build openmpi.", RESET "\n";
+                            exit 1;
+                        }
+                        if (not $#libsysfs) {
+                            print RED "$sysfsutils_devel 32bit is required to build openmpi.", RESET "\n";
+                            exit 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        # Check installation requirements
+        for my $req ( @{ $packages_info{$package}{'dist_req_inst'} } ) {
+            my ($req_name, $req_version) = (split ('_',$req));
+            if (not is_installed($req_name)) {
+                print RED "$req_name rpm is required to install $package", RESET "\n";
+                exit 1;
+            }
+            if ($req_version) {
+                my $inst_version = get_rpm_version($req_name);
+                chomp $inst_version;
+                print "check_linux_dependencies: $req_name installed version $inst_version, required $req_version\n" if ($verbose3);
+                if ($inst_version lt $req_version) {
+                    print RED "$req_name-$req_version rpm is required to install $package", RESET "\n";
+                    exit 1;
+                }
+            }
+        }
+        if ($build32) {
+            if (not -f "/usr/lib/crt1.o") {
+                print RED "glibc-devel 32bit is required to install 32-bit libraries.", RESET "\n";
+                exit 1;
+            }
+            if ($arch eq "ppc64") {
+                my @libstdc32 = </usr/lib/libstdc++.so.*>;
+                if ($package eq "mstflint") {
+                    if (not $#libstdc32) {
+                        print RED "libstdc++ 32bit is required to install mstflint.", RESET "\n";
+                        exit 1;
+                    }
+                }
+                elsif ($package eq "openmpi") {
+                    my @libsysfs = </usr/lib/libsysfs.so.*>;
+                    if (not $#libstdc32) {
+                        print RED "libstdc++ 32bit is required to install openmpi.", RESET "\n";
+                        exit 1;
+                    }
+                    if (not $#libsysfs) {
+                        print RED "$sysfsutils 32bit is required to install openmpi.", RESET "\n";
+                        exit 1;
+                    }
+                }
+            }
+        }
+    }
+}
+
 # Print the list of selected packages
 sub print_selected
 {
@@ -2290,7 +2408,7 @@ sub build_rpm
                 $openmpi_comp_env .= ' CFLAGS="-m64 -O2" CXXFLAGS="-m64 -O2" FCFLAGS="-m64 -O2" FFLAGS="-m64 -O2"';
                 $openmpi_comp_env .= ' --with-wrapper-ldflags="-g -O2 -m64 -L/usr/lib64" --with-wrapper-cflags=-m64';
                 $openmpi_comp_env .= ' --with-wrapper-cxxflags=-m64 --with-wrapper-fflags=-m64 --with-wrapper-fcflags=-m64';
-                $openmpi_wrapper_cxx_flags .= " -m64";
+                $openmpi_wrapper_cxx_flags .= "-m64";
             }
 
             $openmpi_comp_env .= " --enable-mpirun-prefix-by-default";
@@ -2542,7 +2660,7 @@ sub uninstall
 sub install
 {
     # Build and install selected RPMs
-    for my $package ( @selected_packages) {
+    for my $package ( @selected_packages ) {
         if ($packages_info{$package}{'mode'} eq "user") {
             if (not $packages_info{$package}{'exception'}) {
                 if ( (not $packages_info{$package}{'rpm_exist'}) or 
@@ -2672,6 +2790,7 @@ sub main
             set_availability();
             $num_selected = select_packages();
             resolve_dependencies();
+            check_linux_dependencies();
             if (not $quiet) {
                 print_selected();
             }
@@ -2710,6 +2829,7 @@ sub main
         set_availability();
         $num_selected = select_packages();
         resolve_dependencies();
+        check_linux_dependencies();
         if (not $quiet) {
             print_selected();
         }
