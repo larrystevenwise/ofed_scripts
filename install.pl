@@ -51,6 +51,7 @@ my $ALL = 3;
 my $CUSTOM = 4;
 
 my $interactive = 1;
+my $quiet = 0;
 my $verbose = 1;
 my $verbose2 = 0;
 my $verbose3 = 0;
@@ -134,13 +135,17 @@ my @selected_kernel_modules = ();
 
 sub usage
 {
-   print BLUE;
+   print GREEN;
    print "\n Usage: $0 [-c <packages config_file>|--all|--hpc|--basic] [-n|--net <network config_file>]\n";
+
    print "\n           -c|--config <packages config_file>. Example of the config file can be found under docs.";
-   print "\n           --all|--hpc|--basic Install all,hpc or basic packages correspondently";
-   print "\n           [-p|--print-available <kernel version>]";
-   print "\n           [-k|--kernel <kernel version>]. Default $kernel";
-   print "\n           [-s|--kernel-sources <path to the kernel sources>]. Default $kernel_sources";
+   print "\n           -p|--print-available Print available packages for current platform.";
+   print "\n                                And create corresponding ofed.conf file.";
+   print "\n           -k|--kernel <kernel version>. Default on this system: $kernel";
+   print "\n           -s|--kernel-sources <path to the kernel sources>. Default on this system: $kernel_sources";
+   print "\n           -v|-vv|-vvv. Set verbosity level";
+   print "\n           -q. Set quiet - no messages will be printed";
+   print "\n\n           --all|--hpc|--basic Install all,hpc or basic packages correspondently";
    print RESET "\n\n";
 }
 
@@ -1016,6 +1021,8 @@ my $mvapich2_dat_include;
 my $mvapich2_conf_done = 0;
 
 my $config_given = 0;
+my $kernel_given = 0;
+my $kernel_source_given = 0;
 my $install_option;
 
 while ( $#ARGV >= 0 ) {
@@ -1030,8 +1037,10 @@ while ( $#ARGV >= 0 ) {
         $config_net = shift(@ARGV);
     } elsif ( $cmd_flag eq "-k" or $cmd_flag eq "--kernel" ) {
         $kernel = shift(@ARGV);
+        $kernel_given = 1;
     } elsif ( $cmd_flag eq "-s" or $cmd_flag eq "--kernel-sources" ) {
         $kernel_sources = shift(@ARGV);
+        $kernel_source_given = 1;
     } elsif ( $cmd_flag eq "-p" or $cmd_flag eq "--print-available" ) {
         $print_available = 1;
     } elsif ( $cmd_flag eq "--all" ) {
@@ -1043,6 +1052,8 @@ while ( $#ARGV >= 0 ) {
     } elsif ( $cmd_flag eq "--basic" ) {
         $interactive = 0;
         $install_option = 'basic';
+    } elsif ( $cmd_flag eq "-q" ) {
+        $quiet = 1;
     } elsif ( $cmd_flag eq "-v" ) {
         $verbose = 1;
     } elsif ( $cmd_flag eq "-vv" ) {
@@ -1061,6 +1072,21 @@ while ( $#ARGV >= 0 ) {
 if ($config_given and $install_option) {
     print RED "\nError: '-c' option can't be used with '--all|--hpc|--basic'", RESET "\n";
     exit 1;
+}
+if ($quiet) {
+    $verbose = 0;
+    $verbose2 = 0;
+    $verbose3 = 0;
+}
+
+if ($kernel_given and not $kernel_source_given) {
+    if (-d "/lib/modules/$kernel/build") {
+        $kernel_sources = "/lib/modules/$kernel/build";
+    }
+    else {
+        print RED "Provide path to the kernel sources for $kernel kernel.", RESET "\n";
+        exit 1;
+    }
 }
 
 my $kernel_rel = $kernel;
@@ -1744,13 +1770,13 @@ sub select_packages
                         }
                     }
                     else {
-                       print "Unsupported package: $package\n";
+                       print "Unsupported package: $package\n" if (not $quiet);
                        next;
                     }
                 }
 
                 if (not $packages_info{$package}{'available'} and $selected eq 'y') {
-                    print "$package is not available on this platform\n";
+                    print "$package is not available on this platform\n" if (not $quiet);
                     next;
                 }
 
@@ -1804,7 +1830,7 @@ sub select_packages
                 }
             }
             else {
-                print RED "\nUnsupported installation option: $install_option", RESET "\n";
+                print RED "\nUnsupported installation option: $install_option", RESET "\n" if (not $quiet);
                 exit 1;
             }
         }
@@ -1840,18 +1866,19 @@ sub module_in_rpm
         return 1;
     }
 
-    print "is_module_in_rpm: rpm -qlp $package\n";
     open(LIST, "rpm -qlp $package |") or die "Can't run 'rpm -qlp $package': $!\n";
     while (<LIST>) {
         if (/$module[a-z_]*.ko/) {
-            print "is_module_in_rpm: $module $_\n";
+            print "is_module_in_rpm: $module $_\n" if ($verbose3);
             $ret = 0;
             last;
         }
     }
     close LIST;
 
-    print "$module not in $package\n" if ($ret);
+    if ($ret) {
+        print "$module not in $package\n" if ($verbose2);
+    }
 
     return $ret;
 }
@@ -1992,7 +2019,6 @@ sub build_kernel_rpm
         $kernel_configure_options .= " $packages_info{'ofa_kernel'}{'configure_options'}";
 
         for my $module ( @selected_kernel_modules ) {
-            print "module $module\n";
             if ($module eq "core") {
                 $kernel_configure_options .= " --with-core-mod --with-user_mad-mod --with-user_access-mod --with-addr_trans-mod";
             }
@@ -2476,30 +2502,35 @@ sub uninstall
     my $res = 0;
     my $sig = 0;
     my $cnt = 0;
+    print BLUE "Uninstalling the previous version of $PACKAGE", RESET "\n" if (not $quiet);
     system("yes | ofed_uninstall.sh > $ofedlogs/ofed_uninstall.log 2>&1");
     $res = $? >> 8;
     $sig = $? & 127;
     if ($sig or $res) {
-        my $cmd = "rpm -e --allmatches";
-        for my $package (@all_packages, @hidden_packages) {
-            if (is_installed($packages_info{$package}{'name'})) {
-                $cmd .= " $packages_info{$package}{'name'}";
-                $cnt ++;
+        system("yes | $CWD/uninstall.sh > $ofedlogs/ofed_uninstall.log 2>&1");
+        $res = $? >> 8;
+        $sig = $? & 127;
+        if ($sig or $res) {
+            my $cmd = "rpm -e --allmatches";
+            for my $package (@all_packages, @hidden_packages) {
+                if (is_installed($packages_info{$package}{'name'})) {
+                    $cmd .= " $packages_info{$package}{'name'}";
+                    $cnt ++;
+                }
             }
-        }
-        if ($cnt) {
-            print "Uninstalling the previous version of $PACKAGE\n";
-            print "Running $cmd\n" if ($verbose);
-            open (LOG, "+>$ofedlogs/ofed_uninstall.log");
-            print LOG "Running $cmd\n";
-            close LOG;
-            system("$cmd >> $ofedlogs/ofed_uninstall.log 2>&1");
-            $res = $? >> 8;
-            $sig = $? & 127;
-            if ($sig or $res) {
-                print RED "Failed to uninstall the previous installation", RESET "\n";
-                print RED "See $ofedlogs/ofed_uninstall.log", RESET "\n";
-                exit 1;
+            if ($cnt) {
+                print "Running $cmd\n" if (not $quiet);
+                open (LOG, "+>$ofedlogs/ofed_uninstall.log");
+                print LOG "Running $cmd\n";
+                close LOG;
+                system("$cmd >> $ofedlogs/ofed_uninstall.log 2>&1");
+                $res = $? >> 8;
+                $sig = $? & 127;
+                if ($sig or $res) {
+                    print RED "Failed to uninstall the previous installation", RESET "\n";
+                    print RED "See $ofedlogs/ofed_uninstall.log", RESET "\n";
+                    exit 1;
+                }
             }
         }
     }
@@ -2563,6 +2594,8 @@ sub main
 {
     if ($print_available) {
         set_availability();
+        open(CONFIG, ">>$config") || die "Can't open $config: $!";;
+        flock CONFIG, $LOCK_EXCLUSIVE;
         for my $package ( @all_packages, @hidden_packages) {
             next if (not $packages_info{$package}{'available'});
             if ($package eq "kernel-ib") {
@@ -2570,11 +2603,15 @@ sub main
                 for my $module ( @kernel_modules ) {
                     next if (not $kernel_modules_info{$module}{'available'});
                     print $module . ' ';
+                    print CONFIG "$module=y\n";
                 }
                 print "\nOther packages: ";
             }
             print $package . ' ';
+            print CONFIG "$package=y\n";
         }
+        flock CONFIG, $UNLOCK;
+        close(CONFIG);
         print "\n";
         exit 0;
     }
@@ -2631,7 +2668,9 @@ sub main
             set_availability();
             $num_selected = select_packages();
             resolve_dependencies();
-            print_selected();
+            if (not $quiet) {
+                print_selected();
+            }
         }
         elsif ($inp == 3) {
             my $cnt = 0;
@@ -2667,14 +2706,16 @@ sub main
         set_availability();
         $num_selected = select_packages();
         resolve_dependencies();
-        print_selected();
+        if (not $quiet) {
+            print_selected();
+        }
     }
     
     if (not $num_selected) {
         print RED "$num_selected packages selected. Exiting...", RESET "\n";
         exit 1;
     }
-    print BLUE "Detected Linux Distribution: $distro", RESET "\n" if ($verbose);
+    print BLUE "Detected Linux Distribution: $distro", RESET "\n" if ($verbose3);
     
     # Uninstall the previous installations
     uninstall();
