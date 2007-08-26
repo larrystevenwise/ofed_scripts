@@ -73,6 +73,43 @@ chomp $kernel_sources;
 
 my $PACKAGE     = 'OFED';
 
+# Set Linux Distribution
+if ( -f "/etc/SuSE-release" ) {
+    $distro = "SuSE";
+}
+elsif ( -f "/etc/fedora-release" ) {
+    if ($kernel =~ m/fc6/) {
+            $distro = "fedora6";
+    }
+    else {
+            $distro = "fedora";
+    }
+}
+elsif ( -f "/etc/rocks-release" ) {
+    $distro = "Rocks";
+}
+elsif ( -f "/etc/redhat-release" ) {
+    if ($kernel =~ m/el5/) {
+        $distro = "redhat5";
+    }
+    else {
+        open(DISTRO, "/etc/redhat-release");
+        if (<DISTRO> =~ m/release\s5/) {
+            $distro = "redhat5";
+        }
+        else {
+            $distro = "redhat";
+        }
+        close DISTRO;
+    }
+}
+elsif ( -f "/etc/debian_version" ) {
+    $distro = "debian";
+}
+else {
+    $distro = "unsupported";
+}
+
 my $WDIR    = dirname($0);
 chdir $WDIR;
 my $CWD     = getcwd;
@@ -165,6 +202,14 @@ if ($distro eq "SuSE" or $distro eq "redhat" or $distro eq "fedora") {
 else {
     $sysfsutils = "libsysfs";
     $sysfsutils_devel = "libsysfs-devel";
+}
+
+my $network_dir;
+if ($distro eq "SuSE") {
+    $network_dir = "/etc/sysconfig/network";
+}
+else {
+    $network_dir = "/etc/sysconfig/network-scripts";
 }
 
 # List of all available packages sorted following dependencies
@@ -1039,6 +1084,7 @@ my $mvapich2_dat_include;
 my $mvapich2_conf_done = 0;
 
 my $config_given = 0;
+my $config_net_given = 0;
 my $kernel_given = 0;
 my $kernel_source_given = 0;
 my $install_option;
@@ -1053,6 +1099,7 @@ while ( $#ARGV >= 0 ) {
         $config_given = 1;
     } elsif ( $cmd_flag eq "-n" or $cmd_flag eq "--net" ) {
         $config_net = shift(@ARGV);
+        $config_net_given = 1;
     } elsif ( $cmd_flag eq "-k" or $cmd_flag eq "--kernel" ) {
         $kernel = shift(@ARGV);
         $kernel_given = 1;
@@ -1099,6 +1146,48 @@ if ($quiet) {
     $verbose3 = 0;
 }
 
+my %ifcfg = ();
+if ($config_net_given and not -e $config_net) {
+    print RED "$config_net does not exist", RESET "\n";
+    exit 1;
+}
+
+my $eth_dev;
+if ($config_net_given) {
+    open(NET, "$config_net") or die "Can't open $config_net: $!";
+    while (<NET>) {
+        my ($param, $value) = split('=');
+        chomp $param;
+        chomp $value;
+        my $dev = $param;
+        $dev =~ s/(.*)_(ib[0-9]+)/$2/;
+        chomp $dev;
+
+        if ($param =~ m/IPADDR/) {
+            $ifcfg{$dev}{'IPADDR'} = $value;
+        }
+        elsif ($param =~ m/NETMASK/) {
+            $ifcfg{$dev}{'NETMASK'} = $value;
+        }
+        elsif ($param =~ m/NETWORK/) {
+            $ifcfg{$dev}{'NETWORK'} = $value;
+        }
+        elsif ($param =~ m/BROADCAST/) {
+            $ifcfg{$dev}{'BROADCAST'} = $value;
+        }
+        elsif ($param =~ m/ONBOOT/) {
+            $ifcfg{$dev}{'ONBOOT'} = $value;
+        }
+        elsif ($param =~ m/LAN_INTERFACE/) {
+            $ifcfg{$dev}{'LAN_INTERFACE'} = $value;
+        }
+        else {
+            print RED "Unsupported parameter '$param' in $config_net\n" if ($verbose2);
+        }
+    }
+    close(NET);
+}
+
 if ($kernel_given and not $kernel_source_given) {
     if (-d "/lib/modules/$kernel/build") {
         $kernel_sources = "/lib/modules/$kernel/build";
@@ -1111,43 +1200,6 @@ if ($kernel_given and not $kernel_source_given) {
 
 my $kernel_rel = $kernel;
 $kernel_rel =~ s/-/_/g;
-
-# Set Linux Distribution
-if ( -f "/etc/SuSE-release" ) {
-    $distro = "SuSE";
-}
-elsif ( -f "/etc/fedora-release" ) {
-    if ($kernel =~ m/fc6/) {
-            $distro = "fedora6";
-    }
-    else {
-            $distro = "fedora";
-    }
-}
-elsif ( -f "/etc/rocks-release" ) {
-    $distro = "Rocks";
-}
-elsif ( -f "/etc/redhat-release" ) {
-    if ($kernel =~ m/el5/) {
-        $distro = "redhat5";
-    }
-    else {
-        open(DISTRO, "/etc/redhat-release");
-        if (<DISTRO> =~ m/release\s5/) {
-            $distro = "redhat5";
-        }
-        else {
-            $distro = "redhat";
-        }
-        close DISTRO;
-    }
-}
-elsif ( -f "/etc/debian_version" ) {
-    $distro = "debian";
-}
-else {
-    $distro = "unsupported";
-}
 
 sub getch
 {
@@ -1814,7 +1866,7 @@ sub select_packages
             }
         }
         else {
-            open(CONFIG, ">>$config") || die "Can't open $config: $!";;
+            open(CONFIG, ">>$config") || die "Can't open $config: $!";
             flock CONFIG, $LOCK_EXCLUSIVE;
             if ($install_option eq 'all') {
                 for my $package ( @all_packages ) {
@@ -2618,6 +2670,310 @@ sub is_installed
     return not $res;
 }
 
+sub count_ports
+{
+    my $cnt = 0;
+    open(LSPCI, "/sbin/lspci -n|");
+
+    while (<LSPCI>) {
+        if (/15b3:6282/) {
+            $cnt += 2;  # InfiniHost III Ex mode
+        }
+        elsif (/15b3:5e8c|15b3:6274/) {
+            $cnt ++;    # InfiniHost III Lx mode
+        }
+        elsif (/15b3:5a44|15b3:6278/) {
+            $cnt += 2;  # InfiniHost mode
+        }
+        elsif (/15b3:6340|15b3:634a|15b3:6354|15b3:6732|15b3:673c/) {
+            $cnt += 2;  # ConnectX
+        }
+    }
+    close (LSPCI);
+
+    return $cnt;
+}
+
+sub is_valid_ipv4
+{
+    my $ipaddr = shift @_;    
+
+    if( $ipaddr =~ m/^(\d\d?\d?)\.(\d\d?\d?)\.(\d\d?\d?)\.(\d\d?\d?)/ ) {
+        if($1 <= 255 && $2 <= 255 && $3 <= 255 && $4 <= 255) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+sub get_net_config
+{
+    my $interface = shift @_;
+
+    open(IFCONFIG, "/sbin/ifconfig $interface |") or die "Failed to run /sbin/ifconfig $interface: $!";
+    while (<IFCONFIG>) {
+        next if (not m/inet addr:/);
+        my $line = $_;
+        chomp $line;
+        $ifcfg{$interface}{'IPADDR'} = (split (' ', $line))[1];
+        $ifcfg{$interface}{'IPADDR'} =~ s/addr://g;
+        $ifcfg{$interface}{'BROADCAST'} = (split (' ', $line))[2];
+        $ifcfg{$interface}{'BROADCAST'} =~ s/Bcast://g;
+        $ifcfg{$interface}{'NETMASK'} = (split (' ', $line))[3];
+        $ifcfg{$interface}{'NETMASK'} =~ s/Mask://g;
+    }
+    close(IFCONFIG);
+}
+
+sub config_interface
+{
+    my $interface = shift @_;
+    my $ans;
+    my $dev = "ib$interface";
+    my $target = "$network_dir/ifcfg-$dev";
+    my $ret;
+    my $ip;
+    my $nm;
+    my $nw;
+    my $bc;
+    my $onboot = 1;
+
+    print "Going to update $target\n" if ($verbose2);
+    if ($interactive) {
+        print "\nDo you want to configure $dev? [Y/n]:";
+        $ans = getch();
+        if ($ans =~ m/[nN]/) {
+            return;
+        }
+        if (-e $target) {
+            print BLUE "\nThe current IPoIB configuration for $dev is:\n";
+            open(IF,$target);
+            while (<IF>) {
+                print $_;
+            }
+            close(IF);
+            print "\nDo you want to change this configuration? [y/N]:", RESET;
+            $ans = getch();
+            if ($ans !~ m/[yY]/) {
+                return;
+            }
+        }
+        print "\nEnter an IP Adress: ";
+        $ip = <STDIN>;
+        $ret = is_valid_ipv4($ip);
+        while ($ret) {
+            print "\nEnter a valid IPv4 Adress: ";
+            $ip = <STDIN>;
+            $ret = is_valid_ipv4($ip);
+        }
+        print "\nEnter the Netmask: ";
+        $nm = <STDIN>;
+        $ret = is_valid_ipv4($nm);
+        while ($ret) {
+            print "\nEnter a valid Netmask: ";
+            $nm = <STDIN>;
+            $ret = is_valid_ipv4($nm);
+        }
+        print "\nEnter the Network: ";
+        $nw = <STDIN>;
+        $ret = is_valid_ipv4($nw);
+        while ($ret) {
+            print "\nEnter a valid Network: ";
+            $nw = <STDIN>;
+            $ret = is_valid_ipv4($nw);
+        }
+        print "\nEnter the Broadcast Adress: ";
+        $bc = <STDIN>;
+        $ret = is_valid_ipv4($bc);
+        while ($ret) {
+            print "\nEnter a valid Broadcast Adress: ";
+            $bc = <STDIN>;
+            $ret = is_valid_ipv4($bc);
+        }
+        print "\nStart Device On Boot? [Y/n]:";
+        $ans = getch();
+        if ($ans =~ m/[nN]/) {
+            $onboot = 0;
+        }
+
+        print GREEN "\nSelected configuration:\n";
+        print "DEVICE=$dev\n";
+        print "IPADDR=$ip\n";
+        print "NETMASK=$nm\n";
+        print "NETWORK=$nw\n";
+        print "BROADCAST=$bc\n";
+        if ($onboot) {
+            print "ONBOOT=yes\n";
+        }
+        else {
+            print "ONBOOT=no\n";
+        }
+        print "\nDo you want to save the selected configuration? [Y/n]:";
+        $ans = getch();
+        if ($ans =~ m/[nN]/) {
+            return;
+        } 
+    }
+    else {
+        if (not $config_net_given) {
+            return;
+        }
+        if ($ifcfg{$dev}{'LAN_INTERFACE'}) {
+            $eth_dev = $ifcfg{$dev}{'LAN_INTERFACE'};
+            if (not -e "/sys/class/net/$eth_dev") {
+                print "Device $eth_dev is not present\n" if (not $quiet);
+                return;
+            }
+        }
+        else {
+            # Take the first existing Eth interface
+            if (not $eth_dev) {
+                $eth_dev = </sys/class/net/eth*>;
+                $eth_dev =~ s@/sys/class/net/@@g;
+            }
+        }
+        get_net_config("$eth_dev");
+
+        if (not $ifcfg{$dev}{'IPADDR'}) {
+            print "IP address is not defined for $dev\n" if ($verbose2);
+            print "Skipping $dev configuration...\n" if ($verbose2);
+            return;
+        }
+        if (not $ifcfg{$dev}{'NETMASK'}) {
+            print "Netmask is not defined for $dev\n" if ($verbose2);
+            print "Skipping $dev configuration...\n" if ($verbose2);
+            return;
+        }
+        if (not $ifcfg{$dev}{'NETWORK'}) {
+            print "Network is not defined for $dev\n" if ($verbose2);
+            print "Skipping $dev configuration...\n" if ($verbose2);
+            return;
+        }
+        if (not $ifcfg{$dev}{'BROADCAST'}) {
+            print "Broadcast address is not defined for $dev\n" if ($verbose2);
+            print "Skipping $dev configuration...\n" if ($verbose2);
+            return;
+        }
+
+        my @ipib = (split('\.', $ifcfg{$dev}{'IPADDR'}));
+        my @nmib = (split('\.', $ifcfg{$dev}{'NETMASK'}));
+        my @nwib = (split('\.', $ifcfg{$dev}{'NETWORK'}));
+        my @bcib = (split('\.', $ifcfg{$dev}{'BROADCAST'}));
+
+        my @ipeth = (split('\.', $ifcfg{$eth_dev}{'IPADDR'}));
+        my @nmeth = (split('\.', $ifcfg{$eth_dev}{'NETMASK'}));
+        my @nweth = (split('\.', $ifcfg{$eth_dev}{'NETWORK'}));
+        my @bceth = (split('\.', $ifcfg{$eth_dev}{'BROADCAST'}));
+
+        for (my $i = 0; $i < 4 ; $i ++) {
+            if ($ipib[$i] =~ m/\*/) {
+                if ($ipeth[$i] =~ m/(\d\d?\d?)/) {
+                    $ipib[$i] = $ipeth[$i];
+                }
+                else {
+                    print "Cannot determine the IP address of the $dev interface\n" if (not $quiet);
+                    return;
+                }
+            }
+            if ($nmib[$i] =~ m/\*/) {
+                if ($nmeth[$i] =~ m/(\d\d?\d?)/) {
+                    $nmib[$i] = $nmeth[$i];
+                }
+                else {
+                    print "Cannot determine the netmask of the $dev interface\n" if (not $quiet);
+                    return;
+                }
+            }
+            if ($bcib[$i] =~ m/\*/) {
+                if ($bceth[$i] =~ m/(\d\d?\d?)/) {
+                    $bcib[$i] = $bceth[$i];
+                }
+                else {
+                    print "Cannot determine the broadcast address of the $dev interface\n" if (not $quiet);
+                    return;
+                }
+            }
+            if ($nwib[$i] !~ m/(\d\d?\d?)/) {
+                $nwib[$i] = $nweth[$i];
+            }
+        }
+
+        $ip = "$ipib[0].$ipib[1].$ipib[2].$ipib[3]";
+        $nm = "$nmib[0].$nmib[1].$nmib[2].$nmib[3]";
+        $nw = "$nwib[0].$nwib[1].$nwib[2].$nwib[3]";
+        $bc = "$bcib[0].$bcib[1].$bcib[2].$bcib[3]";
+
+        print GREEN "IPoIB configuration for $dev\n";
+        print "DEVICE=$dev\n";
+        print "IPADDR=$ip\n";
+        print "NETMASK=$nm\n";
+        print "NETWORK=$nw\n";
+        print "BROADCAST=$bc\n";
+        if ($onboot) {
+            print "ONBOOT=yes\n";
+        }
+        else {
+            print "ONBOOT=no\n";
+        } 
+        print RESET "\n";
+    }
+
+    open(IF, ">$target") or die "Can't open $target: $!";
+    if ($distro eq "SuSE") {
+        print IF "BOOTPROTO='static'\n";
+        print IF "IPADDR='$ip'\n";
+        print IF "NETMASK='$nm'\n";
+        print IF "NETWORK='$nw'\n";
+        print IF "BROADCAST='$bc'\n";
+        print IF "REMOTE_IPADDR=''\n";
+        if ($onboot) {
+            print IF "STARTMODE='onboot'\n";
+        }
+        else {
+            print IF "STARTMODE='manual'\n";
+        }
+        print IF "WIRELESS=''\n";
+    }
+    else {
+        print IF "DEVICE=$dev\n";
+        print IF "BOOTPROTO=static\n";
+        print IF "IPADDR=$ip\n";
+        print IF "NETMASK=$nm\n";
+        print IF "NETWORK=$nw\n";
+        print IF "BROADCAST=$bc\n";
+        if ($onboot) {
+            print IF "ONBOOT=yes\n";
+        }
+        else {
+            print IF "ONBOOT=no\n";
+        }
+    }
+    close(IF);
+}
+
+sub ipoib_config
+{
+    if ($interactive) {
+        print BLUE;
+        print "\nThe default IPoIB interface configuration is based on DHCP.";
+        print "\nNote that a special patch for DHCP is required for supporting IPoIB.";
+        print "\nThe patch is available under docs/dhcp";
+        print "\nIf you do not have DHCP, you must change this configuration in the following steps.";
+        print RESET "\n";
+    }
+
+    my $ports_num = count_ports();
+    for (my $i = 0; $i < $ports_num; $i++ ) {
+        config_interface($i);
+    }
+
+    if ($interactive) {
+        print GREEN "IPoIB interfaces configured successfully",RESET "\n";
+        print "Press any key to continue ...";
+        getch();
+    }
+}
+
 sub uninstall
 {
     my $res = 0;
@@ -2811,6 +3167,7 @@ sub main
             return 0;
         }
         elsif ($inp == 4) {
+            ipoib_config();
             return 0;
         }
         elsif ($inp == 5) {
@@ -2844,6 +3201,7 @@ sub main
     # Uninstall the previous installations
     uninstall();
     install();
+    ipoib_config();
     print GREEN "\nInstallation finished successfully.", RESET;
     if ($interactive) {
         print GREEN "\nPress any key to continue...", RESET;
