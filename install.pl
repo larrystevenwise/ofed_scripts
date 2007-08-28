@@ -2018,7 +2018,7 @@ sub resolve_dependencies
         }
 
     for my $module ( @selected_modules_by_user ) {
-        if ($module eq "ehca" and not -d "$kernel_sources/include/asm-ppc") {
+        if ($module eq "ehca" and $kernel =~ m/2.6.9-55/ and not -d "$kernel_sources/include/asm-ppc") {
             print RED "\nTo install ib_ehca module please ensure that $kernel_sources/include/ contains directory asm-ppc.", RESET;
             print RED "\nPlease install the kernel.src.rpm from redhat and copy the directory and the files into $kernel_sources/include/", RESET;
             print "\nThen rerun this Script\n";
@@ -2252,6 +2252,7 @@ sub build_rpm
 
     if (not $packages_info{$name}{'rpm_exist'}) {
         $cmd = "rpmbuild --rebuild --define '_topdir $TOPDIR'";
+        $cmd .= " --target $target_cpu";
 
         if ( $parent eq "mvapich") {
             my $compiler = (split('_', $name))[1];
@@ -2525,12 +2526,10 @@ sub build_rpm
     if ($build32 and $packages_info{$name}{'install32'} and 
         not $packages_info{$name}{'rpm_exist32'}) {
         $cmd = "rpmbuild --rebuild --define '_topdir $TOPDIR'";
-        $cmd .= " --define '_target_cpu $target_cpu32'";
-        $cmd .= " --define '_target $target_cpu32-linux'";
+        $cmd .= " --target $target_cpu32";
         $cmd .= " --define '_prefix $prefix'";
         $cmd .= " --define '_lib lib'";
         $cmd .= " --define '__arch_install_post %{nil}'";
-        $cmd .= " --define 'optflags -O2 -g -m32'";
         $cmd .= " $main_packages{$parent}{'srpmpath'}";
 
         print "Running $cmd\n" if ($verbose);
