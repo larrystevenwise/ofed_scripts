@@ -1649,10 +1649,10 @@ sub select_packages
             $ok = 1;
         }
         if ($inp == $BASIC) {
-            for my $package (@basic_user_packages, @basic_kernel_packages) {
+            for my $package (@basic_user_packages, @basic_kernel_packages, @hidden_packages) {
                 next if (not $packages_info{$package}{'available'});
                 push (@selected_by_user, $package);
-                print CONFIG "$package=y\n";
+                print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
                 $cnt ++;
             }
             for my $module ( @basic_kernel_modules ) {
@@ -1662,10 +1662,10 @@ sub select_packages
             }
         }
         elsif ($inp == $HPC) {
-            for my $package ( @hpc_user_packages, @hpc_kernel_packages ) {
+            for my $package ( @hpc_user_packages, @hpc_kernel_packages, @hidden_packages ) {
                 next if (not $packages_info{$package}{'available'});
                 push (@selected_by_user, $package);
-                print CONFIG "$package=y\n";
+                print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
                 $cnt ++;
             }
             for my $module ( @hpc_kernel_modules ) {
@@ -1675,10 +1675,10 @@ sub select_packages
             }
         }
         elsif ($inp == $ALL) {
-            for my $package ( @all_packages ) {
+            for my $package ( @all_packages, @hidden_packages ) {
                 next if (not $packages_info{$package}{'available'});
                 push (@selected_by_user, $package);
-                print CONFIG "$package=y\n";
+                print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
                 $cnt ++;
             }
             for my $module ( @kernel_modules ) {
@@ -1694,7 +1694,7 @@ sub select_packages
                 print "Install $package? [y/N]:";
                 $ans = getch();
                 if ( $ans eq 'Y' or $ans eq 'y' ) {
-                    print CONFIG "$package=y\n";
+                    print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
                     push (@selected_by_user, $package);
                     $cnt ++;
 
@@ -1709,6 +1709,7 @@ sub select_packages
                                     push (@selected_modules_by_user, $module);
                                     print CONFIG "$module=y\n";
                                     check_open_iscsi();
+                                    push (@selected_by_user, "open-iscsi-generic");
                                     if ($upgrade_open_iscsi) {
                                         print CONFIG "upgrade_open_iscsi=yes\n";
                                     }
@@ -1872,7 +1873,7 @@ sub select_packages
                 for my $package ( @all_packages ) {
                     next if (not $packages_info{$package}{'available'});
                     push (@selected_by_user, $package);
-                    print CONFIG "$package=y\n";
+                    print CONFIG "$package=y\n"  if ($package ne "open-iscsi-generic");
                     $cnt ++;
                 }
                 for my $module ( @kernel_modules ) {
@@ -1885,7 +1886,7 @@ sub select_packages
                 for my $package ( @hpc_user_packages, @hpc_kernel_packages ) {
                     next if (not $packages_info{$package}{'available'});
                     push (@selected_by_user, $package);
-                    print CONFIG "$package=y\n";
+                    print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
                     $cnt ++;
                 }
                 for my $module ( @hpc_kernel_modules ) {
@@ -1897,7 +1898,7 @@ sub select_packages
             elsif ($install_option eq 'basic') {
                 for my $package (@basic_user_packages, @basic_kernel_packages) {
                     next if (not $packages_info{$package}{'available'});
-                    push (@selected_by_user, $package);
+                    push (@selected_by_user, $package) if ($package ne "open-iscsi-generic");
                     print CONFIG "$package=y\n";
                     $cnt ++;
                 }
@@ -1919,6 +1920,7 @@ sub select_packages
         chomp $tmp;
         if ("iser" =~ m/$tmp/) {
             check_open_iscsi();
+            push (@selected_by_user, "open-iscsi-generic");
         }
     }
     flock CONFIG, $UNLOCK;
@@ -3084,7 +3086,7 @@ sub main
                 print "\nOther packages: ";
             }
             print $package . ' ';
-            print CONFIG "$package=y\n";
+            print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
         }
         flock CONFIG, $UNLOCK;
         close(CONFIG);
