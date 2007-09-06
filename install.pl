@@ -2576,7 +2576,7 @@ sub install_kernel_rpm
         exit 1;
     }
 
-    $cmd = "rpm -iv";
+    $cmd = "rpm -Uv";
     if ($distro eq "SuSE") {
         # W/A for ksym dependencies on SuSE
         $cmd .= " --nodeps";
@@ -2612,7 +2612,7 @@ sub install_rpm
         print RED "$package does not exist", RESET "\n";
         exit 1;
     }
-    $cmd = "rpm -iv";
+    $cmd = "rpm -Uv";
     $cmd .= " $package";
 
     print "Running $cmd\n" if ($verbose);
@@ -2631,7 +2631,7 @@ sub install_rpm
             print RED "$package does not exist", RESET "\n";
             # exit 1;
         }
-        $cmd = "rpm -iv";
+        $cmd = "rpm -Uv";
         $cmd .= " $package";
 
         print "Running $cmd\n" if ($verbose);
