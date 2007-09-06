@@ -50,6 +50,7 @@ IB_ALL_PACKAGES="$IB_ALL_PACKAGES libmthca libmthca-devel-static libmthca-debugi
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libmlx4 libmlx4-devel-static libmlx4-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libehca libehca-devel-static libehca-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libcxgb3 libcxgb3-devel libcxgb3-debuginfo"
+IB_ALL_PACKAGES="$IB_ALL_PACKAGES libnes libnes-devel-static libnes-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libipathverbs libipathverbs-devel libipathverbs-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libibcm libibcm-devel libibcm-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libibcommon libibcommon-devel libibcommon-debuginfo"

@@ -214,7 +214,7 @@ else {
 
 # List of all available packages sorted following dependencies
 my @kernel_packages = ("kernel-ib", "kernel-ib-devel", "ib-bonding", "ib-bonding-debuginfo");
-my @basic_kernel_modules = ("core", "mthca", "mlx4", "cxgb3", "ehca", "ipath", "ipoib");
+my @basic_kernel_modules = ("core", "mthca", "mlx4", "cxgb3", "nes", "ehca", "ipath", "ipoib");
 my @ulp_modules = ("sdp", "srp", "rds", "vnic", "iser");
 my @kernel_modules = (@basic_kernel_modules, @ulp_modules);
 
@@ -242,6 +242,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "libmlx4", "libmlx4-devel-static", "libmlx4-debuginfo",
                      "libehca", "libehca-devel-static", "libehca-debuginfo",
                      "libcxgb3", "libcxgb3-devel", "libcxgb3-debuginfo",
+                     "libnes", "libnes-devel-static", "libnes-debuginfo",
                      "libipathverbs", "libipathverbs-devel", "libipathverbs-debuginfo",
                      "libibcm", "libibcm-devel", "libibcm-debuginfo",
                      "libibcommon", "libibcommon-devel", "libibcommon-debuginfo",
@@ -258,7 +259,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
 
 my @basic_kernel_packages = ("kernel-ib");
 my @basic_user_packages = ("libibverbs", "libibverbs-utils", "libmthca", "libmlx4",
-                            "libehca", "libcxgb3", @misc_packages);
+                            "libehca", "libcxgb3", "libnes", @misc_packages);
 
 my @hpc_kernel_packages = ("kernel-ib", "ib-bonding");
 my @hpc_kernel_modules = (@basic_kernel_modules);
@@ -288,6 +289,9 @@ my %kernel_modules_info = (
             included_in_rpm => 0, requires => ["core"], },
         'cxgb3' =>
             { name => "cxgb3", available => 1, selected => 0,
+            included_in_rpm => 0, requires => ["core"], },
+        'nes' =>
+            { name => "nes", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'ipoib' =>
             { name => "ipoib", available => 1, selected => 0,
@@ -455,6 +459,28 @@ my %packages_info = (
             install32 => 1, exception => 0 },
         'libcxgb3-debuginfo' =>
             { name => "libcxgb3-debuginfo", parent => "libcxgb3",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+
+        'libnes' =>
+            { name => "libnes", parent => "libnes",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
+            ofa_req_inst => ["libibverbs"],
+            install32 => 1, exception => 0, configure_options => '' },
+        'libnes-devel-static' =>
+            { name => "libnes-devel-static", parent => "libnes",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libnes"],
+            install32 => 1, exception => 0 },
+        'libnes-debuginfo' =>
+            { name => "libnes-debuginfo", parent => "libnes",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
