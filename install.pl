@@ -215,7 +215,7 @@ else {
 # List of all available packages sorted following dependencies
 my @kernel_packages = ("kernel-ib", "kernel-ib-devel", "ib-bonding", "ib-bonding-debuginfo");
 my @basic_kernel_modules = ("core", "mthca", "mlx4", "cxgb3", "nes", "ehca", "ipath", "ipoib");
-my @ulp_modules = ("sdp", "srp", "rds", "vnic", "iser");
+my @ulp_modules = ("sdp", "srp", "rds", "qlgc_vnic", "iser");
 my @kernel_modules = (@basic_kernel_modules, @ulp_modules);
 
 my $kernel_configure_options;
@@ -308,8 +308,8 @@ my %kernel_modules_info = (
         'iser' =>
             { name => "iser", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], ofa_req_inst => ["open-iscsi-generic"] },
-        'vnic' =>
-            { name => "vnic", available => 1, selected => 0,
+        'qlgc_vnic' =>
+            { name => "qlgc_vnic", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
         );
 
@@ -1357,7 +1357,7 @@ sub set_availability
 
     # Vnic
     if ($kernel =~ m/2.6.9-34|2.6.9-42|2.6.9-55|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.19/) {
-            $kernel_modules_info{'vnic'}{'available'} = 1;
+            $kernel_modules_info{'qlgc_vnic'}{'available'} = 1;
             $packages_info{'ibvexdmtools'}{'available'} = 1;
             $packages_info{'qlvnictools'}{'available'} = 1;
             $packages_info{'qlvnictools-debuginfo'}{'available'} = 1;
