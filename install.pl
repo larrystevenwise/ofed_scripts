@@ -690,7 +690,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
             ofa_req_inst => ["libibverbs", "librdmacm"],
-            install32 => 0, exception => 1, configure_options => '' },
+            install32 => 0, exception => 0, configure_options => '' },
         'perftest-debuginfo' =>
             { name => "perftest-debuginfo", parent => "perftest",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -705,7 +705,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => ["libstdc++-devel"],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
-            install32 => 0, exception => 1, configure_options => '' },
+            install32 => 0, exception => 0, configure_options => '' },
         'mstflint-debuginfo' =>
             { name => "mstflint-debuginfo", parent => "mstflint",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
