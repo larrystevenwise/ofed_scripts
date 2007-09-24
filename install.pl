@@ -310,7 +310,7 @@ my %kernel_modules_info = (
             included_in_rpm => 0, requires => ["core", "ipoib"], ofa_req_inst => ["open-iscsi-generic"] },
         'qlgc_vnic' =>
             { name => "qlgc_vnic", available => 1, selected => 0,
-            included_in_rpm => 0, requires => ["core", "ipoib"], },
+            included_in_rpm => 0, requires => ["core"], },
         );
 
 my %packages_info = (
@@ -1355,8 +1355,8 @@ sub set_availability
             $packages_info{'open-iscsi-generic'}{'available'} = 1;
     }
 
-    # Vnic
-    if ($kernel =~ m/2.6.9-34|2.6.9-42|2.6.9-55|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.19/) {
+    # QLogic vnic
+    if ($kernel =~ m/2.6.9-34|2.6.9-42|2.6.9-55|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.19|2.6.18*/) {
             $kernel_modules_info{'qlgc_vnic'}{'available'} = 1;
             $packages_info{'ibvexdmtools'}{'available'} = 1;
             $packages_info{'qlvnictools'}{'available'} = 1;
