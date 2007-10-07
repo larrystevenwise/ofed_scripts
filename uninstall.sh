@@ -110,7 +110,6 @@ fi
 uninstall()
 {
     local RC=0
-    local OLD_PREFIX=""
     echo
     echo "Removing ${PACKAGE} Software installations"
     echo
@@ -219,13 +218,12 @@ uninstall()
     done    
 
     if ( $RPM -q ib-verbs > $NULL 2>&1 ); then
-        OLD_PREFIX=`$RPM -ql ib-verbs | grep "utils/create_devs" | sed -e 's/\/utils\/create_devs//'`
-        NEW_PREFIX=`$RPM -ql ib-verbs | grep "bin/ibv_devinfo" | sed -e 's/\/bin\/ibv_devinfo//'`
+        STACK_PREFIX=`$RPM -ql ib-verbs | grep "bin/ibv_devinfo" | sed -e 's/\/bin\/ibv_devinfo//'`
         let RC++
     fi    
 
     if ( $RPM -q libibverbs > $NULL 2>&1 ); then
-        GEN2_PREFIX=$($RPM -ql libibverbs | grep "libibverbs.so" | head -1 | sed -e 's@/lib.*/libibverbs.so.*@@')            
+        STACK_PREFIX=$($RPM -ql libibverbs | grep "libibverbs.so" | head -1 | sed -e 's@/lib.*/libibverbs.so.*@@')            
     fi
 
     if [ -n "${packs_to_remove}" ]; then
