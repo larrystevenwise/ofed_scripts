@@ -145,8 +145,9 @@ mkpath([$TOPDIR . '/BUILD' ,$TOPDIR . '/RPMS',$TOPDIR . '/SOURCES',$TOPDIR . '/S
 my $ofedlogs = "/tmp/$PACKAGE.$$.logs";
 mkpath([$ofedlogs]);
 
-my $prefix ='/usr';
-chomp $prefix;
+my $default_prefix = '/usr';
+chomp $default_prefix;
+my $prefix = $default_prefix;
 
 my $target_cpu  = `rpm --eval '%{_target_cpu}'`;
 chomp $target_cpu;
@@ -181,6 +182,7 @@ sub usage
    print "\n Usage: $0 [-c <packages config_file>|--all|--hpc|--basic] [-n|--net <network config_file>]\n";
 
    print "\n           -c|--config <packages config_file>. Example of the config file can be found under docs.";
+   print "\n           -l|--prefix Set installation prefix.";
    print "\n           -p|--print-available Print available packages for current platform.";
    print "\n                                And create corresponding ofed.conf file.";
    print "\n           -k|--kernel <kernel version>. Default on this system: $kernel";
@@ -1126,6 +1128,8 @@ while ( $#ARGV >= 0 ) {
     } elsif ( $cmd_flag eq "-n" or $cmd_flag eq "--net" ) {
         $config_net = shift(@ARGV);
         $config_net_given = 1;
+    } elsif ( $cmd_flag eq "-l" or $cmd_flag eq "--prefix" ) {
+        $prefix = shift(@ARGV);
     } elsif ( $cmd_flag eq "-k" or $cmd_flag eq "--kernel" ) {
         $kernel = shift(@ARGV);
         $kernel_given = 1;
@@ -2238,9 +2242,9 @@ sub build_kernel_rpm
     elsif ($name eq 'ib-bonding') {
         $cmd .= " --define 'KVERSION $kernel'";
         $cmd .= " --define '_release $kernel_rel'";
-        $cmd .= " --define '_prefix $prefix'";
     }
 
+    $cmd .= " --define '_prefix $prefix'";
     $cmd .= " $main_packages{$name}{'srpmpath'}";
 
     print "Running $cmd\n" if ($verbose);
@@ -2278,8 +2282,27 @@ sub build_rpm
     my $parent = $packages_info{$name}{'parent'};
     print "Build $name RPM\n" if ($verbose);
 
+    my $pref_env;
+    if ($prefix ne $default_prefix) {
+        if ($parent ne "mvapich" and $parent ne "mvapich2" and $parent ne "openmpi") {
+            $pref_env = "env LD_LIBRARY_PATH='$prefix/lib64:$prefix/lib:$ENV{LD_LIBRARY_PATH}'";
+            $pref_env .= " LDFLAGS='-g -O2 -L$prefix/lib64 -L$prefix/lib'";
+            $pref_env .= " CFLAGS='-g -O2 -I$prefix/include'";
+            $pref_env .= " CPPFLAGS='-g -O2 -I$prefix/include'";
+        }
+
+        # $sysconfdir = "$prefix/etc";
+        if ($parent eq "ibutils") {
+            $packages_info{'ibutils'}{'configure_options'} .= " --with-osm=$prefix";
+        }
+
+        if ($parent eq "openmpi") {
+            $packages_info{'openmpi'}{'configure_options'} .= " --with-openib=$prefix";
+        }
+    }
+
     if (not $packages_info{$name}{'rpm_exist'}) {
-        $cmd = "rpmbuild --rebuild --define '_topdir $TOPDIR'";
+        $cmd = "$pref_env rpmbuild --rebuild --define '_topdir $TOPDIR'";
         $cmd .= " --target $target_cpu";
 
         if ( $parent eq "mvapich") {
@@ -2287,6 +2310,7 @@ sub build_rpm
             $cmd .= " --define '_name $name'";
             $cmd .= " --define 'compiler $compiler'";
             $cmd .= " --define 'openib_prefix $prefix'";
+            $cmd .= " --define '_usr $prefix'";
             if ($packages_info{'mvapich'}{'configure_options'}) {
                 $cmd .= " --define 'configure_options $packages_info{'mvapich'}{'configure_options'}'";
             }
@@ -2383,6 +2407,7 @@ sub build_rpm
                 $cmd .= " --define 'configure_options $packages_info{'mvapich2'}{'configure_options'}'";
             }
             $cmd .= " --define 'open_ib_home $prefix'";
+            $cmd .= " --define '_usr $prefix'";
             $cmd .= " --define 'shared_libs $mvapich2_conf_shared_libs'";
             $cmd .= " --define 'romio $mvapich2_conf_romio'";
             $cmd .= " --define 'comp_env $mvapich2_comp_env'";
@@ -2499,6 +2524,7 @@ sub build_rpm
 
             $cmd .= " --define '_name $name'";
             $cmd .= " --define 'mpi_selector $prefix/bin/mpi-selector'";
+            $cmd .= " --define '_usr $prefix'";
             $cmd .= " --define 'ofed 0'";
             $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
             $cmd .= " --define '_defaultdocdir $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
@@ -2513,13 +2539,17 @@ sub build_rpm
 
             $cmd .= " --define '_name $name'";
             $cmd .= " --define 'root_path /'";
+            $cmd .= " --define '_usr $prefix'";
             $cmd .= " --define 'path_to_mpihome $prefix/mpi/$compiler/$mpi-$main_packages{$mpi}{'version'}'";
         }
         else {
             $cmd .= " --define '_prefix $prefix'";
+            $cmd .= " --define '_exec_prefix $prefix'";
+            $cmd .= " --define '_sysconfdir $sysconfdir'";
+            $cmd .= " --define '_usr $prefix'";
         }
 
-        if ($user_configure_options) {
+        if ($packages_info{$parent}{'configure_options'} or $user_configure_options) {
             $cmd .= " --define 'configure_options $packages_info{$parent}{'configure_options'} $user_configure_options'";
         }
 
@@ -2553,9 +2583,12 @@ sub build_rpm
 
     if ($build32 and $packages_info{$name}{'install32'} and 
         not $packages_info{$name}{'rpm_exist32'}) {
-        $cmd = "rpmbuild --rebuild --define '_topdir $TOPDIR'";
+        $cmd = "$pref_env rpmbuild --rebuild --define '_topdir $TOPDIR'";
         $cmd .= " --target $target_cpu32";
         $cmd .= " --define '_prefix $prefix'";
+        $cmd .= " --define '_exec_prefix $prefix'";
+        $cmd .= " --define '_sysconfdir $sysconfdir'";
+        $cmd .= " --define '_usr $prefix'";
         $cmd .= " --define '_lib lib'";
         $cmd .= " --define '__arch_install_post %{nil}'";
         $cmd .= " $main_packages{$parent}{'srpmpath'}";
