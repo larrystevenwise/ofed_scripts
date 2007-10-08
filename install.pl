@@ -1191,6 +1191,16 @@ if ($config_given and $install_option) {
     print RED "\nError: '-c' option can't be used with '--all|--hpc|--basic'", RESET "\n";
     exit 1;
 }
+
+if ($config_given and not -e $config) {
+    print RED "$config does not exist", RESET "\n";
+    exit 1;
+}
+
+if (not $config_given and -e $config) {
+    move($config, "$config.save");
+}
+
 if ($quiet) {
     $verbose = 0;
     $verbose2 = 0;
