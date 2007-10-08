@@ -1120,7 +1120,6 @@ my %intel = ('icc' => 0, 'icpc' => 0, 'ifort' => 0);
 my $mvapich2_conf_impl = "ofa";
 my $mvapich2_conf_romio = 1;
 my $mvapich2_conf_shared_libs = 1;
-my $mvapich2_conf_multithread = 0;
 my $mvapich2_conf_ckpt = 0;
 my $mvapich2_conf_blcr_home;
 my $mvapich2_conf_vcluster = "small";
@@ -1524,20 +1523,8 @@ sub mvapich2_config
         $mvapich2_conf_shared_libs = 1;
     }
 
-    print "\nMultithread support should only be enabled only if thread safety is required.";
-    print "\nThere may be a slight performance penalty for single threaded only use.";
-
-    print "\nEnable multithread support [y/N]: ";
-    $ans = getch();
-    if ($ans =~ m/Yy/) {
-        $mvapich2_conf_multithread = 1;
-    }
-    else {
-        $mvapich2_conf_multithread = 0;
-    }
-
     # OFA specific options.
-    if ($mvapich2_conf_impl eq "ofa" and not $mvapich2_conf_multithread) {
+    if ($mvapich2_conf_impl eq "ofa") {
         $done = 0;
         while (not $done) {
             print "\nEnable Checkpoint-Restart support [y/N]: ";
@@ -1546,6 +1533,7 @@ sub mvapich2_config
                 $mvapich2_conf_ckpt = 1;
                 print "\nBLCR installation directory [or nothing if not installed]: ";
                 my $tmp = <STDIN>;
+                chomp $tmp;
                 if (-d "$tmp") {
                     $mvapich2_conf_blcr_home = $tmp;
                     $done = 1;
@@ -1622,6 +1610,7 @@ sub mvapich2_config
 
         print "\nDefault DAPL provider [ib0]: ";
         $ans = <STDIN>;
+        chomp $ans;
         if ($ans) {
             $mvapich2_conf_dapl_provider = $ans;
         }
@@ -1634,8 +1623,6 @@ sub mvapich2_config
     print CONFIG "mvapich2_conf_impl=$mvapich2_conf_impl\n";
     print CONFIG "mvapich2_conf_romio=$mvapich2_conf_romio\n";
     print CONFIG "mvapich2_conf_shared_libs=$mvapich2_conf_shared_libs\n";
-    print CONFIG "mvapich2_conf_multithread=$mvapich2_conf_multithread\n";
-
     print CONFIG "mvapich2_conf_ckpt=$mvapich2_conf_ckpt\n";
     print CONFIG "mvapich2_conf_blcr_home=$mvapich2_conf_blcr_home\n" if ($mvapich2_conf_blcr_home);
     print CONFIG "mvapich2_conf_vcluster=$mvapich2_conf_vcluster\n";
@@ -1868,10 +1855,6 @@ sub select_packages
                 }
                 elsif ($package eq "mvapich2_conf_shared_libs") {
                     $mvapich2_conf_shared_libs = $selected;
-                    next;
-                }
-                elsif ($package eq "mvapich2_conf_multithread") {
-                    $mvapich2_conf_multithread = $selected;
                     next;
                 }
                 elsif ($package eq "mvapich2_conf_ckpt") {
@@ -2362,7 +2345,7 @@ sub build_rpm
                         $mvapich2_comp_env = "CC=gcc CXX=g++ F77=gfortran F90=gfortran";
                     }
                 }
-                if ($gcc{'g77'}) {
+                elsif ($gcc{'g77'}) {
                     if ($arch eq "ppc64") {
                         $mvapich2_comp_env = 'CC="gcc -m64" CXX="g++ -m64" F77="g77 -m64" F90=/bin/false';
                     }
@@ -2396,12 +2379,10 @@ sub build_rpm
             if ($mvapich2_conf_impl eq "ofa") {
                 print BLUE "Building the MVAPICH2 RPM in the OFA configuration. Please wait...", RESET "\n" if ($verbose);
                 if ($mvapich2_conf_ckpt) {
-                    $cmd .= " --define 'multithread 0'";
                     $cmd .= " --define 'rdma_cm 0'";
                     $cmd .= " --define 'blcr_home $mvapich2_conf_blcr_home'";
                 }
                 else {
-                    $cmd .= " --define 'multithread $mvapich2_conf_multithread'";
                     $cmd .= " --define 'rdma_cm 1'";
                 }
                 $cmd .= " --define 'ckpt $mvapich2_conf_ckpt'";
@@ -2425,7 +2406,6 @@ sub build_rpm
                     print RED "Could not find a proper uDAPL include directory.", RESET "\n";
                     exit 1;
                 }
-                $cmd .= " --define 'multithread $mvapich2_conf_multithread'";
                 $cmd .= " --define 'vcluster $mvapich2_conf_vcluster'";
                 $cmd .= " --define 'io_bus $mvapich2_conf_io_bus'";
                 $cmd .= " --define 'link_speed $mvapich2_conf_link_speed'";
