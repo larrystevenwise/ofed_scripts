@@ -53,15 +53,72 @@ install -m 0755 ofed_info $RPM_BUILD_ROOT%{_prefix}/bin
 
 perl -ni -e "s@(STACK_PREFIX=).*@\$1%{_prefix}@; print" $RPM_BUILD_ROOT%{_prefix}/sbin/ofed_uninstall.sh
 
+touch ofed-files
+
+case %{_prefix} in
+	/usr | /usr/)
+	;;
+	*)
+install -d $RPM_BUILD_ROOT/etc/profile.d
+cat > $RPM_BUILD_ROOT/etc/profile.d/ofed.sh << EOF
+if ! echo \${PATH} | grep -q %{_prefix}/bin ; then
+        PATH=\${PATH}:%{_prefix}/bin
+fi
+if ! echo \${PATH} | grep -q %{_prefix}/sbin ; then
+        PATH=\${PATH}:%{_prefix}/sbin
+fi
+if ! echo \${MANPATH} | grep -q %{_mandir} ; then
+        MANPATH=\${MANPATH}:%{_mandir}
+fi
+EOF
+cat > $RPM_BUILD_ROOT/etc/profile.d/ofed.csh << EOF
+if (\$?path) then
+if ( "\${path}" !~ *%{_prefix}/bin* ) then
+        set path = ( \$path %{_prefix}/bin )
+endif
+if ( "\${path}" !~ *%{_prefix}/sbin* ) then
+        set path = ( \$path %{_prefix}/sbin )
+endif
+else
+        set path = ( %{_prefix}/bin %{_prefix}/sbin )
+endif
+if (\$?MANPATH) then
+if ( "\${MANPATH}" !~ *%{_mandir}* ) then
+        setenv MANPATH \${MANPATH}:%{_mandir}
+endif
+else
+        setenv MANPATH %{_mandir}:
+endif
+EOF
+
+install -d $RPM_BUILD_ROOT/etc/ld.so.conf.d
+echo %{_libdir} > $RPM_BUILD_ROOT/etc/ld.so.conf.d/ofed.conf
+    %ifarch x86_64 ppc64
+    echo "%{_prefix}/lib" >> $RPM_BUILD_ROOT/etc/ld.so.conf.d/ofed.conf
+    %endif
+	echo "/etc/profile.d/ofed.sh" >> ofed-files
+	echo "/etc/profile.d/ofed.csh" >> ofed-files
+	echo "/etc/ld.so.conf.d/ofed.conf" >> ofed-files
+	;;
+esac
+
+%post
+/sbin/ldconfig
+
+%postun
+/sbin/ldconfig
+
 %clean
 [ "${RPM_BUILD_ROOT}" != "/" -a -d ${RPM_BUILD_ROOT} ] && rm -rf $RPM_BUILD_ROOT
 
-%files
+%files -f ofed-files
 %defattr(-,root,root)
 %{_prefix}/bin/ofed_info
 %{_prefix}/sbin/ofed_uninstall.sh
 
 %changelog
+* Tue Oct  9 2007 Vladimir Sokolovsky <vlad@mellanox.co.il>
+- Added ofed.[c]sh and ofed.conf if prefix is not /usr
 * Tue Aug 21 2007 Vladimir Sokolovsky <vlad@mellanox.co.il>
 - Changed version to 1.3
 * Mon Apr  2  2007 Vladimir Sokolovsky <vlad@mellanox.co.il>
