@@ -1918,7 +1918,12 @@ sub select_packages
                     $modules =~ s/ /|/g;
                     if ($package =~ m/$modules/) {
                         if ( $selected eq 'y' ) {
-                            push (@selected_modules_by_user, $package);
+                            if (not $kernel_modules_info{$package}{'available'}) {
+                                print "$package is not available on this platform\n" if (not $quiet);
+                            }
+                            else {
+                                push (@selected_modules_by_user, $package);
+                            }
                             next;
                         }
                     }
