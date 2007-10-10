@@ -253,6 +253,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "librdmacm", "librdmacm-utils", "librdmacm-devel", "librdmacm-debuginfo",
                      "libsdp", "libsdp-devel", "libsdp-debuginfo",
                      "opensm", "opensm-libs", "opensm-devel", "opensm-debuginfo", "opensm-static",
+                     "dapl", "dapl-devel", "dapl-utils", "dapl-debuginfo",
                      "perftest", "mstflint", "tvflash",
                      "qlvnictools", "sdpnetstat", "srptools", "rds-tools",
                      "ibutils", "infiniband-diags",
@@ -321,7 +322,7 @@ my %packages_info = (
             { name => "ofa_kernel", parent => "ofa_kernel",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "kernel", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [], ofa_req_inst => [], configure_options => '' },
+            dist_req_inst => [], ofa_req_build => [], ofa_req_inst => ["ofed-scripts"], configure_options => '' },
         'kernel-ib' =>
             { name => "kernel-ib", parent => "ofa_kernel",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -348,7 +349,7 @@ my %packages_info = (
             { name => "libibverbs", parent => "libibverbs",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => ["gcc_3.3.3", "glibc-devel","libstdc++"],
-            dist_req_inst => [], ofa_req_build => [], ofa_req_inst => [], 
+            dist_req_inst => [], ofa_req_build => [], ofa_req_inst => ["ofed-scripts"], 
             install32 => 1, exception => 0, configure_options => '' },
         'libibverbs-devel' =>
             { name => "libibverbs-devel", parent => "libibverbs",
@@ -843,6 +844,35 @@ my %packages_info = (
             install32 => 0, exception => 0, configure_options => '' },
         'infiniband-diags-debuginfo' =>
             { name => "infiniband-diags-debuginfo", parent => "infiniband-diags",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+
+        'dapl' =>
+            { name => "dapl", parent => "dapl",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs", "libibverbs-devel", "librdmacm", "librdmacm-devel"],
+            ofa_req_inst => ["libibverbs", "librdmacm"],
+            install32 => 0, exception => 0, configure_options => '' },
+        'dapl-devel' =>
+            { name => "dapl-devel", parent => "dapl",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel", "librdmacm", "librdmacm-devel"],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0, configure_options => '' },
+        'dapl-utils' =>
+            { name => "dapl-utils", parent => "dapl",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => ["dapl"],
+            install32 => 0, exception => 0, configure_options => '' },
+        'dapl-debuginfo' =>
+            { name => "dapl-debuginfo", parent => "dapl",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
