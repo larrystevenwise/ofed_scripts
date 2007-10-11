@@ -824,7 +824,7 @@ my %packages_info = (
             { name => "ibutils", parent => "ibutils",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => ["tcl_8.4", "tcl-devel_8.4", "tk", "libstdc++-devel"],
-            dist_req_inst => ["tcl_8.4", "tk", "libstdc++"], ofa_req_build => ["opensm-libs", "opensm-devel"],
+            dist_req_inst => ["tcl_8.4", "tk", "libstdc++"], ofa_req_build => ["libibverbs-devel", "opensm-libs", "opensm-devel"],
             ofa_req_inst => ["libibcommon", "libibumad", "opensm-libs"],
             install32 => 0, exception => 0, configure_options => '' },
         'ibutils-debuginfo' =>
@@ -2340,11 +2340,6 @@ sub build_rpm
             $pref_env .= " CPPFLAGS='-g -O2 -I$prefix/include'";
         }
 
-        # $sysconfdir = "$prefix/etc";
-        if ($parent eq "ibutils") {
-            $packages_info{'ibutils'}{'configure_options'} .= " --with-osm=$prefix";
-        }
-
         if ($parent eq "openmpi") {
             $packages_info{'openmpi'}{'configure_options'} .= " --with-openib=$prefix";
         }
@@ -2354,7 +2349,24 @@ sub build_rpm
         $cmd = "$pref_env rpmbuild --rebuild --define '_topdir $TOPDIR'";
         $cmd .= " --target $target_cpu";
 
-        if ( $parent eq "mvapich") {
+        if ($parent eq "ibutils") {
+            if ($parent eq "ibutils") {
+                $packages_info{'ibutils'}{'configure_options'} .= " --with-osm=$prefix";
+            }
+            if ($arch eq "ppc64") {
+                my $kernel_minor = (split('-', $kernel))[0];
+                my $kernel_minor = (split('.', $kernel_minor))[3];
+                if ($distro eq "SuSE" and $kernel_minor =~ m/[0-9]+/ and $kernel_minor >= 46) {
+                    # SLES 10 SP1
+                    $packages_info{'ibutils'}{'configure_options'} .= ' LDFLAGS="-L/usr/lib/gcc/powerpc64-suse-linux/4.1.2/64"';
+                    $cmd .= " --define '__arch_install_post %{nil}'";
+                }
+                else {
+                    $packages_info{'ibutils'}{'configure_options'} .= ' LDFLAGS="-m64 -g -O2 -L/usr/lib64" CFLAGS="-m64 -g -O2" CPPFLAGS="-m64 -g -O2"';
+                }
+            }
+        }
+        elsif ( $parent eq "mvapich") {
             my $compiler = (split('_', $name))[1];
             $cmd .= " --define '_name $name'";
             $cmd .= " --define 'compiler $compiler'";
