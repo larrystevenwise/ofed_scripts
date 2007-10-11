@@ -190,7 +190,7 @@ sub usage
    print "\n           --build32        Build 32-bit libraries. Relevant for x86_64 and ppc64 platforms";
    print "\n           -v|-vv|-vvv.     Set verbosity level";
    print "\n           -q. Set quiet - no messages will be printed";
-   print "\n\n           --all|--hpc|--basic Install all,hpc or basic packages correspondently";
+   print "\n\n           --all|--hpc|--basic Install all,hpc or basic packages correspondingly";
    print RESET "\n\n";
 }
 
