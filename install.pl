@@ -182,15 +182,16 @@ sub usage
    print "\n Usage: $0 [-c <packages config_file>|--all|--hpc|--basic] [-n|--net <network config_file>]\n";
 
    print "\n           -c|--config <packages config_file>. Example of the config file can be found under docs.";
-   print "\n           -l|--prefix Set installation prefix.";
+   print "\n           -l|--prefix          Set installation prefix.";
    print "\n           -p|--print-available Print available packages for current platform.";
    print "\n                                And create corresponding ofed.conf file.";
    print "\n           -k|--kernel <kernel version>. Default on this system: $kernel";
-   print "\n           -s|--kernel-sources <path to the kernel sources>. Default on this system: $kernel_sources";
-   print "\n           --build32        Build 32-bit libraries. Relevant for x86_64 and ppc64 platforms";
-   print "\n           -v|-vv|-vvv.     Set verbosity level";
-   print "\n           -q. Set quiet - no messages will be printed";
-   print "\n\n           --all|--hpc|--basic Install all,hpc or basic packages correspondingly";
+   print "\n           -s|--kernel-sources  <path to the kernel sources>. Default on this system: $kernel_sources";
+   print "\n           --build32            Build 32-bit libraries. Relevant for x86_64 and ppc64 platforms";
+   print "\n           --without-depcheck   Skip Distro's libraries check";
+   print "\n           -v|-vv|-vvv.         Set verbosity level";
+   print "\n           -q.                  Set quiet - no messages will be printed";
+   print "\n\n           --all|--hpc|--basic    Install all,hpc or basic packages correspondingly";
    print RESET "\n\n";
 }
 
@@ -1166,6 +1167,7 @@ my $config_net_given = 0;
 my $kernel_given = 0;
 my $kernel_source_given = 0;
 my $install_option;
+my $check_linux_deps = 1;
 
 while ( $#ARGV >= 0 ) {
 
@@ -1199,6 +1201,8 @@ while ( $#ARGV >= 0 ) {
         $install_option = 'basic';
     } elsif ( $cmd_flag eq "--build32" ) {
         $build32 = 1;
+    } elsif ( $cmd_flag eq "--without-depcheck" ) {
+        $check_linux_deps = 0;
     } elsif ( $cmd_flag eq "-q" ) {
         $quiet = 1;
     } elsif ( $cmd_flag eq "-v" ) {
@@ -2120,6 +2124,9 @@ sub resolve_dependencies
 
 sub check_linux_dependencies
 {
+    if (! $check_linux_deps) {
+        return 0;
+    }
     for my $package ( @selected_packages ) {
         # Check rpmbuild requirements
         if (not $packages_info{$package}{'rpm_exist'}) {
