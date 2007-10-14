@@ -166,6 +166,9 @@ elsif ($arch eq "ppc64") {
 }
 chomp $target_cpu32;
 
+my $optflags  = `rpm --eval '%{optflags}'`;
+chomp $optflags;
+
 my $mandir      = `rpm --eval '%{_mandir}'`;
 chomp $mandir;
 my $sysconfdir  = `rpm --eval '%{_sysconfdir}'`;
@@ -2335,6 +2338,13 @@ sub build_rpm
     my $sig = 0;
     my $TMPRPMS;
 
+    my $ldflags;
+    my $cflags;
+    my $cppflags;
+    my $cxxflags;
+    my $fflags;
+    my $ldlibs;
+
     my $parent = $packages_info{$name}{'parent'};
     print "Build $name RPM\n" if ($verbose);
 
@@ -2342,9 +2352,9 @@ sub build_rpm
     if ($prefix ne $default_prefix) {
         if ($parent ne "mvapich" and $parent ne "mvapich2" and $parent ne "openmpi") {
             $pref_env = "env LD_LIBRARY_PATH='$prefix/lib64:$prefix/lib:$ENV{LD_LIBRARY_PATH}'";
-            $pref_env .= " LDFLAGS='-g -O2 -L$prefix/lib64 -L$prefix/lib'";
-            $pref_env .= " CFLAGS='-g -O2 -I$prefix/include'";
-            $pref_env .= " CPPFLAGS='-g -O2 -I$prefix/include'";
+            $ldflags .= " -L$prefix/lib64 -L$prefix/lib";
+            $cflags .= " -I$prefix/include";
+            $cppflags .= " -I$prefix/include";
         }
 
         if ($parent eq "openmpi") {
@@ -2353,25 +2363,50 @@ sub build_rpm
     }
 
     if (not $packages_info{$name}{'rpm_exist'}) {
+        if ($arch eq "ppc64") {
+            my $kernel_minor = (split('-', $kernel))[0];
+            my $kernel_minor = (split('.', $kernel_minor))[3];
+            if ($distro eq "SuSE" and $kernel_minor =~ m/[0-9]+/ and $kernel_minor >= 46) {
+                # SLES 10 SP1
+                if ($parent eq "ibutils") {
+                    $packages_info{'ibutils'}{'configure_options'} .= ' LDFLAGS="$ldflags -L/usr/lib/gcc/powerpc64-suse-linux/4.1.2/64"';
+                    $cmd .= " --define '__arch_install_post %{nil}'";
+                }
+            }
+            else {
+                $ldflags    .= " $optflags $ldflags -m64 -g -O2 -L/usr/lib64";
+                $cflags     .= " $optflags -m64 -g -O2";
+                $cppflags   .= " $optflags -m64 -g -O2";
+                $cxxflags   .= " $optflags -m64 -g -O2";
+                $fflags     .= " $optflags -m64 -g -O2";
+                $ldlibs     .= " $optflags -m64 -g -O2 -L/usr/lib64";
+            }
+        }
+
+        if ($ldflags) {
+            $pref_env   .= " LDFLAGS='$ldflags'";
+        }
+        if ($cflags) {
+            $pref_env   .= " CFLAGS='$cflags'";
+        }
+        if ($cppflags) {
+            $pref_env   .= " CPPFLAGS='$cppflags'";
+        }
+        if ($cxxflags) {
+            $pref_env   .= " CXXFLAGS='$cxxflags'";
+        }
+        if ($fflags) {
+            $pref_env   .= " FFLAGS='$fflags'";
+        }
+        if ($ldlibs) {
+            $pref_env   .= " LDLIBS='$ldlibs'";
+        }
+
         $cmd = "$pref_env rpmbuild --rebuild --define '_topdir $TOPDIR'";
         $cmd .= " --target $target_cpu";
 
         if ($parent eq "ibutils") {
-            if ($parent eq "ibutils") {
-                $packages_info{'ibutils'}{'configure_options'} .= " --with-osm=$prefix";
-            }
-            if ($arch eq "ppc64") {
-                my $kernel_minor = (split('-', $kernel))[0];
-                my $kernel_minor = (split('.', $kernel_minor))[3];
-                if ($distro eq "SuSE" and $kernel_minor =~ m/[0-9]+/ and $kernel_minor >= 46) {
-                    # SLES 10 SP1
-                    $packages_info{'ibutils'}{'configure_options'} .= ' LDFLAGS="-L/usr/lib/gcc/powerpc64-suse-linux/4.1.2/64"';
-                    $cmd .= " --define '__arch_install_post %{nil}'";
-                }
-                else {
-                    $packages_info{'ibutils'}{'configure_options'} .= ' LDFLAGS="-m64 -g -O2 -L/usr/lib64" CFLAGS="-m64 -g -O2" CPPFLAGS="-m64 -g -O2"';
-                }
-            }
+            $packages_info{'ibutils'}{'configure_options'} .= " --with-osm=$prefix";
         }
         elsif ( $parent eq "mvapich") {
             my $compiler = (split('_', $name))[1];
