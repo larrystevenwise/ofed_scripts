@@ -2374,12 +2374,22 @@ sub build_rpm
                 }
             }
             else {
-                $ldflags    .= " $optflags $ldflags -m64 -g -O2 -L/usr/lib64";
-                $cflags     .= " $optflags -m64 -g -O2";
-                $cppflags   .= " $optflags -m64 -g -O2";
-                $cxxflags   .= " $optflags -m64 -g -O2";
-                $fflags     .= " $optflags -m64 -g -O2";
-                $ldlibs     .= " $optflags -m64 -g -O2 -L/usr/lib64";
+                if ($parent eq "sdpnetstat" or $parent eq "rds-tools") {
+                    $ldflags    .= " -g -O2";
+                    $cflags     .= " -g -O2";
+                    $cppflags   .= " -g -O2";
+                    $cxxflags   .= " -g -O2";
+                    $fflags     .= " -g -O2";
+                    $ldlibs     .= " -g -O2";
+                }
+                else {
+                    $ldflags    .= " $optflags -m64 -g -O2 -L/usr/lib64";
+                    $cflags     .= " $optflags -m64 -g -O2";
+                    $cppflags   .= " $optflags -m64 -g -O2";
+                    $cxxflags   .= " $optflags -m64 -g -O2";
+                    $fflags     .= " $optflags -m64 -g -O2";
+                    $ldlibs     .= " $optflags -m64 -g -O2 -L/usr/lib64";
+                }
             }
         }
 
