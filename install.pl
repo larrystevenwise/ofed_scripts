@@ -1865,7 +1865,7 @@ sub select_packages
                     next;
                 }
 
-                if ($package eq "kernel_configure_options") {
+                if ($package eq "kernel_configure_options" or $package eq "OFA_KERNEL_PARAMS") {
                     $kernel_configure_options = $selected;
                     next;
                 }
