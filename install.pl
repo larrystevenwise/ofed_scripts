@@ -1501,7 +1501,7 @@ sub set_existing_rpms
             $packages_info{$rpm_name}{'rpm_exist'} = 1;
             print "$rpm_name RPM exist\n" if ($verbose2);
         }
-        else {
+        elsif ($rpm_arch eq $target_cpu32) {
             $packages_info{$rpm_name}{'rpm_exist32'} = 1;
             print "$rpm_name 32-bit RPM exist\n" if ($verbose2);
         }
