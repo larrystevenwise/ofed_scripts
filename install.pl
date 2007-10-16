@@ -745,7 +745,7 @@ my %packages_info = (
         'tvflash' =>
             { name => "tvflash", parent => "tvflash",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => ["pciutils-devel"],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
