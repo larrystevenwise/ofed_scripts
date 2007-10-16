@@ -748,7 +748,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
-            install32 => 0, exception => 1, configure_options => '' },
+            install32 => 0, exception => 0, configure_options => '' },
         'tvflash-debuginfo' =>
             { name => "tvflash-debuginfo", parent => "tvflash",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
