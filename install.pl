@@ -313,10 +313,10 @@ my %kernel_modules_info = (
             { name => "rds", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
         'iser' =>
-            { name => "iser", available => 1, selected => 0,
+            { name => "iser", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], ofa_req_inst => ["open-iscsi-generic"] },
         'qlgc_vnic' =>
-            { name => "qlgc_vnic", available => 1, selected => 0,
+            { name => "qlgc_vnic", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         );
 
