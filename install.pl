@@ -2773,6 +2773,21 @@ sub install_rpm
     my $sig = 0;
     my $package;
 
+    if ($name eq $packages_info{'open-iscsi-generic'}{'name'}) {
+        if (is_installed($packages_info{'open-iscsi-generic'}{'name'}) ) {
+            $cmd = "rpm -e $packages_info{'open-iscsi-generic'}{'name'}";
+            print "Running $cmd\n" if ($verbose);
+            system("$cmd > $ofedlogs/$name.rpmuninstall.log 2>&1");
+            $res = $? >> 8;
+            $sig = $? & 127;
+            if ($sig or $res) {
+                print RED "Failed to uninstall $packages_info{'open-iscsi-generic'}{'name'} RPM", RESET "\n";
+                print RED "See $ofedlogs/$name.rpmuninstall.log", RESET "\n";
+                exit 1;
+            }
+        }
+    }
+
     my $version = $main_packages{$packages_info{$name}{'parent'}}{'version'};
     my $release = $main_packages{$packages_info{$name}{'parent'}}{'release'};
 
