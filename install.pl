@@ -2625,12 +2625,12 @@ sub build_rpm
                 $openmpi_comp_env .= ' CFLAGS="-m64 -O2" CXXFLAGS="-m64 -O2" FCFLAGS="-m64 -O2" FFLAGS="-m64 -O2"';
                 $openmpi_comp_env .= ' --with-wrapper-ldflags="-g -O2 -m64 -L/usr/lib64" --with-wrapper-cflags=-m64';
                 $openmpi_comp_env .= ' --with-wrapper-cxxflags=-m64 --with-wrapper-fflags=-m64 --with-wrapper-fcflags=-m64';
-                $openmpi_wrapper_cxx_flags .= "-m64";
+                $openmpi_wrapper_cxx_flags .= " -m64";
             }
 
             $openmpi_comp_env .= " --enable-mpirun-prefix-by-default";
             if ($openmpi_wrapper_cxx_flags) {
-                $openmpi_comp_env .= " --with-wrapper-cxxflags=$openmpi_wrapper_cxx_flags";
+                $openmpi_comp_env .= " --with-wrapper-cxxflags=\"$openmpi_wrapper_cxx_flags\"";
             }
 
             $cmd .= " --define '_name $name'";
