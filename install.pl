@@ -3013,9 +3013,18 @@ sub config_interface
         }
         else {
             # Take the first existing Eth interface
-            if (not $eth_dev) {
-                $eth_dev = </sys/class/net/eth*>;
-                $eth_dev =~ s@/sys/class/net/@@g;
+            my @eth_devs = </sys/class/net/eth*>;
+            for my $tmp_dev ( @eth_devs ) {
+                if (open(ETH, "$tmp_dev/operstate")) {
+                    my $eth_state = <ETH>;
+                    chomp $eth_state;
+                    if ($eth_state eq "up") {
+                        $eth_dev = $tmp_dev;
+                        $eth_dev =~ s@/sys/class/net/@@g;
+                        last;
+                    }
+                    close (ETH);
+                }
             }
         }
         get_net_config("$eth_dev");
