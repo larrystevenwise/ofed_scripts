@@ -2278,8 +2278,6 @@ sub build_kernel_rpm
     $cmd = "rpmbuild --rebuild --define '_topdir $TOPDIR'";
 
     if ($name eq 'ofa_kernel') {
-        $kernel_configure_options .= " --kernel-version=$kernel";
-        $kernel_configure_options .= " --kernel-sources=$kernel_sources";
         $kernel_configure_options .= " $packages_info{'ofa_kernel'}{'configure_options'}";
 
         for my $module ( @selected_kernel_modules ) {
@@ -2297,6 +2295,8 @@ sub build_kernel_rpm
         $cmd .= " --define 'configure_options $kernel_configure_options'";
         $cmd .= " --define 'build_kernel_ib 1'";
         $cmd .= " --define 'build_kernel_ib_devel 1'";
+        $cmd .= " --define 'KVERSION $kernel'";
+        $cmd .= " --define 'K_SRC $kernel_sources'";
         $cmd .= " --define 'network_dir $network_dir'";
     }
     elsif ($name eq 'ib-bonding') {
