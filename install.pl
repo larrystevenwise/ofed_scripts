@@ -1313,6 +1313,11 @@ sub get_rpm_name_arch
     return `rpm --queryformat "[%{NAME}] [%{ARCH}]" -qp @_`;
 }
 
+sub get_rpm_release
+{
+    return `rpm --queryformat "[%{RELEASE}]" -qp @_`;
+}
+
 # Get RPM name and version of the INSTALLED package
 sub get_rpm_version
 {
@@ -1497,13 +1502,21 @@ sub set_existing_rpms
 {
     for my $binrpm ( <$RPMS/*.rpm> ) {
         my ($rpm_name, $rpm_arch) = (split ' ', get_rpm_name_arch($binrpm));
-        if ($rpm_arch eq $target_cpu) {
-            $packages_info{$rpm_name}{'rpm_exist'} = 1;
-            print "$rpm_name RPM exist\n" if ($verbose2);
+        if ($rpm_name =~ /kernel-ib|ib-bonding/) {
+            if (($rpm_arch eq $target_cpu) and (get_rpm_release($binrpm) eq $kernel_rel)) {
+                $packages_info{$rpm_name}{'rpm_exist'} = 1;
+                print "$rpm_name RPM exist\n" if ($verbose2);
+            }
         }
-        elsif ($rpm_arch eq $target_cpu32) {
-            $packages_info{$rpm_name}{'rpm_exist32'} = 1;
-            print "$rpm_name 32-bit RPM exist\n" if ($verbose2);
+        else {
+            if ($rpm_arch eq $target_cpu) {
+                $packages_info{$rpm_name}{'rpm_exist'} = 1;
+                print "$rpm_name RPM exist\n" if ($verbose2);
+            }
+            elsif ($rpm_arch eq $target_cpu32) {
+                $packages_info{$rpm_name}{'rpm_exist32'} = 1;
+                print "$rpm_name 32-bit RPM exist\n" if ($verbose2);
+            }
         }
     }
 }
