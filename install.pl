@@ -2937,7 +2937,6 @@ sub config_interface
     my $bc;
     my $onboot = 1;
 
-    print "Going to update $target\n" if ($verbose2);
     if ($interactive) {
         print "\nDo you want to configure $dev? [Y/n]:";
         $ans = getch();
@@ -3017,6 +3016,7 @@ sub config_interface
         if (not $config_net_given) {
             return;
         }
+        print "Going to update $target\n" if ($verbose2);
         if ($ifcfg{$dev}{'LAN_INTERFACE'}) {
             $eth_dev = $ifcfg{$dev}{'LAN_INTERFACE'};
             if (not -e "/sys/class/net/$eth_dev") {
