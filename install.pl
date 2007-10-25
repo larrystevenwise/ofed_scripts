@@ -218,6 +218,30 @@ else {
     $network_dir = "/etc/sysconfig/network-scripts";
 }
 
+# List of packages that were included in the previous OFED releases
+# for uninstall purpose
+my @prev_ofed_packages = (
+                        "mpich_mlx", "ibtsal", "openib", "opensm", "opensm-devel", "opensm-libs",
+                        "mpi_ncsa", "mpi_osu", "thca", "ib-osm", "osm", "diags", "ibadm",
+                        "ib-diags", "ibgdiag", "ibdiag", "ib-management",
+                        "ib-verbs", "ib-ipoib", "ib-cm", "ib-sdp", "ib-dapl", "udapl",
+                        "udapl-devel", "libdat", "libibat", "ib-kdapl", "ib-srp", "ib-srp_target",
+                        "oiscsi-iser-support", "libipathverbs", "libipathverbs-devel",
+                        "libehca", "libehca-devel", "dapl", "dapl-devel",
+                        "libibcm", "libibcm-devel", "libibcommon", "libibcommon-devel",
+                        "libibmad", "libibmad-devel", "libibumad", "libibumad-devel",
+                        "libibverbs", "libibverbs-devel", "libibverbs-utils",
+                        "libipathverbs", "libipathverbs-devel", "libmthca",
+                        "libmthca-devel", "libmlx4", "libmlx4-devel",
+                        "libsdp", "librdmacm", "librdmacm-devel", "librdmacm-utils",
+                        "openib-diags", "openib-mstflint", "openib-perftest", "openib-srptools", "openib-tvflash",
+                        "openmpi", "openmpi-devel", "openmpi-libs",
+                        "ibutils", "ibutils-devel", "ibutils-libs"
+                        );
+
+
+
+
 # List of all available packages sorted following dependencies
 my @kernel_packages = ("kernel-ib", "kernel-ib-devel", "ib-bonding", "ib-bonding-debuginfo");
 my @basic_kernel_modules = ("core", "mthca", "mlx4", "cxgb3", "nes", "ehca", "ipath", "ipoib");
@@ -3212,7 +3236,7 @@ sub uninstall
         $sig = $? & 127;
         if ($sig or $res) {
             my $cmd = "rpm -e --allmatches";
-            for my $package (@all_packages, @hidden_packages) {
+            for my $package (@all_packages, @hidden_packages, @prev_ofed_packages) {
                 if (is_installed($packages_info{$package}{'name'})) {
                     $cmd .= " $packages_info{$package}{'name'}";
                     $cnt ++;
