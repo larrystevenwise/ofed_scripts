@@ -62,7 +62,7 @@ IB_ALL_PACKAGES="$IB_ALL_PACKAGES opensm opensm-libs opensm-devel opensm-debugin
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES perftest mstflint tvflash"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES dapl dapl-devel dapl-utils dapl-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES qlvnictools ibvexdmtools sdpnetstat srptools rds-tools"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibutils infiniband-diags"
+IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibutils infiniband-diags qperf qperf-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES ofed-docs ofed-scripts"
 
 ALL_PACKAGES="${IB_ALL_PACKAGES} mpi-selector mvapich mvapich2 openmpi mpitests ibutils"

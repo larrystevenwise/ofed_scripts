@@ -260,7 +260,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "dapl", "dapl-devel", "dapl-utils", "dapl-debuginfo",
                      "perftest", "mstflint", "tvflash",
                      "qlvnictools", "sdpnetstat", "srptools", "rds-tools",
-                     "ibutils", "infiniband-diags",
+                     "ibutils", "infiniband-diags", "qperf", "qperf-debuginfo",
                      "ofed-docs", "ofed-scripts", @mpi_packages
                      );
 
@@ -272,7 +272,7 @@ my @hpc_kernel_packages = ("kernel-ib", "ib-bonding");
 my @hpc_kernel_modules = (@basic_kernel_modules);
 my @hpc_user_packages = (@basic_user_packages, "librdmacm",
                         "librdmacm-utils", "dapl", "dapl-utils",
-                        "infiniband-diags", "ibutils", @mpi_packages);
+                        "infiniband-diags", "ibutils", "qperf", @mpi_packages);
 
 # all_packages is required to save ordered (following dependencies) list of
 # packages. Hash does not saves the order
@@ -818,6 +818,21 @@ my %packages_info = (
             install32 => 0, exception => 0, configure_options => '' },
         'rds-tools-debuginfo' =>
             { name => "rds-tools-debuginfo", parent => "rds-tools",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+
+        'qperf' =>
+            { name => "qperf", parent => "qperf",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
+            ofa_req_inst => ["libibverbs"],
+            install32 => 0, exception => 0, configure_options => '' },
+        'qperf-debuginfo' =>
+            { name => "qperf-debuginfo", parent => "qperf",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
