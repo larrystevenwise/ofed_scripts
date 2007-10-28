@@ -2963,6 +2963,21 @@ sub get_net_config
     close(IFCONFIG);
 }
 
+sub is_carrier
+{
+    my $ifcheck = shift @_;
+    open(IFSTATUS, "ip link show dev $ifcheck |");
+    while ( <IFSTATUS> ) {
+        next unless m@(\s$ifcheck).*@;
+        if( m/NO-CARRIER/ ) {
+            close(IFSTATUS);
+            return 0;
+        }
+    }
+    close(IFSTATUS);
+    return 1;
+}
+
 sub config_interface
 {
     my $interface = shift @_;
@@ -2975,6 +2990,7 @@ sub config_interface
     my $nw;
     my $bc;
     my $onboot = 1;
+    my $found_eth_up = 0;
 
     if ($interactive) {
         print "\nDo you want to configure $dev? [Y/n]:";
@@ -3067,19 +3083,18 @@ sub config_interface
             # Take the first existing Eth interface
             my @eth_devs = </sys/class/net/eth*>;
             for my $tmp_dev ( @eth_devs ) {
-                if (open(ETH, "$tmp_dev/operstate")) {
-                    my $eth_state = <ETH>;
-                    chomp $eth_state;
-                    if ($eth_state eq "up") {
-                        $eth_dev = $tmp_dev;
-                        $eth_dev =~ s@/sys/class/net/@@g;
-                        last;
-                    }
-                    close (ETH);
+                $eth_dev = $tmp_dev;
+                $eth_dev =~ s@/sys/class/net/@@g;
+                if ( is_carrier ($eth_dev) ) {
+                    $found_eth_up = 1;
+                    last;
                 }
             }
         }
-        get_net_config("$eth_dev");
+
+        if ($found_eth_up) {
+            get_net_config("$eth_dev");
+        }
 
         if (not $ifcfg{$dev}{'IPADDR'}) {
             print "IP address is not defined for $dev\n" if ($verbose2);
