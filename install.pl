@@ -3249,28 +3249,26 @@ sub uninstall
         system("yes | $CWD/uninstall.sh > $ofedlogs/ofed_uninstall.log 2>&1");
         $res = $? >> 8;
         $sig = $? & 127;
+    }
+    my $cmd = "rpm -e --allmatches";
+    for my $package (@all_packages, @hidden_packages, @prev_ofed_packages) {
+        if (is_installed($package)) {
+            $cmd .= " $package";
+            $cnt ++;
+        }
+    }
+    if ($cnt) {
+        print "Running $cmd\n" if (not $quiet);
+        open (LOG, "+>$ofedlogs/ofed_uninstall.log");
+        print LOG "Running $cmd\n";
+        close LOG;
+        system("$cmd >> $ofedlogs/ofed_uninstall.log 2>&1");
+        $res = $? >> 8;
+        $sig = $? & 127;
         if ($sig or $res) {
-            my $cmd = "rpm -e --allmatches";
-            for my $package (@all_packages, @hidden_packages, @prev_ofed_packages) {
-                if (is_installed($packages_info{$package}{'name'})) {
-                    $cmd .= " $packages_info{$package}{'name'}";
-                    $cnt ++;
-                }
-            }
-            if ($cnt) {
-                print "Running $cmd\n" if (not $quiet);
-                open (LOG, "+>$ofedlogs/ofed_uninstall.log");
-                print LOG "Running $cmd\n";
-                close LOG;
-                system("$cmd >> $ofedlogs/ofed_uninstall.log 2>&1");
-                $res = $? >> 8;
-                $sig = $? & 127;
-                if ($sig or $res) {
-                    print RED "Failed to uninstall the previous installation", RESET "\n";
-                    print RED "See $ofedlogs/ofed_uninstall.log", RESET "\n";
-                    exit 1;
-                }
-            }
+            print RED "Failed to uninstall the previous installation", RESET "\n";
+            print RED "See $ofedlogs/ofed_uninstall.log", RESET "\n";
+            exit 1;
         }
     }
 }
