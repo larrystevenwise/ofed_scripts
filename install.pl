@@ -2468,8 +2468,13 @@ sub build_rpm
         $cmd = "$pref_env rpmbuild --rebuild --define '_topdir $TOPDIR'";
         $cmd .= " --target $target_cpu";
 
+        # Prefix should be defined per package
         if ($parent eq "ibutils") {
             $packages_info{'ibutils'}{'configure_options'} .= " --with-osm=$prefix";
+            $cmd .= " --define '_prefix $prefix'";
+            $cmd .= " --define '_exec_prefix $prefix'";
+            $cmd .= " --define '_sysconfdir $sysconfdir'";
+            $cmd .= " --define '_usr $prefix'";
         }
         elsif ( $parent eq "mvapich") {
             my $compiler = (split('_', $name))[1];
