@@ -2974,7 +2974,7 @@ sub is_carrier
     open(IFSTATUS, "ip link show dev $ifcheck |");
     while ( <IFSTATUS> ) {
         next unless m@(\s$ifcheck).*@;
-        if( m/NO-CARRIER/ ) {
+        if( m/NO-CARRIER/ or not m/UP/ ) {
             close(IFSTATUS);
             return 0;
         }
