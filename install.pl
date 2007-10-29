@@ -2723,6 +2723,13 @@ sub build_rpm
             $cmd .= " --define '_usr $prefix'";
             $cmd .= " --define 'path_to_mpihome $prefix/mpi/$compiler/$mpi-$main_packages{$mpi}{'version'}'";
         }
+        elsif ($parent eq "mpi-selector") {
+            $cmd .= " --define '_prefix $prefix'";
+            $cmd .= " --define '_exec_prefix $prefix'";
+            $cmd .= " --define '_sysconfdir $sysconfdir'";
+            $cmd .= " --define '_usr $prefix'";
+            $cmd .= " --define 'shell_startup_dir /etc/profile.d'";
+        }
         else {
             $cmd .= " --define '_prefix $prefix'";
             $cmd .= " --define '_exec_prefix $prefix'";
