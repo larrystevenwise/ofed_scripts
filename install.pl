@@ -1539,6 +1539,19 @@ sub set_availability
 # Set rpm_exist parameter for existing RPMs
 sub set_existing_rpms
 {
+    # Check if the ofed-scripts RPM exist and its prefix is the same as required one
+    my $scr_rpm = <$RPMS/ofed-scripts-*.$target_cpu.rpm>;
+    if ( -f $scr_rpm ) {
+        my $current_prefix = `rpm -qlp $scr_rpm | grep ofed_info | sed -e "s@/bin/ofed_info@@"`;
+        chomp $current_prefix;
+        print "Found $scr_rpm. Its installation prefix: $current_prefix\n" if ($verbose2);
+        if (not $current_prefix eq $prefix) {
+            print "Required prefix is: $prefix\n" if ($verbose2);
+            print "Going to rebuils RPMs from scratch\n" if ($verbose2);
+            return;
+        }
+    }
+
     for my $binrpm ( <$RPMS/*.rpm> ) {
         my ($rpm_name, $rpm_arch) = (split ' ', get_rpm_name_arch($binrpm));
         if ($rpm_name =~ /kernel-ib|ib-bonding/) {
