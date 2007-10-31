@@ -2706,6 +2706,9 @@ sub build_rpm
 
             $cmd .= " --define '_name $name'";
             $cmd .= " --define 'mpi_selector $prefix/bin/mpi-selector'";
+            $cmd .= " --define 'use_mpi_selector 1'";
+            $cmd .= " --define 'install_shell_scripts 1'";
+            $cmd .= " --define 'shell_scripts_basename mpivars'";
             $cmd .= " --define '_usr $prefix'";
             $cmd .= " --define 'ofed 0'";
             $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
