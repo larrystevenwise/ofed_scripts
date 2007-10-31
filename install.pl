@@ -2495,6 +2495,7 @@ sub build_rpm
             $cmd .= " --define 'compiler $compiler'";
             $cmd .= " --define 'openib_prefix $prefix'";
             $cmd .= " --define '_usr $prefix'";
+            $cmd .= " --define 'use_mpi_selector 1'";
             if ($packages_info{'mvapich'}{'configure_options'}) {
                 $cmd .= " --define 'configure_options $packages_info{'mvapich'}{'configure_options'}'";
             }
