@@ -2466,7 +2466,7 @@ sub build_rpm
     if (not $packages_info{$name}{'rpm_exist'}) {
         if ($arch eq "ppc64") {
             my $kernel_minor = (split('-', $kernel))[0];
-            my $kernel_minor = (split('.', $kernel_minor))[3];
+            my $kernel_minor = (split('\.', $kernel_minor))[3];
             if ($distro eq "SuSE" and $kernel_minor =~ m/[0-9]+/ and $kernel_minor >= 46) {
                 # SLES 10 SP1
                 if ($parent eq "ibutils") {
