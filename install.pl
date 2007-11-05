@@ -2470,7 +2470,7 @@ sub build_rpm
             if ($distro eq "SuSE" and $kernel_minor =~ m/[0-9]+/ and $kernel_minor >= 46) {
                 # SLES 10 SP1
                 if ($parent eq "ibutils") {
-                    $packages_info{'ibutils'}{'configure_options'} .= ' LDFLAGS="$ldflags -L/usr/lib/gcc/powerpc64-suse-linux/4.1.2/64"';
+                    $packages_info{'ibutils'}{'configure_options'} .= " LDFLAGS=-L/usr/lib/gcc/powerpc64-suse-linux/4.1.2/64";
                     $cmd .= " --define '__arch_install_post %{nil}'";
                 }
             }
@@ -2523,6 +2523,7 @@ sub build_rpm
             $cmd .= " --define '_exec_prefix $prefix'";
             $cmd .= " --define '_sysconfdir $sysconfdir'";
             $cmd .= " --define '_usr $prefix'";
+            $cmd .= " --define 'build_ibmgtsim 1'";
         }
         elsif ( $parent eq "mvapich") {
             my $compiler = (split('_', $name))[1];
