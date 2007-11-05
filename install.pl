@@ -2453,10 +2453,9 @@ sub build_rpm
     my $pref_env;
     if ($prefix ne $default_prefix) {
         if ($parent ne "mvapich" and $parent ne "mvapich2" and $parent ne "openmpi") {
-            $pref_env = "env LD_LIBRARY_PATH='$prefix/lib64:$prefix/lib:$ENV{LD_LIBRARY_PATH}'";
-            $ldflags .= " -L$prefix/lib64 -L$prefix/lib";
-            $cflags .= " -I$prefix/include";
-            $cppflags .= " -I$prefix/include";
+            $ldflags .= "$optflags -L$prefix/lib64 -L$prefix/lib";
+            $cflags .= "$optflags -I$prefix/include";
+            $cppflags .= "$optflags -I$prefix/include";
         }
 
         if ($parent eq "openmpi") {
