@@ -281,7 +281,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "librdmacm", "librdmacm-utils", "librdmacm-devel", "librdmacm-debuginfo",
                      "libsdp", "libsdp-devel", "libsdp-debuginfo",
                      "opensm", "opensm-libs", "opensm-devel", "opensm-debuginfo", "opensm-static",
-                     "dapl", "dapl-devel", "dapl-utils", "dapl-debuginfo",
+                     "dapl-v1", "dapl-v2", "dapl-devel", "dapl-devel-static", "dapl-utils", "dapl-debuginfo",
                      "perftest", "mstflint", "tvflash",
                      "qlvnictools", "sdpnetstat", "srptools", "rds-tools",
                      "ibutils", "infiniband-diags", "qperf", "qperf-debuginfo",
@@ -295,7 +295,7 @@ my @basic_user_packages = ("libibverbs", "libibverbs-utils", "libmthca", "libmlx
 my @hpc_kernel_packages = ("kernel-ib", "ib-bonding");
 my @hpc_kernel_modules = (@basic_kernel_modules);
 my @hpc_user_packages = (@basic_user_packages, "librdmacm",
-                        "librdmacm-utils", "dapl", "dapl-utils",
+                        "librdmacm-utils", "dapl-v1", "dapl-v2", "dapl-utils",
                         "infiniband-diags", "ibutils", "qperf", @mpi_packages);
 
 # all_packages is required to save ordered (following dependencies) list of
@@ -893,29 +893,43 @@ my %packages_info = (
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
 
-        'dapl' =>
-            { name => "dapl", parent => "dapl",
+        'dapl-v1' =>
+            { name => "dapl", parent => "dapl-v1",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs", "libibverbs-devel", "librdmacm", "librdmacm-devel"],
+            ofa_req_inst => ["libibverbs", "librdmacm"],
+            install32 => 0, exception => 0, configure_options => '' },
+        'dapl-v2' =>
+            { name => "dapl", parent => "dapl-v2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs", "libibverbs-devel", "librdmacm", "librdmacm-devel"],
             ofa_req_inst => ["libibverbs", "librdmacm"],
             install32 => 0, exception => 0, configure_options => '' },
         'dapl-devel' =>
-            { name => "dapl-devel", parent => "dapl",
+            { name => "dapl-devel", parent => "dapl-v2",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel", "librdmacm", "librdmacm-devel"],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0, configure_options => '' },
+        'dapl-devel-static' =>
+            { name => "dapl-devel-static", parent => "dapl-v2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel", "librdmacm", "librdmacm-devel"],
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
         'dapl-utils' =>
-            { name => "dapl-utils", parent => "dapl",
+            { name => "dapl-utils", parent => "dapl-v2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => ["dapl"],
+            ofa_req_inst => ["dapl-v2"],
             install32 => 0, exception => 0, configure_options => '' },
         'dapl-debuginfo' =>
-            { name => "dapl-debuginfo", parent => "dapl",
+            { name => "dapl-debuginfo", parent => "dapl-v2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
@@ -1357,6 +1371,10 @@ sub get_rpm_release
     return `rpm --queryformat "[%{RELEASE}]" -qp @_`;
 }
 
+sub get_rpm_ver
+{
+    return `rpm --queryformat "[%{VERSION}]\n" -qp @_ | uniq`;
+}
 # Get RPM name and version of the INSTALLED package
 sub get_rpm_version
 {
@@ -1424,6 +1442,14 @@ sub set_cfg
 
     my $info = get_rpm_info($srpm_full_path);
     my $name = (split(/ /,$info,4))[0];
+    my $version = (split(/ /,$info,4))[1];
+
+    if ( "$name-$version" =~ m/dapl-1/ ) {
+       $name = "dapl-v1"; 
+    }
+    elsif ( "$name-$version" =~ m/dapl-2/ ) {
+       $name = "dapl-v2"; 
+    }
 
     ( $main_packages{$name}{'name'},
       $main_packages{$name}{'version'},
@@ -1432,7 +1458,8 @@ sub set_cfg
       $main_packages{$name}{'srpmpath'}   = $srpm_full_path;
 
     print "set_cfg: " .
-             "name: $main_packages{$name}{'name'}, " .
+             "name: $name, " .
+             "original name: $main_packages{$name}{'name'}, " .
              "version: $main_packages{$name}{'version'}, " .
              "release: $main_packages{$name}{'release'}, " .
              "srpmpath: $main_packages{$name}{'srpmpath'}\n" if ($verbose3);
@@ -1561,6 +1588,15 @@ sub set_existing_rpms
             }
         }
         else {
+            if ($rpm_name eq "dapl") {
+                my $dapl_version = get_rpm_ver($binrpm);
+                if ($dapl_version =~ m/1.*/) {
+                    $rpm_name = "dapl-v1";
+                }
+                else {
+                    $rpm_name = "dapl-v2";
+                }
+            }
             if ($rpm_arch eq $target_cpu) {
                 $packages_info{$rpm_name}{'rpm_exist'} = 1;
                 print "$rpm_name RPM exist\n" if ($verbose2);
@@ -2734,6 +2770,15 @@ sub build_rpm
             $cmd .= " --define '_usr $prefix'";
             $cmd .= " --define 'shell_startup_dir /etc/profile.d'";
         }
+        elsif ($parent =~ m/dapl/) {
+            my $def_doc_dir = `rpm --eval '%{_defaultdocdir}'`;
+            chomp $def_doc_dir;
+            $cmd .= " --define '_prefix $prefix'";
+            $cmd .= " --define '_exec_prefix $prefix'";
+            $cmd .= " --define '_sysconfdir $sysconfdir'";
+            $cmd .= " --define '_defaultdocdir $def_doc_dir/$main_packages{$parent}{'name'}-$main_packages{$parent}{'version'}'";
+            $cmd .= " --define '_usr $prefix'";
+        }
         else {
             $cmd .= " --define '_prefix $prefix'";
             $cmd .= " --define '_exec_prefix $prefix'";
@@ -2769,6 +2814,9 @@ sub build_rpm
             print "Created $myrpm\n" if ($verbose2);
             my ($myrpm_name, $myrpm_arch) = (split ' ', get_rpm_name_arch($myrpm));
             move($myrpm, $RPMS);
+            if ( $myrpm_name eq "dapl" ) {
+                $myrpm_name = $name;
+            }
             $packages_info{$myrpm_name}{'rpm_exist'} = 1;
         }
     }
@@ -2868,10 +2916,12 @@ sub install_rpm
             }
         }
     }
-
     my $version = $main_packages{$packages_info{$name}{'parent'}}{'version'};
     my $release = $main_packages{$packages_info{$name}{'parent'}}{'release'};
 
+    if ( $name =~ m/dapl-v/ ) {
+        $name = "dapl";
+    }
     $package = "$RPMS/$name-$version-$release.$target_cpu.rpm";
 
     if (not -f $package) {
