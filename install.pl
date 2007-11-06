@@ -3512,9 +3512,9 @@ sub main
             }
             
             # Set RPMs info for available source RPMs
-            set_existing_rpms();
             set_availability();
             $num_selected = select_packages();
+            set_existing_rpms();
             resolve_dependencies();
             check_linux_dependencies();
             if (not $quiet) {
@@ -3552,9 +3552,9 @@ sub main
         }
         
         # Set RPMs info for available source RPMs
-        set_existing_rpms();
         set_availability();
         $num_selected = select_packages();
+        set_existing_rpms();
         resolve_dependencies();
         check_linux_dependencies();
         if (not $quiet) {
