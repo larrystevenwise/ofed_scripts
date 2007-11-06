@@ -1238,6 +1238,7 @@ while ( $#ARGV >= 0 ) {
         $config_net_given = 1;
     } elsif ( $cmd_flag eq "-l" or $cmd_flag eq "--prefix" ) {
         $prefix = shift(@ARGV);
+        $prefix =~ s/\/$//;
     } elsif ( $cmd_flag eq "-k" or $cmd_flag eq "--kernel" ) {
         $kernel = shift(@ARGV);
         $kernel_given = 1;
@@ -1933,6 +1934,7 @@ sub select_packages
             chomp $ans;
             if ($ans) {
                 $prefix = $ans;
+                $prefix =~ s/\/$//;
             }
             print CONFIG "prefix=$prefix\n";
         }
@@ -1956,6 +1958,7 @@ sub select_packages
 
                 if ($package eq "prefix") {
                     $prefix = $selected;
+                    $prefix =~ s/\/$//;
                     next;
                 }
 
