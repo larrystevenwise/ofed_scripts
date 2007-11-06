@@ -2478,12 +2478,13 @@ sub build_rpm
             }
             else {
                 if ($parent eq "sdpnetstat" or $parent eq "rds-tools") {
-                    $ldflags    .= " -g -O2";
-                    $cflags     .= " -g -O2";
-                    $cppflags   .= " -g -O2";
-                    $cxxflags   .= " -g -O2";
-                    $fflags     .= " -g -O2";
-                    $ldlibs     .= " -g -O2";
+                    # Override compilation flags on RHEL 4.0 and 5.0 PPC64
+                    $ldflags    = " -g -O2";
+                    $cflags     = " -g -O2";
+                    $cppflags   = " -g -O2";
+                    $cxxflags   = " -g -O2";
+                    $fflags     = " -g -O2";
+                    $ldlibs     = " -g -O2";
                 }
                 else {
                     $ldflags    .= " $optflags -m64 -g -O2 -L/usr/lib64";
