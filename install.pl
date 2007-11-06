@@ -2446,7 +2446,6 @@ sub build_rpm
     my $cxxflags;
     my $fflags;
     my $ldlibs;
-
     my $parent = $packages_info{$name}{'parent'};
     print "Build $name RPM\n" if ($verbose);
 
@@ -2823,7 +2822,36 @@ sub build_rpm
 
     if ($build32 and $packages_info{$name}{'install32'} and 
         not $packages_info{$name}{'rpm_exist32'}) {
-        $cmd = "$pref_env rpmbuild --rebuild --define '_topdir $TOPDIR'";
+
+        my $pref_env32;
+        my $ldflags32;
+        my $cflags32;
+        my $cppflags32;
+        my $cxxflags32;
+        my $fflags32;
+        my $ldlibs32;
+
+        $ldflags32    .= " -m32 -g -O2 -L/usr/lib";
+        $cflags32     .= " -m32 -g -O2";
+        $cppflags32   .= " -m32 -g -O2";
+        $cxxflags32   .= " -m32 -g -O2";
+        $fflags32     .= " -m32 -g -O2";
+        $ldlibs32     .= " -m32 -g -O2 -L/usr/lib";
+
+        if ($prefix ne $default_prefix) {
+            $ldflags32 .= " -L$prefix/lib";
+            $cflags32 .= " -I$prefix/include";
+            $cppflags32 .= " -I$prefix/include";
+        }
+
+        $pref_env32 .= " LDFLAGS='$ldflags32'";
+        $pref_env32 .= " CFLAGS='$cflags32'";
+        $pref_env32 .= " CPPFLAGS='$cppflags32'";
+        $pref_env32 .= " CXXFLAGS='$cxxflags32'";
+        $pref_env32 .= " FFLAGS='$fflags32'";
+        $pref_env32 .= " LDLIBS='$ldlibs32'";
+
+        $cmd = "$pref_env32 rpmbuild --rebuild --define '_topdir $TOPDIR'";
         $cmd .= " --target $target_cpu32";
         $cmd .= " --define '_prefix $prefix'";
         $cmd .= " --define '_exec_prefix $prefix'";
