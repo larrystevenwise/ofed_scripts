@@ -230,6 +230,7 @@ my @prev_ofed_packages = (
                         "libehca", "libehca-devel", "dapl", "dapl-devel",
                         "libibcm", "libibcm-devel", "libibcommon", "libibcommon-devel",
                         "libibmad", "libibmad-devel", "libibumad", "libibumad-devel",
+                        "ibsim", "ibsim-debuginfo",
                         "libibverbs", "libibverbs-devel", "libibverbs-utils",
                         "libipathverbs", "libipathverbs-devel", "libmthca",
                         "libmthca-devel", "libmlx4", "libmlx4-devel",
@@ -278,6 +279,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "libibcommon", "libibcommon-devel", "libibcommon-static", "libibcommon-debuginfo",
                      "libibumad", "libibumad-devel", "libibumad-static", "libibumad-debuginfo",
                      "libibmad", "libibmad-devel", "libibmad-static", "libibmad-debuginfo",
+                     "ibsim", "ibsim-debuginfo",
                      "librdmacm", "librdmacm-utils", "librdmacm-devel", "librdmacm-debuginfo",
                      "libsdp", "libsdp-devel", "libsdp-debuginfo",
                      "opensm", "opensm-libs", "opensm-devel", "opensm-debuginfo", "opensm-static",
@@ -684,6 +686,21 @@ my %packages_info = (
             dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
+
+        'ibsim' =>
+            { name => "ibsim", parent => "ibsim",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibmad-devel"],
+            ofa_req_inst => ["libibumad", "libibmad"],
+            install32 => 1, exception => 0, configure_options => '' },
+        'ibsim-debuginfo' =>
+            { name => "ibsim-debuginfo", parent => "ibsim",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibmad-devel"],
+            ofa_req_inst => [],
+            install32 => 1, exception => 0, configure_options => '' },
 
         'librdmacm' =>
             { name => "librdmacm", parent => "librdmacm",
