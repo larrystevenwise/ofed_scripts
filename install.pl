@@ -246,7 +246,7 @@ my @prev_ofed_packages = (
 # List of all available packages sorted following dependencies
 my @kernel_packages = ("kernel-ib", "kernel-ib-devel", "ib-bonding", "ib-bonding-debuginfo");
 my @basic_kernel_modules = ("core", "mthca", "mlx4", "cxgb3", "nes", "ehca", "ipath", "ipoib");
-my @ulp_modules = ("sdp", "srp", "rds", "qlgc_vnic", "iser");
+my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser");
 my @kernel_modules = (@basic_kernel_modules, @ulp_modules);
 
 my $kernel_configure_options;
@@ -335,6 +335,9 @@ my %kernel_modules_info = (
         'srp' =>
             { name => "srp", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
+        'srpt' =>
+            { name => "srpt", available => 1, selected => 0,
+            included_in_rpm => 0, requires => ["core"], },
         'rds' =>
             { name => "rds", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
