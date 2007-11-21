@@ -118,8 +118,14 @@ my $netdir;
 
 # Define RPMs environment
 my $dist_rpm;
+my $dist_rpm_ver = 0;
+my $dist_rpm_rel = 0;
+
 if (-f "/etc/issue") {
     $dist_rpm = `rpm -qf /etc/issue`;
+    chomp $dist_rpm;
+    $dist_rpm_ver = get_rpm_ver_inst($dist_rpm);
+    $dist_rpm_rel = get_rpm_rel_inst($dist_rpm);
 }
 else {
     $dist_rpm = "unsupported";
@@ -1277,7 +1283,9 @@ while ( $#ARGV >= 0 ) {
         $interactive = 0;
         $install_option = 'basic';
     } elsif ( $cmd_flag eq "--build32" ) {
-        $build32 = 1;
+        if (supported32bit()) {
+            $build32 = 1;
+        }
     } elsif ( $cmd_flag eq "--without-depcheck" ) {
         $check_linux_deps = 0;
     } elsif ( $cmd_flag eq "-q" ) {
@@ -1384,27 +1392,55 @@ sub getch
 
 sub get_rpm_name_arch
 {
-    return `rpm --queryformat "[%{NAME}] [%{ARCH}]" -qp @_`;
-}
-
-sub get_rpm_release
-{
-    return `rpm --queryformat "[%{RELEASE}]" -qp @_`;
+    my $ret = `rpm --queryformat "[%{NAME}] [%{ARCH}]" -qp @_`;
+    chomp $ret;
+    return $ret;
 }
 
 sub get_rpm_ver
 {
-    return `rpm --queryformat "[%{VERSION}]\n" -qp @_ | uniq`;
+    my $ret = `rpm --queryformat "[%{VERSION}]\n" -qp @_ | uniq`;
+    chomp $ret;
+    return $ret;
 }
-# Get RPM name and version of the INSTALLED package
-sub get_rpm_version
+
+sub get_rpm_rel
 {
-    return `rpm --queryformat "[%{VERSION}]\n" -q @_ | uniq`;
+    my $ret = `rpm --queryformat "[%{RELEASE}]\n" -qp @_ | uniq`;
+    chomp $ret;
+    return $ret;
+}
+
+# Get RPM name and version of the INSTALLED package
+sub get_rpm_ver_inst
+{
+    my $ret = `rpm --queryformat '[%{VERSION}]\n' -q @_ | uniq`;
+    chomp $ret;
+    return $ret;
+}
+
+sub get_rpm_rel_inst
+{
+    my $ret = `rpm --queryformat "[%{RELEASE}]\n" -q @_ | uniq`;
+    chomp $ret;
+    return $ret;
 }
 
 sub get_rpm_info
 {
-    return `rpm --queryformat "[%{NAME}] [%{VERSION}] [%{RELEASE}] [%{DESCRIPTION}]" -qp @_`;
+    my $ret = `rpm --queryformat "[%{NAME}] [%{VERSION}] [%{RELEASE}] [%{DESCRIPTION}]" -qp @_`;
+    chomp $ret;
+    return $ret;
+}
+
+sub supported32bit
+{
+    # Disable 32bit libraries on SLES10 SP1 U1
+    if ($distro eq "SuSE" and $dist_rpm_rel gt 15.2) {
+        print RED "\n32-bit libraries are not supported on this platform", RESET "\n" if (not $quiet);
+        return 0;
+    }
+    return 1
 }
 
 # Check whether compiler $1 exist
@@ -1603,7 +1639,7 @@ sub set_existing_rpms
     for my $binrpm ( <$RPMS/*.rpm> ) {
         my ($rpm_name, $rpm_arch) = (split ' ', get_rpm_name_arch($binrpm));
         if ($rpm_name =~ /kernel-ib|ib-bonding/) {
-            if (($rpm_arch eq $target_cpu) and (get_rpm_release($binrpm) eq $kernel_rel)) {
+            if (($rpm_arch eq $target_cpu) and (get_rpm_rel($binrpm) eq $kernel_rel)) {
                 $packages_info{$rpm_name}{'rpm_exist'} = 1;
                 print "$rpm_name RPM exist\n" if ($verbose2);
             }
@@ -1938,11 +1974,17 @@ sub select_packages
                 }
             }
             if ($arch eq "x86_64" or $arch eq "ppc64") {
-                print "Install 32-bit packages? [y/N]:";
-                $ans = getch();
-                if ( $ans eq 'Y' or $ans eq 'y' ) {
-                    $build32 = 1;
-                    print CONFIG "build32=1\n";
+                if (supported32bit()) {
+                    print "Install 32-bit packages? [y/N]:";
+                    $ans = getch();
+                    if ( $ans eq 'Y' or $ans eq 'y' ) {
+                        $build32 = 1;
+                        print CONFIG "build32=1\n";
+                    }
+                    else {
+                        $build32 = 0;
+                        print CONFIG "build32=0\n";
+                    }
                 }
                 else {
                     $build32 = 0;
@@ -1972,7 +2014,9 @@ sub select_packages
                 print "$package=$selected\n" if ($verbose3);
 
                 if ($package eq "build32") {
-                    $build32 = 1 if ($selected);
+                    if (supported32bit()) {
+                        $build32 = 1 if ($selected);
+                    }
                     next;
                 }
 
@@ -2264,8 +2308,7 @@ sub check_linux_dependencies
                     exit 1;
                 }
                 if ($req_version) {
-                    my $inst_version = get_rpm_version($req_name);
-                    chomp $inst_version;
+                    my $inst_version = get_rpm_ver_inst($req_name);
                     print "check_linux_dependencies: $req_name installed version $inst_version, required $req_version\n" if ($verbose3);
                     if ($inst_version lt $req_version) {
                         print RED "$req_name-$req_version rpm is required to build $package", RESET "\n";
@@ -2309,8 +2352,7 @@ sub check_linux_dependencies
                 exit 1;
             }
             if ($req_version) {
-                my $inst_version = get_rpm_version($req_name);
-                chomp $inst_version;
+                my $inst_version = get_rpm_ver_inst($req_name);
                 print "check_linux_dependencies: $req_name installed version $inst_version, required $req_version\n" if ($verbose3);
                 if ($inst_version lt $req_version) {
                     print RED "$req_name-$req_version rpm is required to install $package", RESET "\n";
