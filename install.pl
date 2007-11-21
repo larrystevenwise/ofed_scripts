@@ -3634,7 +3634,9 @@ sub main
     # Uninstall the previous installations
     uninstall();
     install();
-    ipoib_config();
+    if ($kernel_modules_info{'ipoib'}{'selected'}) {
+        ipoib_config();
+    }
     print GREEN "\nInstallation finished successfully.", RESET;
     if ($interactive) {
         print GREEN "\nPress any key to continue...", RESET;
