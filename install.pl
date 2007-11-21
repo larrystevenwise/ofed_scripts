@@ -2514,6 +2514,7 @@ sub build_rpm
     my $cxxflags;
     my $fflags;
     my $ldlibs;
+    my $openmpi_comp_env;
     my $parent = $packages_info{$name}{'parent'};
     print "Build $name RPM\n" if ($verbose);
 
@@ -2532,12 +2533,13 @@ sub build_rpm
 
     if (not $packages_info{$name}{'rpm_exist'}) {
         if ($arch eq "ppc64") {
-            my $kernel_minor = (split('-', $kernel))[0];
-            my $kernel_minor = (split('\.', $kernel_minor))[3];
-            if ($distro eq "SuSE" and $kernel_minor =~ m/[0-9]+/ and $kernel_minor >= 46) {
+            if ($distro eq "SuSE" and $dist_rpm_rel gt 15.2) {
                 # SLES 10 SP1
                 if ($parent eq "ibutils") {
                     $packages_info{'ibutils'}{'configure_options'} .= " LDFLAGS=-L/usr/lib/gcc/powerpc64-suse-linux/4.1.2/64";
+                }
+                if ($parent eq "openmpi") {
+                    $openmpi_comp_env .= ' LDFLAGS="-m64 -O2 -L/usr/lib/gcc/powerpc64-suse-linux/4.1.2/64"';
                 }
             }
             else {
@@ -2704,14 +2706,13 @@ sub build_rpm
         }
         elsif ($parent eq "openmpi") {
             my $compiler = (split('_', $name))[1];
-            my $openmpi_comp_env;
             my $use_default_rpm_opt_flags = 1;
             my $openmpi_ldflags;
             my $openmpi_wrapper_cxx_flags;
             my $openmpi_lib;
             
             if ($compiler eq "gcc") {
-                $openmpi_comp_env = "CC=gcc";
+                $openmpi_comp_env .= " CC=gcc";
                 if ($gcc{'g++'}) {
                     $openmpi_comp_env .= " CXX=g++";
                 }
@@ -2729,7 +2730,7 @@ sub build_rpm
                 }
             }
             elsif ($compiler eq "pathscale") {
-                $openmpi_comp_env = "CC=pathcc";
+                $openmpi_comp_env .= " CC=pathcc";
                 if ($pathscale{'pathCC'}) {
                     $openmpi_comp_env .= " CXX=pathCC";
                 }
@@ -2748,7 +2749,7 @@ sub build_rpm
                 }
             }
             elsif ($compiler eq "pgi") {
-                $openmpi_comp_env = "CC=pgcc";
+                $openmpi_comp_env .= " CC=pgcc";
                 $use_default_rpm_opt_flags = 0;
                 if ($pgi{'pgCC'}) {
                     $openmpi_comp_env .= " CXX=pgCC";
@@ -2775,7 +2776,7 @@ sub build_rpm
                 }
             }
             elsif ($compiler eq "intel") {
-                $openmpi_comp_env = "CC=icc";
+                $openmpi_comp_env .= " CC=icc";
                 if ($intel{'icpc'}) {
                     $openmpi_comp_env .= " CXX=icpc";
                 }
