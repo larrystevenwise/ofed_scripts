@@ -33,9 +33,7 @@ use File::Find;
 use File::Copy;
 use Cwd;
 use Term::ANSIColor qw(:constants);
-
-# use Cwd;
-
+use sigtrap 'handler', \&sig_handler, 'normal-signals';
 
 $| = 1;
 my $LOCK_EXCLUSIVE = 2;
@@ -1380,12 +1378,22 @@ if ($kernel_given and not $kernel_source_given) {
 my $kernel_rel = $kernel;
 $kernel_rel =~ s/-/_/g;
 
+sub sig_handler
+{
+    exit 1;
+}
+
 sub getch
 {
         my $c;
         system("stty -echo raw");
         $c=getc(STDIN);
         system("stty echo -raw");
+        # Exit on Ctrl+c or Esc
+        if ($c eq "\cC" or $c eq "\e") {
+            print "\n";
+            exit 1;
+        }
         print "$c\n";
         return $c;
 }
