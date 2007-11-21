@@ -2453,6 +2453,9 @@ sub build_kernel_rpm
             elsif ($module eq "ipath") {
                 $kernel_configure_options .= " --with-ipath_inf-mod";
             }
+            elsif ($module eq "srpt") {
+                $kernel_configure_options .= " --with-srp-target-mod";
+            }
             else {
                 $kernel_configure_options .= " --with-$module-mod";
             }
