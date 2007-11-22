@@ -2533,10 +2533,6 @@ sub build_rpm
             $cflags .= "$optflags -I$prefix/include";
             $cppflags .= "$optflags -I$prefix/include";
         }
-
-        if ($parent eq "openmpi") {
-            $packages_info{'openmpi'}{'configure_options'} .= " --with-openib=$prefix";
-        }
     }
 
     if (not $packages_info{$name}{'rpm_exist'}) {
@@ -2718,6 +2714,13 @@ sub build_rpm
             my $openmpi_ldflags;
             my $openmpi_wrapper_cxx_flags;
             my $openmpi_lib;
+
+            if ($arch =~ m/x86_64|ppc64/) {
+                $openmpi_lib = 'lib64';
+            }
+            else {
+                $openmpi_lib = 'lib';
+            }
             
             if ($compiler eq "gcc") {
                 $openmpi_comp_env .= " CC=gcc";
