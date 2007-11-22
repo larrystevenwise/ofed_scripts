@@ -2545,6 +2545,14 @@ sub build_rpm
                 if ($parent eq "openmpi") {
                     $openmpi_comp_env .= ' LDFLAGS="-m64 -O2 -L/usr/lib/gcc/powerpc64-suse-linux/4.1.2/64"';
                 }
+                if ($parent eq "sdpnetstat" or $parent eq "rds-tools") {
+                    $ldflags    = " -g -O2";
+                    $cflags     = " -g -O2";
+                    $cppflags   = " -g -O2";
+                    $cxxflags   = " -g -O2";
+                    $fflags     = " -g -O2";
+                    $ldlibs     = " -g -O2";
+                }
             }
             else {
                 if ($parent eq "sdpnetstat" or $parent eq "rds-tools") {
