@@ -1444,10 +1444,10 @@ sub get_rpm_info
 sub supported32bit
 {
     # Disable 32bit libraries on SLES10 SP1 U1
-    if ($distro eq "SuSE" and $dist_rpm_rel gt 15.2) {
-        print RED "\n32-bit libraries are not supported on this platform", RESET "\n" if (not $quiet);
-        return 0;
-    }
+###    if ($distro eq "SuSE" and $dist_rpm_rel gt 15.2) {
+###        print RED "\n32-bit libraries are not supported on this platform", RESET "\n" if (not $quiet);
+###        return 0;
+###    }
     return 1
 }
 
@@ -3065,6 +3065,9 @@ sub install_rpm
             # exit 1;
         }
         $cmd = "rpm -iv";
+        if ($distro eq "SuSE" and $dist_rpm_rel gt 15.2) {
+            $cmd .= " --force";
+        }
         $cmd .= " $package";
 
         print "Running $cmd\n" if ($verbose);
