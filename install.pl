@@ -2749,6 +2749,7 @@ sub build_rpm
                 }
             }
             elsif ($compiler eq "pathscale") {
+                $cmd .= " --define 'disable_auto_requires 1'";
                 $openmpi_comp_env .= " CC=pathcc";
                 if ($pathscale{'pathCC'}) {
                     $openmpi_comp_env .= " CXX=pathCC";
@@ -2768,6 +2769,7 @@ sub build_rpm
                 }
             }
             elsif ($compiler eq "pgi") {
+                $cmd .= " --define 'disable_auto_requires 1'";
                 $openmpi_comp_env .= " CC=pgcc";
                 $use_default_rpm_opt_flags = 0;
                 if ($pgi{'pgCC'}) {
@@ -2795,6 +2797,7 @@ sub build_rpm
                 }
             }
             elsif ($compiler eq "intel") {
+                $cmd .= " --define 'disable_auto_requires 1'";
                 $openmpi_comp_env .= " CC=icc";
                 if ($intel{'icpc'}) {
                     $openmpi_comp_env .= " CXX=icpc";
