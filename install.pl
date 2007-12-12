@@ -846,7 +846,7 @@ my %packages_info = (
             { name => "srptools", parent => "srptools",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibcommon-devel", "libibumad-devel"],
+            dist_req_inst => [], ofa_req_build => ["libibcommon-devel", "libibumad-devel", "libibverbs-devel"],
             ofa_req_inst => ["libibcommon", "libibumad", "libibverbs"],
             install32 => 0, exception => 0, configure_options => '' },
         'srptools-debuginfo' =>
