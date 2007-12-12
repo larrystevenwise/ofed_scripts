@@ -949,14 +949,14 @@ my %packages_info = (
             { name => "dapl-utils", parent => "dapl-v2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel", "librdmacm", "librdmacm-devel"],
             ofa_req_inst => ["dapl-v2"],
             install32 => 0, exception => 0, configure_options => '' },
         'dapl-debuginfo' =>
             { name => "dapl-debuginfo", parent => "dapl-v2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel", "librdmacm", "librdmacm-devel"],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
 
