@@ -1016,28 +1016,28 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad"],
+            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
             install32 => 0, exception => 0 },
         'mvapich2_pgi' =>
             { name => "mvapich2_pgi", parent => "mvapich2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad"],
+            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
             install32 => 0, exception => 0 },
         'mvapich2_intel' =>
             { name => "mvapich2_intel", parent => "mvapich2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad"],
+            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
             install32 => 0, exception => 0 },
         'mvapich2_pathscale' =>
             { name => "mvapich2_pathscale", parent => "mvapich2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad"],
+            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
             install32 => 0, exception => 0 },
 
         'openmpi' =>
