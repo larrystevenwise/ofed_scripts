@@ -1538,7 +1538,7 @@ sub set_availability
 
     # Ehca
     if ($arch =~ m/ppc64|powerpc/ and
-            $kernel =~ m/2.6.1[6-9]|2.6.2[0-9]|2.6.9-55/) {
+            $kernel =~ m/2.6.1[6-9]|2.6.2[0-9]|2.6.9-55|2.6.9-67/) {
             $kernel_modules_info{'ehca'}{'available'} = 1;
             $packages_info{'libehca'}{'available'} = 1;
             $packages_info{'libehca-devel-static'}{'available'} = 1;
@@ -1549,7 +1549,7 @@ sub set_availability
     if ( ($arch =~ m/ppc64/ and
             $kernel =~ m/2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) or
        ($arch =~ m/x86_64/ and
-            $kernel =~ m/2.6.5|2.6.9-22|2.6.9-34|2.6.9-42|2.6.9-55|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) ) {
+            $kernel =~ m/2.6.5|2.6.9-22|2.6.9-34|2.6.9-42|2.6.9-55|2.6.9-67|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) ) {
             $kernel_modules_info{'ipath'}{'available'} = 1;
             $packages_info{'libipathverbs'}{'available'} = 1;
             $packages_info{'libipathverbs-devel'}{'available'} = 1;
@@ -1557,13 +1557,13 @@ sub set_availability
     }
 
     # Iser
-    if ($kernel =~ m/2.6.9-34|2.6.9-42|2.6.9-55|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
+    if ($kernel =~ m/2.6.9-34|2.6.9-42|2.6.9-55|2.6.9-67|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
             $kernel_modules_info{'iser'}{'available'} = 1;
             $packages_info{'open-iscsi-generic'}{'available'} = 1;
     }
 
     # QLogic vnic
-    if ($kernel =~ m/2.6.9-34|2.6.9-42|2.6.9-55|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.19|2.6.18*/) {
+    if ($kernel =~ m/2.6.9-34|2.6.9-42|2.6.9-55|2.6.9-67|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.19|2.6.18*/) {
             $kernel_modules_info{'qlgc_vnic'}{'available'} = 1;
             $packages_info{'ibvexdmtools'}{'available'} = 1;
             $packages_info{'qlvnictools'}{'available'} = 1;
