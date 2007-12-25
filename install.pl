@@ -183,6 +183,9 @@ my @selected_by_user = ();
 my @selected_modules_by_user = ();
 my @selected_kernel_modules = ();
 
+my $open_iscsi_ver_rh4 = '2.0-754';
+my $open_iscsi_ver_non_rh4 = '2.0-865.15';
+
 sub usage
 {
    print GREEN;
@@ -2524,6 +2527,9 @@ sub build_rpm
     my $ldlibs;
     my $openmpi_comp_env;
     my $parent = $packages_info{$name}{'parent'};
+    my $srpmdir;
+    my $srpmpath_for_distro;
+
     print "Build $name RPM\n" if ($verbose);
 
     my $pref_env;
@@ -2870,6 +2876,17 @@ sub build_rpm
             $cmd .= " --define '_defaultdocdir $def_doc_dir/$main_packages{$parent}{'name'}-$main_packages{$parent}{'version'}'";
             $cmd .= " --define '_usr $prefix'";
         }
+	elsif ($parent eq "open-iscsi-generic") {
+	    # We use different open-iscsi version for RH4 and all other supported distros
+	    $srpmdir=`dirname $main_packages{$parent}{'srpmpath'}`;
+	    chomp($srpmdir);
+            if ($distro eq "redhat") {
+                $srpmpath_for_distro="$srpmdir/$parent-$open_iscsi_ver_rh4.src.rpm";
+	    }
+            else {
+	        $srpmpath_for_distro="$srpmdir/$parent-$open_iscsi_ver_non_rh4.src.rpm";
+	    }
+	}
         else {
             $cmd .= " --define '_prefix $prefix'";
             $cmd .= " --define '_exec_prefix $prefix'";
@@ -2881,7 +2898,12 @@ sub build_rpm
             $cmd .= " --define 'configure_options $packages_info{$parent}{'configure_options'} $user_configure_options'";
         }
 
-        $cmd .= " $main_packages{$parent}{'srpmpath'}";
+	if ($parent ne "open-iscsi-generic") {
+            $cmd .= " $main_packages{$parent}{'srpmpath'}";
+	}
+	else {
+            $cmd .= " $srpmpath_for_distro";
+	}
 
         print "Running $cmd\n" if ($verbose);
         open(LOG, "+>$ofedlogs/$parent.rpmbuild.log");
@@ -3042,7 +3064,19 @@ sub install_rpm
     if ( $name =~ m/dapl-v/ ) {
         $name = "dapl";
     }
-    $package = "$RPMS/$name-$version-$release.$target_cpu.rpm";
+    
+    if ($name eq $packages_info{'open-iscsi-generic'}{'name'}) {
+        # We use different open-iscsi version for RH4 and all other supported distros
+        if ($distro eq "redhat") {
+            $package = "$RPMS/$name-$open_iscsi_ver_rh4.$target_cpu.rpm";
+	}
+	else {
+            $package = "$RPMS/$name-$open_iscsi_ver_non_rh4.$target_cpu.rpm";
+	}
+    }
+    else {
+        $package = "$RPMS/$name-$version-$release.$target_cpu.rpm";
+    }
 
     if (not -f $package) {
         print RED "$package does not exist", RESET "\n";
