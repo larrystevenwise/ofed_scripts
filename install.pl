@@ -59,6 +59,11 @@ my $print_available = 0;
 my $clear_string = `clear`;
 my $upgrade_open_iscsi = 0;
 
+my $vendor_pre_install = "";
+my $vendor_post_install = "";
+my $vendor_pre_uninstall = "";
+my $vendor_post_uninstall = "";
+
 my $distro;
 
 my $build32 = 0;
@@ -2044,6 +2049,50 @@ sub select_packages
                     next;
                 }
 
+                if ($package eq "vendor_pre_install") {
+		    if ( -f $selected ) {
+			$vendor_pre_install = dirname($selected) . '/' . basename($selected);
+		    }
+		    else {
+			print RED "\nVendor script $selected is not found", RESET "\n" if (not $quiet);
+			exit 1
+		    }
+                    next;
+                }
+
+                if ($package eq "vendor_post_install") {
+		    if ( -f $selected ) {
+			$vendor_post_install = dirname($selected) . '/' . basename($selected);
+		    }
+		    else {
+			print RED "\nVendor script $selected is not found", RESET "\n" if (not $quiet);
+			exit 1
+		    }
+                    next;
+                }
+
+                if ($package eq "vendor_pre_uninstall") {
+		    if ( -f $selected ) {
+			$vendor_pre_uninstall = dirname($selected) . '/' . basename($selected);
+		    }
+		    else {
+			print RED "\nVendor script $selected is not found", RESET "\n" if (not $quiet);
+			exit 1
+		    }
+                    next;
+                }
+
+                if ($package eq "vendor_post_uninstall") {
+		    if ( -f $selected ) {
+			$vendor_post_uninstall = dirname($selected) . '/' . basename($selected);
+		    }
+		    else {
+			print RED "\nVendor script $selected is not found", RESET "\n" if (not $quiet);
+			exit 1
+		    }
+                    next;
+                }
+
                 if ($package eq "kernel_configure_options" or $package eq "OFA_KERNEL_PARAMS") {
                     $kernel_configure_options = $selected;
                     next;
@@ -3696,7 +3745,33 @@ sub main
     
     # Uninstall the previous installations
     uninstall();
+    my $vendor_ret;
+    if (length($vendor_pre_install) > 0) {
+	    print BLUE "\nRunning vendor pre install script: $vendor_pre_install", RESET "\n" if (not $quiet);
+	    $vendor_ret = system ( "$vendor_pre_install", "CONFIG=$config",
+		"RPMS=$RPMS", "SRPMS=$SRPMS", "PREFIX=$prefix", "TOPDIR=$TOPDIR", "QUIET=$quiet" );
+	    if ($vendor_ret != 0) {
+		    print RED "\nExecution of vendor pre install script failed.", RESET "\n" if (not $quiet);
+		    exit 1;
+	    }
+    }
     install();
+    if (length($vendor_pre_uninstall) > 0) {
+	    system "cp $vendor_pre_uninstall $prefix/sbin/vendor_pre_uninstall.sh";
+    }
+    if (length($vendor_post_uninstall) > 0) {
+	    system "cp $vendor_post_uninstall $prefix/sbin/vendor_post_uninstall.sh";
+    }
+    if (length($vendor_post_install) > 0) {
+	    print BLUE "\nRunning vendor post install script: $vendor_post_install", RESET "\n" if (not $quiet);
+	    $vendor_ret = system ( "$vendor_post_install", "CONFIG=$config",
+		"RPMS=$RPMS", "SRPMS=$SRPMS", "PREFIX=$prefix", "TOPDIR=$TOPDIR", "QUIET=$quiet");
+	    if ($vendor_ret != 0) {
+		    print RED "\nExecution of vendor post install script failed.", RESET "\n" if (not $quiet);
+		    exit 1;
+	    }
+    }
+
     if ($kernel_modules_info{'ipoib'}{'selected'}) {
         ipoib_config();
     }

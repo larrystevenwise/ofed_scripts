@@ -266,7 +266,11 @@ echo
 
 read -p "Do you want to continue?[y/N]:" ans_r
 if [[ "$ans_r" == "y" || "$ans_r" == "Y" || "$ans_r" == "yes" ]]; then
+    [ -x $STACK_PREFIX/sbin/vendor_pre_uninstall.sh ] && ex $STACK_PREFIX/sbin/vendor_pre_uninstall.sh
+    [ -x $STACK_PREFIX/sbin/vendor_post_uninstall.sh ] && \
+	cp $STACK_PREFIX/sbin/vendor_post_uninstall.sh /tmp/$$-ofed_vendor_post_uninstall.sh
     uninstall
+    [ -x /tmp/$$-ofed_vendor_post_uninstall.sh ] && ex /tmp/$$-ofed_vendor_post_uninstall.sh
 else    
     exit 1
 fi

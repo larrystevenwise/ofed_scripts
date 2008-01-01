@@ -49,6 +49,8 @@ OpenFabrics scripts
 install -d $RPM_BUILD_ROOT%{_prefix}/bin
 install -d $RPM_BUILD_ROOT%{_prefix}/sbin
 install -m 0755 uninstall.sh $RPM_BUILD_ROOT%{_prefix}/sbin/ofed_uninstall.sh
+install -m 0755 vendor_pre_uninstall.sh $RPM_BUILD_ROOT%{_prefix}/sbin
+install -m 0755 vendor_post_uninstall.sh $RPM_BUILD_ROOT%{_prefix}/sbin
 install -m 0755 ofed_info $RPM_BUILD_ROOT%{_prefix}/bin
 
 perl -ni -e "s@(STACK_PREFIX=).*@\$1%{_prefix}@; print" $RPM_BUILD_ROOT%{_prefix}/sbin/ofed_uninstall.sh
@@ -115,6 +117,8 @@ esac
 %defattr(-,root,root)
 %{_prefix}/bin/ofed_info
 %{_prefix}/sbin/ofed_uninstall.sh
+%{_prefix}/sbin/vendor_pre_uninstall.sh
+%{_prefix}/sbin/vendor_post_uninstall.sh
 
 %changelog
 * Tue Oct  9 2007 Vladimir Sokolovsky <vlad@mellanox.co.il>
