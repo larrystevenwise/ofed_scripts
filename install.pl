@@ -2049,6 +2049,11 @@ sub select_packages
                     next;
                 }
 
+
+		if (substr($package,0,length("vendor_config")) eq "vendor_config") {
+		       next;
+		}
+
                 if ($package eq "vendor_pre_install") {
 		    if ( -f $selected ) {
 			$vendor_pre_install = dirname($selected) . '/' . basename($selected);
