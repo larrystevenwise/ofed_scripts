@@ -2564,6 +2564,76 @@ sub build_kernel_rpm
     }
 }
 
+sub build_rpm_32
+{
+    my $name = shift @_;
+    my $parent = $packages_info{$name}{'parent'};
+    my $cmd;
+    my $res = 0;
+    my $sig = 0;
+    my $TMPRPMS;
+
+    my $pref_env32;
+    my $ldflags32;
+    my $cflags32;
+    my $cppflags32;
+    my $cxxflags32;
+    my $fflags32;
+    my $ldlibs32;
+
+    $ldflags32    .= " -m32 -g -O2 -L/usr/lib";
+    $cflags32     .= " -m32 -g -O2";
+    $cppflags32   .= " -m32 -g -O2";
+    $cxxflags32   .= " -m32 -g -O2";
+    $fflags32     .= " -m32 -g -O2";
+    $ldlibs32     .= " -m32 -g -O2 -L/usr/lib";
+
+    if ($prefix ne $default_prefix) {
+        $ldflags32 .= " -L$prefix/lib";
+        $cflags32 .= " -I$prefix/include";
+        $cppflags32 .= " -I$prefix/include";
+    }
+
+    $pref_env32 .= " LDFLAGS='$ldflags32'";
+    $pref_env32 .= " CFLAGS='$cflags32'";
+    $pref_env32 .= " CPPFLAGS='$cppflags32'";
+    $pref_env32 .= " CXXFLAGS='$cxxflags32'";
+    $pref_env32 .= " FFLAGS='$fflags32'";
+    $pref_env32 .= " LDLIBS='$ldlibs32'";
+
+    $cmd = "$pref_env32 rpmbuild --rebuild --define '_topdir $TOPDIR'";
+    $cmd .= " --target $target_cpu32";
+    $cmd .= " --define '_prefix $prefix'";
+    $cmd .= " --define '_exec_prefix $prefix'";
+    $cmd .= " --define '_sysconfdir $sysconfdir'";
+    $cmd .= " --define '_usr $prefix'";
+    $cmd .= " --define '_lib lib'";
+    $cmd .= " --define '__arch_install_post %{nil}'";
+    $cmd .= " $main_packages{$parent}{'srpmpath'}";
+
+    print "Running $cmd\n" if ($verbose);
+    open(LOG, "+>$ofedlogs/$parent.rpmbuild32bit.log");
+    print LOG "Running $cmd\n";
+    close LOG;
+    system("$cmd >> $ofedlogs/$parent.rpmbuild32bit.log 2>&1");
+    $res = $? >> 8;
+    $sig = $? & 127;
+    if ($sig or $res) {
+        print RED "Failed to build $parent RPM", RESET "\n";
+        print RED "See $ofedlogs/$parent.rpmbuild32bit.log", RESET "\n";
+        exit 1;
+    }
+
+    $TMPRPMS = "$TOPDIR/RPMS/$target_cpu32";
+    chomp $TMPRPMS;
+    for my $myrpm ( <$TMPRPMS/*.rpm> ) {
+        print "Created $myrpm\n" if ($verbose2);
+        my ($myrpm_name, $myrpm_arch) = (split ' ', get_rpm_name_arch($myrpm));
+        move($myrpm, $RPMS);
+        $packages_info{$myrpm_name}{'rpm_exist32'} = 1;
+    }
+}
+
 # Build RPM from source RPM
 sub build_rpm
 {
@@ -2623,6 +2693,11 @@ sub build_rpm
                     $cxxflags   = " -g -O2";
                     $fflags     = " -g -O2";
                     $ldlibs     = " -g -O2";
+                }
+                elsif ($distro eq "redhat" and $parent eq "tvflash") {
+                    build_rpm_32($name);
+                    $packages_info{$name}{'rpm_exist'} = 1;
+                    return;
                 }
                 else {
                     $ldflags    .= " $optflags -m64 -g -O2 -L/usr/lib64";
@@ -2990,66 +3065,7 @@ sub build_rpm
 
     if ($build32 and $packages_info{$name}{'install32'} and 
         not $packages_info{$name}{'rpm_exist32'}) {
-
-        my $pref_env32;
-        my $ldflags32;
-        my $cflags32;
-        my $cppflags32;
-        my $cxxflags32;
-        my $fflags32;
-        my $ldlibs32;
-
-        $ldflags32    .= " -m32 -g -O2 -L/usr/lib";
-        $cflags32     .= " -m32 -g -O2";
-        $cppflags32   .= " -m32 -g -O2";
-        $cxxflags32   .= " -m32 -g -O2";
-        $fflags32     .= " -m32 -g -O2";
-        $ldlibs32     .= " -m32 -g -O2 -L/usr/lib";
-
-        if ($prefix ne $default_prefix) {
-            $ldflags32 .= " -L$prefix/lib";
-            $cflags32 .= " -I$prefix/include";
-            $cppflags32 .= " -I$prefix/include";
-        }
-
-        $pref_env32 .= " LDFLAGS='$ldflags32'";
-        $pref_env32 .= " CFLAGS='$cflags32'";
-        $pref_env32 .= " CPPFLAGS='$cppflags32'";
-        $pref_env32 .= " CXXFLAGS='$cxxflags32'";
-        $pref_env32 .= " FFLAGS='$fflags32'";
-        $pref_env32 .= " LDLIBS='$ldlibs32'";
-
-        $cmd = "$pref_env32 rpmbuild --rebuild --define '_topdir $TOPDIR'";
-        $cmd .= " --target $target_cpu32";
-        $cmd .= " --define '_prefix $prefix'";
-        $cmd .= " --define '_exec_prefix $prefix'";
-        $cmd .= " --define '_sysconfdir $sysconfdir'";
-        $cmd .= " --define '_usr $prefix'";
-        $cmd .= " --define '_lib lib'";
-        $cmd .= " --define '__arch_install_post %{nil}'";
-        $cmd .= " $main_packages{$parent}{'srpmpath'}";
-
-        print "Running $cmd\n" if ($verbose);
-        open(LOG, "+>$ofedlogs/$parent.rpmbuild32bit.log");
-        print LOG "Running $cmd\n";
-        close LOG;
-        system("$cmd >> $ofedlogs/$parent.rpmbuild32bit.log 2>&1");
-        $res = $? >> 8;
-        $sig = $? & 127;
-        if ($sig or $res) {
-            print RED "Failed to build $parent RPM", RESET "\n";
-            print RED "See $ofedlogs/$parent.rpmbuild32bit.log", RESET "\n";
-            exit 1;
-        }
-
-        $TMPRPMS = "$TOPDIR/RPMS/$target_cpu32";
-        chomp $TMPRPMS;
-        for my $myrpm ( <$TMPRPMS/*.rpm> ) {
-            print "Created $myrpm\n" if ($verbose2);
-            my ($myrpm_name, $myrpm_arch) = (split ' ', get_rpm_name_arch($myrpm));
-            move($myrpm, $RPMS);
-            $packages_info{$myrpm_name}{'rpm_exist32'} = 1;
-        }
+        build_rpm_32($name);
     }
 }
 
@@ -3089,6 +3105,40 @@ sub install_kernel_rpm
     }
 }
 
+sub install_rpm_32
+{
+    my $name = shift @_;
+    my $cmd;
+    my $res = 0;
+    my $sig = 0;
+    my $package;
+
+    my $version = $main_packages{$packages_info{$name}{'parent'}}{'version'};
+    my $release = $main_packages{$packages_info{$name}{'parent'}}{'release'};
+
+    $package = "$RPMS/$name-$version-$release.$target_cpu32.rpm";
+    if (not -f $package) {
+        print RED "$package does not exist", RESET "\n";
+        # exit 1;
+    }
+
+    $cmd = "rpm -iv";
+    if ($distro eq "SuSE" and $dist_rpm_rel gt 15.2) {
+        $cmd .= " --force";
+    }
+    $cmd .= " $package";
+
+    print "Running $cmd\n" if ($verbose);
+    system("$cmd > $ofedlogs/$name.rpminstall.log 2>&1");
+    $res = $? >> 8;
+    $sig = $? & 127;
+    if ($sig or $res) {
+        print RED "Failed to install $name RPM", RESET "\n";
+        print RED "See $ofedlogs/$name.rpminstall.log", RESET "\n";
+        exit 1;
+    }
+}
+
 # Install required RPM
 sub install_rpm
 {
@@ -3112,6 +3162,12 @@ sub install_rpm
             }
         }
     }
+
+    if ($arch eq "ppc64" and $distro eq "redhat" and $name =~ m/tvflash/) {
+        install_rpm_32($name);
+        return;
+    }
+
     my $version = $main_packages{$packages_info{$name}{'parent'}}{'version'};
     my $release = $main_packages{$packages_info{$name}{'parent'}}{'release'};
 
@@ -3150,26 +3206,7 @@ sub install_rpm
     }
 
     if ($build32 and $packages_info{$name}{'install32'}) {
-        $package = "$RPMS/$name-$version-$release.$target_cpu32.rpm";
-        if (not -f $package) {
-            print RED "$package does not exist", RESET "\n";
-            # exit 1;
-        }
-        $cmd = "rpm -iv";
-        if ($distro eq "SuSE" and $dist_rpm_rel gt 15.2) {
-            $cmd .= " --force";
-        }
-        $cmd .= " $package";
-
-        print "Running $cmd\n" if ($verbose);
-        system("$cmd > $ofedlogs/$name.rpminstall.log 2>&1");
-        $res = $? >> 8;
-        $sig = $? & 127;
-        if ($sig or $res) {
-            print RED "Failed to install $name RPM", RESET "\n";
-            print RED "See $ofedlogs/$name.rpminstall.log", RESET "\n";
-            exit 1;
-        }
+        install_rpm_32($name);
     }
 }
 
