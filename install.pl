@@ -295,7 +295,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "librdmacm", "librdmacm-utils", "librdmacm-devel", "librdmacm-debuginfo",
                      "libsdp", "libsdp-devel", "libsdp-debuginfo",
                      "opensm", "opensm-libs", "opensm-devel", "opensm-debuginfo", "opensm-static",
-                     "dapl-v1", "dapl-v2", "dapl-devel", "dapl-devel-static", "dapl-utils", "dapl-debuginfo",
+                     "dapl-v1", "dapl-v1-devel", "dapl-v2", "dapl-devel", "dapl-devel-static", "dapl-utils", "dapl-debuginfo",
                      "perftest", "mstflint", "tvflash",
                      "qlvnictools", "sdpnetstat", "srptools", "rds-tools",
                      "ibutils", "infiniband-diags", "qperf", "qperf-debuginfo",
@@ -309,7 +309,7 @@ my @basic_user_packages = ("libibverbs", "libibverbs-utils", "libmthca", "libmlx
 my @hpc_kernel_packages = ("kernel-ib", "ib-bonding");
 my @hpc_kernel_modules = (@basic_kernel_modules);
 my @hpc_user_packages = (@basic_user_packages, "librdmacm",
-                        "librdmacm-utils", "dapl-v1", "dapl-v2", "dapl-devel", "dapl-devel-static", "dapl-utils",
+                        "librdmacm-utils", "dapl-v1", "dapl-v1-devel", "dapl-v2", "dapl-devel", "dapl-devel-static", "dapl-utils",
                         "infiniband-diags", "ibutils", "qperf", @mpi_packages);
 
 # all_packages is required to save ordered (following dependencies) list of
@@ -931,6 +931,13 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs", "libibverbs-devel", "librdmacm", "librdmacm-devel"],
             ofa_req_inst => ["libibverbs", "librdmacm"],
+            install32 => 1, exception => 0, configure_options => '' },
+        'dapl-v1-devel' =>
+            { name => "dapl-devel", parent => "dapl-v1",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel", "librdmacm", "librdmacm-devel"],
+            ofa_req_inst => ["dapl-v1"],
             install32 => 1, exception => 0, configure_options => '' },
         'dapl-v2' =>
             { name => "dapl", parent => "dapl-v2",
@@ -3120,7 +3127,7 @@ sub install_rpm_32
     my $release = $main_packages{$packages_info{$name}{'parent'}}{'release'};
 
     if ( $name =~ m/dapl-v/ ) {
-        $name = "dapl";
+        $name = $packages_info{$name}{'name'};
     }
 
     $package = "$RPMS/$name-$version-$release.$target_cpu32.rpm";
@@ -3181,7 +3188,7 @@ sub install_rpm
 
     if ( $name =~ m/dapl-v/ ) {
         $tmp_name = $name;
-        $name = "dapl";
+        $name = $packages_info{$name}{'name'};
     }
     
     if ($name eq $packages_info{'open-iscsi-generic'}{'name'}) {
