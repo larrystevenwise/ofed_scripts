@@ -2616,6 +2616,17 @@ sub build_rpm_32
     $cmd .= " --define '_usr $prefix'";
     $cmd .= " --define '_lib lib'";
     $cmd .= " --define '__arch_install_post %{nil}'";
+
+    if ($parent =~ m/dapl/) {
+        my $def_doc_dir = `rpm --eval '%{_defaultdocdir}'`;
+        chomp $def_doc_dir;
+        $cmd .= " --define '_prefix $prefix'";
+        $cmd .= " --define '_exec_prefix $prefix'";
+        $cmd .= " --define '_sysconfdir $sysconfdir'";
+        $cmd .= " --define '_defaultdocdir $def_doc_dir/$main_packages{$parent}{'name'}-$main_packages{$parent}{'version'}'";
+        $cmd .= " --define '_usr $prefix'";
+    }
+
     $cmd .= " $main_packages{$parent}{'srpmpath'}";
 
     print "Running $cmd\n" if ($verbose);
