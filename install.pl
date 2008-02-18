@@ -683,7 +683,7 @@ my %packages_info = (
         'opensm-libs' =>
             { name => "opensm-libs", parent => "opensm",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => ["bison", "flex"],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
             ofa_req_inst => ["libibumad"],
             install32 => 1, exception => 0 },
