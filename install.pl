@@ -1024,7 +1024,7 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [$sysfsutils, "libstdc++-devel"],
             dist_req_inst => ["libstdc++"], ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
-            ofa_req_inst => [],
+            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
             install32 => 0, exception => 0, configure_options => '' },
         'mvapich2_gcc' =>
             { name => "mvapich2_gcc", parent => "mvapich2",
