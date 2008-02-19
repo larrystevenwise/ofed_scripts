@@ -136,7 +136,7 @@ else {
 
 my $SRPMS = $CWD . '/' . 'SRPMS/';
 chomp $SRPMS;
-my $RPMS  = $CWD . '/' . 'RPMS' . '/' . $dist_rpm;
+my $RPMS  = $CWD . '/' . 'RPMS' . '/' . $dist_rpm . '/' . $arch;
 chomp $RPMS;
 if (not -d $RPMS) {
     mkpath([$RPMS]);
