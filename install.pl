@@ -125,7 +125,7 @@ my $dist_rpm_ver = 0;
 my $dist_rpm_rel = 0;
 
 if (-f "/etc/issue") {
-    $dist_rpm = `rpm -qf /etc/issue | cut -d ' ' -f 1`;
+    $dist_rpm = `rpm -qf /etc/issue | head -1`;
     chomp $dist_rpm;
     $dist_rpm_ver = get_rpm_ver_inst($dist_rpm);
     $dist_rpm_rel = get_rpm_rel_inst($dist_rpm);
