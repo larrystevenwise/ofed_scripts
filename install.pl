@@ -1591,6 +1591,12 @@ sub set_availability
             $packages_info{'ib-bonding-debuginfo'}{'available'} = 1;
     }
 
+    # RDS
+    if ($arch =~ m/ppc64/ or $kernel =~ m/2.6.24/) {
+            $kernel_modules_info{'rds'}{'available'} = 0;
+            $packages_info{'rds-tools'}{'available'} = 0;
+    }
+
     # mvapich, mvapich2 and openmpi
     if ($gcc{'gcc'}) {
         if ($gcc{'g77'} or $gcc{'gfortran'}) {
