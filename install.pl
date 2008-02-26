@@ -2617,6 +2617,7 @@ sub build_rpm_32
     $cmd = "$pref_env32 rpmbuild --rebuild --define '_topdir $TOPDIR'";
     $cmd .= " --target $target_cpu32";
     $cmd .= " --define '_prefix $prefix'";
+    $cmd .= " --define 'dist '";
     $cmd .= " --define '_exec_prefix $prefix'";
     $cmd .= " --define '_sysconfdir $sysconfdir'";
     $cmd .= " --define '_usr $prefix'";
@@ -2757,6 +2758,7 @@ sub build_rpm
         }
 
         $cmd = "$pref_env rpmbuild --rebuild --define '_topdir $TOPDIR'";
+        $cmd .= " --define 'dist '";
         $cmd .= " --target $target_cpu";
 
         # Prefix should be defined per package
