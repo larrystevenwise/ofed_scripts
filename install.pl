@@ -1639,6 +1639,10 @@ sub set_availability
         $packages_info{'mpitests_openmpi_intel'}{'available'} = 1;
     }
 
+    if (is_installed('openSUSE-release')) {
+        $packages_info{'tvflash'}{'available'} = 0;
+    }
+
     # debuginfo RPM currently are not supported on SuSE
     if ($distro eq 'SuSE') {
         for my $package (@all_packages) {
