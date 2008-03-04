@@ -1463,6 +1463,9 @@ sub supported32bit
 ###        print RED "\n32-bit libraries are not supported on this platform", RESET "\n" if (not $quiet);
 ###        return 0;
 ###    }
+    if ($arch =~ /i[0-9]86|ia64/) {
+        return 0;
+    }
     return 1
 }
 
