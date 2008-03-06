@@ -582,7 +582,7 @@ my %packages_info = (
         'libibcommon' =>
             { name => "libibcommon", parent => "libibcommon",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => ["libtool"],
             dist_req_inst => [], ofa_req_build => ["libibverbs"],
             ofa_req_inst => ["libibverbs"],
             install32 => 1, exception => 0, configure_options => '' },
@@ -978,7 +978,7 @@ my %packages_info = (
         'mpi-selector' =>
             { name => "mpi-selector", parent => "mpi-selector",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => ["tcsh"],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
