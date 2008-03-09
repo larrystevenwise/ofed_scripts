@@ -67,7 +67,7 @@ IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibsim ibsim-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibutils ibutils-debuginfo infiniband-diags infiniband-diags-debuginfo qperf qperf-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES ofed-docs ofed-scripts"
 
-ALL_PACKAGES="${IB_ALL_PACKAGES} mpi-selector mvapich mvapich2 openmpi mpitests ibutils"
+ALL_PACKAGES="${IB_ALL_PACKAGES} mpi-selector mvapich mvapich2 openmpi mpitests ibutils mft"
 
 PREV_RELEASE_PACKAGES="mpich_mlx ibtsal openib opensm opensm-devel mpi_ncsa thca ib-osm osm diags ibadm ib-diags ibgdiag ibdiag ib-management"
 PREV_RELEASE_PACKAGES="$PREV_RELEASE_PACKAGES ib-verbs ib-ipoib ib-cm ib-sdp ib-dapl udapl udapl-devel libdat libibat ib-kdapl ib-srp ib-srp_target oiscsi-iser-support"
