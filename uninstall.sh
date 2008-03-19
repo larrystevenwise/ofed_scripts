@@ -187,29 +187,6 @@ uninstall()
             fi
         done    
     fi
-
-    if [[ ! -z $MTHOME && -d $MTHOME ]]; then
-        if [ -e $MTHOME/uninstall.sh ]; then
-            echo
-            echo "  An old version of the OPENIB driver was detected and will be removed now"
-            ex "yes | env MTHOME=$MTHOME $MTHOME/uninstall.sh"
-        else
-            echo
-            echo "Found an MTHOME variable pointing to $MTHOME. Probably some old InfiniBand Software ..."
-            echo
-        fi    
-        let RC++
-    elif [ -d /usr/mellanox ]; then
-        if [ -e /usr/mellanox/uninstall.sh ]; then
-            echo
-            echo "  Removing MVAPI..."
-            ex "yes | /usr/mellanox/uninstall.sh"
-        else
-            echo
-            echo "Found a /usr/mellanox directory. Probably some old InfiniBand Software ..."
-            echo
-        fi  
-    fi
     
     packs_to_remove=""
     for package in $ALL_PACKAGES $PREV_RELEASE_PACKAGES
@@ -233,6 +210,34 @@ uninstall()
         ex "$RPM -e --allmatches $packs_to_remove"
     fi
 
+    if [[ ! -z $MTHOME && -d $MTHOME ]]; then
+        if [ -e $MTHOME/uninstall.sh ]; then
+            echo
+            echo "  An old version of the OPENIB driver was detected and will be removed now"
+            ex "yes | env MTHOME=$MTHOME $MTHOME/uninstall.sh"
+        fi    
+        let RC++
+    elif [ -d /usr/mellanox ]; then
+        if [ -e /usr/mellanox/uninstall.sh ]; then
+            echo
+            echo "  Removing MVAPI..."
+            ex "yes | /usr/mellanox/uninstall.sh"
+        else
+            echo
+            echo "  Removing /usr/mellanox ..."
+            echo
+            /bin/rm -rf /usr/mellanox
+        fi  
+    fi
+
+    if [ -d /usr/mst ]; then
+        /bin/rm -rf /usr/mst
+    fi
+
+    if [ -z ${STACK_PREFIX} ] && [ -x /etc/infiniband/info ]; then
+        STACK_PREFIX=`/etc/infiniband/info | grep -w prefix | cut -d '=' -f 2`
+    fi
+
     # Remove /usr/local/ofed* if exist
     # BUG: https://bugs.openfabrics.org/show_bug.cgi?id=563
     if [ -d ${STACK_PREFIX} ]; then
@@ -241,6 +246,10 @@ uninstall()
                     rm -rf ${STACK_PREFIX}
                     ;;
         esac
+    fi
+
+    if [ -d ${STACK_PREFIX}/mpi ]; then
+        find ${STACK_PREFIX}/mpi -type d | sort -r | xargs rmdir
     fi
 
 #    # Uninstall SilverStorm package
