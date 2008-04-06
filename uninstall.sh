@@ -120,11 +120,13 @@ uninstall()
     case ${DISTRIBUTION} in
         SuSE)
         if ( $RPM -q ${OPEN_ISCSI_SUSE_NAME} > $NULL 2>&1 ) && ( $RPM --queryformat "[%{VENDOR}]" -q ${OPEN_ISCSI_SUSE_NAME} | grep -i Voltaire > $NULL 2>&1 ); then
+            ex "/sbin/insserv -r open-iscsi"
             ex "$RPM -e ${OPEN_ISCSI_SUSE_NAME}"
         fi
         ;;
         redhat)
         if ( $RPM -q ${OPEN_ISCSI_REDHAT_NAME} > $NULL 2>&1 ) && ( $RPM --queryformat "[%{VENDOR}]" -q ${OPEN_ISCSI_REDHAT_NAME} | grep -i Voltaire > $NULL 2>&1 ); then
+            ex "/sbin/chkconfig --del iscsi"
             ex "$RPM -e ${OPEN_ISCSI_REDHAT_NAME}"
         fi
         ;;

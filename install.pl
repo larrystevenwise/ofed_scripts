@@ -3255,6 +3255,28 @@ sub install_rpm
     if ($build32 and $packages_info{$name}{'install32'}) {
         install_rpm_32($name);
     }
+
+    # Set open-iscsi for auto startup
+    if ($name eq $packages_info{'open-iscsi-generic'}{'name'}) {
+        if ($distro eq "SuSE") {
+            $res = system("/sbin/insserv open-iscsi > /dev/null 2>&1");
+            if ($res) {
+                print RED "Failed to set open-iscsi for auto-startup", RESET "\n";
+                exit 1;
+            }
+        } elsif ($distro eq "redhat" or $distro eq "redhat5") {
+            $res = system("/sbin/chkconfig --del iscsi > /dev/null 2>&1");
+            if ($res) {
+                print RED "Failed to set open-iscsi for manual startup", RESET "\n";
+                exit 1;
+            }
+            $res = system("/sbin/chkconfig --add iscsi > /dev/null 2>&1");
+            if ($res) {
+                print RED "Failed to set open-iscsi for auto-startup", RESET "\n";
+                exit 1;
+            }
+        }
+    }
 }
 
 sub print_package_info
