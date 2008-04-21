@@ -46,7 +46,7 @@ IB_ALL_PACKAGES="$IB_ALL_PACKAGES libopensm libopensm-devel libosmcomp libosmcom
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES openib-diags ib-bonding ib-bonding-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libibverbs libibverbs-devel libibverbs-devel-static"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libibverbs-utils libibverbs-debuginfo"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libmthca libmthca-devel-static libmthca-debuginfo"
+IB_ALL_PACKAGES="$IB_ALL_PACKAGES libmthca libmthca-devel libmthca-devel-static libmthca-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libmlx4 libmlx4-devel-static libmlx4-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libehca libehca-devel-static libehca-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libcxgb3 libcxgb3-devel libcxgb3-debuginfo"
@@ -67,7 +67,8 @@ IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibsim ibsim-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibutils ibutils-debuginfo infiniband-diags infiniband-diags-debuginfo qperf qperf-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES ofed-docs ofed-scripts"
 
-ALL_PACKAGES="${IB_ALL_PACKAGES} mpi-selector mvapich mvapich2 openmpi mpitests ibutils mft"
+ALL_PACKAGES="${IB_ALL_PACKAGES} mpi-selector mvapich mvapich2 openmpi openmpi-libs openmpi-devel mpitests ibutils mft"
+ALL_PACKAGES="${IB_ALL_PACKAGES} ibutils-libs ibutils-devel openib-mstflint openib-tvflash openib-srptools openib-perftest"
 
 PREV_RELEASE_PACKAGES="mpich_mlx ibtsal openib opensm opensm-devel mpi_ncsa thca ib-osm osm diags ibadm ib-diags ibgdiag ibdiag ib-management"
 PREV_RELEASE_PACKAGES="$PREV_RELEASE_PACKAGES ib-verbs ib-ipoib ib-cm ib-sdp ib-dapl udapl udapl-devel libdat libibat ib-kdapl ib-srp ib-srp_target oiscsi-iser-support"
@@ -116,18 +117,19 @@ uninstall()
     echo
     echo "Removing ${PACKAGE} Software installations"
     echo
+    packs_to_remove=""
 
     case ${DISTRIBUTION} in
         SuSE)
         if ( $RPM -q ${OPEN_ISCSI_SUSE_NAME} > $NULL 2>&1 ) && ( $RPM --queryformat "[%{VENDOR}]" -q ${OPEN_ISCSI_SUSE_NAME} | grep -i Voltaire > $NULL 2>&1 ); then
             ex "/sbin/insserv -r open-iscsi"
-            ex "$RPM -e ${OPEN_ISCSI_SUSE_NAME}"
+            packs_to_remove="$packs_to_remove ${OPEN_ISCSI_SUSE_NAME}"
         fi
         ;;
         redhat)
         if ( $RPM -q ${OPEN_ISCSI_REDHAT_NAME} > $NULL 2>&1 ) && ( $RPM --queryformat "[%{VENDOR}]" -q ${OPEN_ISCSI_REDHAT_NAME} | grep -i Voltaire > $NULL 2>&1 ); then
             ex "/sbin/chkconfig --del iscsi"
-            ex "$RPM -e ${OPEN_ISCSI_REDHAT_NAME}"
+            packs_to_remove="$packs_to_remove ${OPEN_ISCSI_REDHAT_NAME}"
         fi
         ;;
         *)
@@ -141,7 +143,7 @@ uninstall()
         for mpitest_name in $MPITESTS_LIST
         do 
             if ( $RPM -q ${mpitest_name} > $NULL 2>&1 ); then
-                ex "$RPM -e ${mpitest_name}"
+                packs_to_remove="$packs_to_remove ${mpitest_name}"
             fi
         done    
     fi
@@ -152,7 +154,7 @@ uninstall()
         for mpi_name in $MVAPICH_LIST
         do 
             if ( $RPM -q ${mpi_name} > $NULL 2>&1 ); then
-                ex "$RPM -e ${mpi_name}"
+                packs_to_remove="$packs_to_remove ${mpi_name}"
             fi
         done    
     fi
@@ -163,7 +165,7 @@ uninstall()
         for mpi_name in $MVAPICH2_LIST
         do
             if ( $RPM -q ${mpi_name} > $NULL 2>&1 ); then
-                ex "$RPM -e ${mpi_name}"
+                packs_to_remove="$packs_to_remove ${mpi_name}"
             fi
         done
     fi
@@ -174,7 +176,7 @@ uninstall()
         for mpi_name in $OPENMPI_LIST
         do 
             if ( $RPM -q ${mpi_name} > $NULL 2>&1 ); then
-                ex "$RPM -e ${mpi_name}"
+                packs_to_remove="$packs_to_remove ${mpi_name}"
             fi
         done    
     fi
@@ -185,12 +187,11 @@ uninstall()
         for mpitest_name in $MPI_SELECTOR_LIST
         do 
             if ( $RPM -q ${mpitest_name} > $NULL 2>&1 ); then
-                ex "$RPM -e ${mpitest_name}"
+                packs_to_remove="$packs_to_remove ${mpitest_name}"
             fi
         done    
     fi
     
-    packs_to_remove=""
     for package in $ALL_PACKAGES $PREV_RELEASE_PACKAGES
     do
         if ( $RPM -q ${package} > $NULL 2>&1 ); then
@@ -280,7 +281,7 @@ read -p "Do you want to continue?[y/N]:" ans_r
 if [[ "$ans_r" == "y" || "$ans_r" == "Y" || "$ans_r" == "yes" ]]; then
     [ -x $STACK_PREFIX/sbin/vendor_pre_uninstall.sh ] && ex $STACK_PREFIX/sbin/vendor_pre_uninstall.sh
     [ -x $STACK_PREFIX/sbin/vendor_post_uninstall.sh ] && \
-	cp $STACK_PREFIX/sbin/vendor_post_uninstall.sh /tmp/$$-ofed_vendor_post_uninstall.sh
+        cp $STACK_PREFIX/sbin/vendor_post_uninstall.sh /tmp/$$-ofed_vendor_post_uninstall.sh
     uninstall
     [ -x /tmp/$$-ofed_vendor_post_uninstall.sh ] && ex /tmp/$$-ofed_vendor_post_uninstall.sh
 else    
