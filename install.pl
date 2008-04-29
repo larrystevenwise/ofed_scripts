@@ -2385,6 +2385,17 @@ sub check_linux_dependencies
     }
     for my $package ( @selected_packages ) {
         # Check rpmbuild requirements
+        if ($package =~ /kernel-ib|ib-bonding/) {
+            if (not $packages_info{$package}{'rpm_exist'}) {
+                # kernel sources required
+                if ( not -d "$kernel_sources/" ) {
+                    print RED "$kernel_sources is required to build $package RPM.", RESET "\n";
+                    print RED "Please install the corresponding kernel-source or kernel-devel RPM.", RESET "\n";
+                    exit 1;
+                }
+            }
+        }
+
         if (not $packages_info{$package}{'rpm_exist'}) {
             for my $req ( @{ $packages_info{$package}{'dist_req_build'} } ) {
                 my ($req_name, $req_version) = (split ('_',$req));
