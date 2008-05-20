@@ -1681,13 +1681,13 @@ sub set_existing_rpms
             }
         }
         else {
-            if ($rpm_name eq "dapl") {
+            if ($rpm_name =~ /dapl/) {
                 my $dapl_version = get_rpm_ver($binrpm);
                 if ($dapl_version =~ m/1.*/) {
-                    $rpm_name = "dapl-v1";
+                    $rpm_name =~ s/dapl/dapl-v1/;
                 }
-                else {
-                    $rpm_name = "dapl-v2";
+                elsif ($rpm_name eq "dapl" and $dapl_version =~ m/2.*/) {
+                    $rpm_name =~ s/dapl/dapl-v2/;
                 }
             }
             if ($rpm_arch eq $target_cpu) {
