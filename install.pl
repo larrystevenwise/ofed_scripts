@@ -249,7 +249,8 @@ my @prev_ofed_packages = (
                         "libsdp", "librdmacm", "librdmacm-devel", "librdmacm-utils",
                         "openib-diags", "openib-mstflint", "openib-perftest", "openib-srptools", "openib-tvflash",
                         "openmpi", "openmpi-devel", "openmpi-libs",
-                        "ibutils", "ibutils-devel", "ibutils-libs"
+                        "ibutils", "ibutils-devel", "ibutils-libs",
+                        "libnes", "libnes-devel"
                         );
 
 
