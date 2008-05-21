@@ -41,6 +41,24 @@ STACK_PREFIX=/usr
 
 ARCH=$(uname -m)
 
+UNLOAD_MODULES=0
+FORCE=0
+
+while [ $# -gt 0 ]
+do
+    case $1 in
+            --unload-modules)
+                UNLOAD_MODULES=1
+            ;;
+            --force)
+                FORCE=1
+            ;;
+            *)
+            ;;
+    esac
+    shift
+done
+
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES kernel-ib kernel-ib-devel ipoibtools "
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libopensm libopensm-devel libosmcomp libosmcomp-devel libosmvendor libosmvendor-devel"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES openib-diags ib-bonding ib-bonding-debuginfo"
@@ -275,8 +293,18 @@ echo
 echo "This program will uninstall all ${PACKAGE} packages on your machine."
 echo
 
-read -p "Do you want to continue?[y/N]:" ans_r
+if [ $FORCE -eq 0 ]; then
+    read -p "Do you want to continue?[y/N]:" ans_r
+else
+    ans_r="y"
+fi
+
 if [[ "$ans_r" == "y" || "$ans_r" == "Y" || "$ans_r" == "yes" ]]; then
+    if [ $UNLOAD_MODULES -eq 1 ]; then
+        if [ -x /etc/init.d/openibd ]; then
+            ex /etc/init.d/openibd stop
+        fi
+    fi
     [ -x $STACK_PREFIX/sbin/vendor_pre_uninstall.sh ] && ex $STACK_PREFIX/sbin/vendor_pre_uninstall.sh
     [ -x $STACK_PREFIX/sbin/vendor_post_uninstall.sh ] && \
         cp $STACK_PREFIX/sbin/vendor_post_uninstall.sh /tmp/$$-ofed_vendor_post_uninstall.sh
