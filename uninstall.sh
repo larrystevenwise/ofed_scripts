@@ -141,7 +141,7 @@ uninstall()
         for mpitest_name in $MPITESTS_LIST
         do 
             if ( $RPM -q ${mpitest_name} > $NULL 2>&1 ); then
-                packs_to_remove="$packs_to_remove ${mpitest_name}"
+                ex "$RPM -e ${mpitest_name}"
             fi
         done    
     fi
@@ -152,7 +152,7 @@ uninstall()
         for mpi_name in $MVAPICH_LIST
         do 
             if ( $RPM -q ${mpi_name} > $NULL 2>&1 ); then
-                packs_to_remove="$packs_to_remove ${mpi_name}"
+                ex "$RPM -e ${mpi_name}"
             fi
         done    
     fi
@@ -163,7 +163,7 @@ uninstall()
         for mpi_name in $MVAPICH2_LIST
         do
             if ( $RPM -q ${mpi_name} > $NULL 2>&1 ); then
-                packs_to_remove="$packs_to_remove ${mpi_name}"
+                ex "$RPM -e ${mpi_name}"
             fi
         done
     fi
@@ -174,7 +174,7 @@ uninstall()
         for mpi_name in $OPENMPI_LIST
         do 
             if ( $RPM -q ${mpi_name} > $NULL 2>&1 ); then
-                packs_to_remove="$packs_to_remove ${mpi_name}"
+                ex "$RPM -e ${mpi_name}"
             fi
         done    
     fi
@@ -182,10 +182,10 @@ uninstall()
     MPI_SELECTOR_LIST=$(rpm -qa | grep ${MPI_SELECTOR_NAME})
 
     if [ -n "$MPI_SELECTOR_LIST" ]; then
-        for mpitest_name in $MPI_SELECTOR_LIST
+        for mpiselector in $MPI_SELECTOR_LIST
         do 
-            if ( $RPM -q ${mpitest_name} > $NULL 2>&1 ); then
-                packs_to_remove="$packs_to_remove ${mpitest_name}"
+            if ( $RPM -q ${mpiselector} > $NULL 2>&1 ); then
+                ex "$RPM -e ${mpiselector}"
             fi
         done    
     fi
