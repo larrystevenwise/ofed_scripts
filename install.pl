@@ -188,8 +188,8 @@ my @selected_by_user = ();
 my @selected_modules_by_user = ();
 my @selected_kernel_modules = ();
 
-my $open_iscsi_ver_rh4 = '2.0-754';
-my $open_iscsi_ver_non_rh4 = '2.0-865.15';
+my $open_iscsi_ver_rh4 = '2.0-754.1';
+my $open_iscsi_ver_non_rh4 = '2.0-865.15.1';
 
 sub usage
 {
