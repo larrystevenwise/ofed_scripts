@@ -287,6 +287,8 @@ uninstall()
     if [ -n "${voltaire_rpms}" ]; then
         ex $RPM -e ${voltaire_rpms}
     fi
+
+    perl -ni -e "print unless (/mlx4_core/)" /etc/modprobe.conf
 }
 
 echo
