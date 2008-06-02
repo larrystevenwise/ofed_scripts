@@ -3628,6 +3628,9 @@ sub uninstall
     my $sig = 0;
     my $cnt = 0;
     print BLUE "Uninstalling the previous version of $PACKAGE", RESET "\n" if (not $quiet);
+    if ( -f "/sbin/mlnx_en_uninstall.sh" ) {
+        system("yes | /sbin/mlnx_en_uninstall.sh > $ofedlogs/mlnx_en_uninstall.log 2>&1");
+    }
     system("yes | ofed_uninstall.sh > $ofedlogs/ofed_uninstall.log 2>&1");
     $res = $? >> 8;
     $sig = $? & 127;
