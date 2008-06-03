@@ -2037,11 +2037,11 @@ sub select_packages
             }
             print CONFIG "prefix=$prefix\n";
         }
+        flock CONFIG, $UNLOCK;
     }
     else {
         if ($config_given) {
             open(CONFIG, "$config") || die "Can't open $config: $!";;
-            flock CONFIG, $LOCK_EXCLUSIVE;
             while(<CONFIG>) {
                 next if (m@^\s+$|^#.*@);
                 my ($package,$selected) = (split '=', $_);
@@ -2262,8 +2262,8 @@ sub select_packages
             check_open_iscsi();
             push (@selected_by_user, "open-iscsi-generic");
         }
+        flock CONFIG, $UNLOCK;
     }
-    flock CONFIG, $UNLOCK;
     close(CONFIG);
 
     
