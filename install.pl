@@ -84,6 +84,9 @@ elsif ( -f "/etc/fedora-release" ) {
     if ($kernel =~ m/fc6/) {
             $distro = "fedora6";
     }
+    elsif ($kernel =~ m/fc9/) {
+            $distro = "fedora9";
+    }
     else {
             $distro = "fedora";
     }
