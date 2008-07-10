@@ -824,12 +824,19 @@ my %packages_info = (
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
+        'qlgc_vnic_daemon' =>
+            { name => "qlgc_vnic_daemon", parent => "qlvnictools",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 0, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0, configure_options => '' },
         'qlvnictools' =>
             { name => "qlvnictools", parent => "qlvnictools",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => ["ibvexdmtools"],
+            ofa_req_inst => ["ibvexdmtools", "qlgc_vnic_daemon"],
             install32 => 0, exception => 0, configure_options => '' },
         'qlvnictools-debuginfo' =>
             { name => "qlvnictools-debuginfo", parent => "qlvnictools",
@@ -1237,7 +1244,7 @@ my %packages_info = (
         );
 
 
-my @hidden_packages = ("open-iscsi-generic", "ibvexdmtools");
+my @hidden_packages = ("open-iscsi-generic", "ibvexdmtools", "qlgc_vnic_daemon");
 
 my %MPI_SUPPORTED_COMPILERS = (gcc => 0, pgi => 0, intel => 0, pathscale => 0);
 
@@ -1585,9 +1592,10 @@ sub set_availability
     }
 
     # QLogic vnic
-    if ($kernel =~ m/2.6.9-34|2.6.9-42|2.6.9-55|2.6.9-67|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.19|2.6.18*/) {
+    if ($kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.18-*/) {
             $kernel_modules_info{'qlgc_vnic'}{'available'} = 1;
             $packages_info{'ibvexdmtools'}{'available'} = 1;
+            $packages_info{'qlgc_vnic_daemon'}{'available'} = 1;
             $packages_info{'qlvnictools'}{'available'} = 1;
             $packages_info{'qlvnictools-debuginfo'}{'available'} = 1;
     }
