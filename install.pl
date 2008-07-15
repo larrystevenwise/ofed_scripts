@@ -194,6 +194,8 @@ my @selected_kernel_modules = ();
 my $open_iscsi_ver_rh4 = '2.0-754.1';
 my $open_iscsi_ver_non_rh4 = '2.0-865.15.1';
 
+my $tgt_ver = '0.1-20080629';
+
 sub usage
 {
    print GREEN;
@@ -303,7 +305,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "perftest", "mstflint", "tvflash",
                      "qlvnictools", "sdpnetstat", "srptools", "rds-tools",
                      "ibutils", "infiniband-diags", "qperf", "qperf-debuginfo",
-                     "ofed-docs", "ofed-scripts", @mpi_packages
+                     "ofed-docs", "ofed-scripts", "tgt-generic", @mpi_packages
                      );
 
 my @basic_kernel_packages = ("kernel-ib");
@@ -1226,6 +1228,35 @@ my %packages_info = (
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
 
+        'tgt-generic' =>
+            { name => ($distro eq 'SuSE') ? 'tgt': 'scsi-target-utils', parent => "tgt-generic",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
+            ofa_req_inst => ["librdmacm", "libibverbs-devel"],
+            install32 => 0, exception => 1, configure_options => '' },
+        'stgt' =>
+            { name => "stgt", parent => "tgt-generic",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
+            ofa_req_inst => ["librdmacm", "libibverbs-devel"],
+            install32 => 0, exception => 1 },
+        'tgt' =>
+            { name => "tgt", parent => "tgt-generic",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
+            ofa_req_inst => ["librdmacm", "libibverbs-devel"],
+            install32 => 0, exception => 1 },
+        'scsi-target-utils' =>
+            { name => "scsi-target-utils", parent => "tgt-generic",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
+            ofa_req_inst => ["librdmacm", "libibverbs-devel"],
+            install32 => 0, exception => 1 },
+
         'ofed-docs' =>
             { name => "ofed-docs", parent => "ofed-docs",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -1589,6 +1620,11 @@ sub set_availability
     if ($kernel =~ m/2.6.9-34|2.6.9-42|2.6.9-55|2.6.9-67|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
             $kernel_modules_info{'iser'}{'available'} = 1;
             $packages_info{'open-iscsi-generic'}{'available'} = 1;
+    }
+
+    # tgt
+    if ($kernel =~ m/2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
+            $packages_info{'tgt-generic'}{'available'} = 1;
     }
 
     # QLogic vnic
@@ -2081,6 +2117,14 @@ sub select_packages
                     next;
                 }
 
+                if ($package eq "stgt") {
+                    if ( $selected eq 'y' ) {
+                       push (@selected_by_user, "tgt-generic");
+                       print "select_package: selected tgt-generic\n" if ($verbose2);
+                       $cnt ++;
+                       next;
+                    }
+                }
 
 		if (substr($package,0,length("vendor_config")) eq "vendor_config") {
 		       next;
@@ -2272,6 +2316,9 @@ sub select_packages
         if ("iser" =~ m/$tmp/) {
             check_open_iscsi();
             push (@selected_by_user, "open-iscsi-generic");
+        }
+        if ("stgt" =~ m/$tmp/) {
+            push (@selected_by_user, "tgt-generic");
         }
         flock CONFIG, $UNLOCK;
     }
@@ -3695,7 +3742,7 @@ sub install
                 install_rpm($package);
             }
             else {
-                if ($package eq "open-iscsi-generic") {
+                if (($package eq "open-iscsi-generic") || ($package eq "tgt-generic")) {
                     my $real_name = $packages_info{$package}{'name'};
                     if (not $packages_info{$real_name}{'rpm_exist'}) {
                         build_rpm($real_name);

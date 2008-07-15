@@ -113,6 +113,8 @@ fi
 
 OPEN_ISCSI_SUSE_NAME="open-iscsi"
 OPEN_ISCSI_REDHAT_NAME="iscsi-initiator-utils"
+STGT_SUSE_NAME="tgt"
+STGT_REDHAT_NAME="scsi-target-utils"
 
 # Execute the command $@ and check exit status
 ex()
@@ -142,10 +144,16 @@ uninstall()
         if ( $RPM -q ${OPEN_ISCSI_SUSE_NAME} > $NULL 2>&1 ) && ( $RPM --queryformat "[%{VENDOR}]" -q ${OPEN_ISCSI_SUSE_NAME} | grep -i Voltaire > $NULL 2>&1 ); then
             packs_to_remove="$packs_to_remove ${OPEN_ISCSI_SUSE_NAME}"
         fi
+        if ( $RPM -q ${STGT_SUSE_NAME} > $NULL 2>&1 ) && ( $RPM --queryformat "[%{VENDOR}]" -q ${STGT_SUSE_NAME} | grep -i Voltaire > $NULL 2>&1 ); then
+            packs_to_remove="$packs_to_remove ${STGT_SUSE_NAME}"
+        fi
         ;;
         redhat)
         if ( $RPM -q ${OPEN_ISCSI_REDHAT_NAME} > $NULL 2>&1 ) && ( $RPM --queryformat "[%{VENDOR}]" -q ${OPEN_ISCSI_REDHAT_NAME} | grep -i Voltaire > $NULL 2>&1 ); then
             packs_to_remove="$packs_to_remove ${OPEN_ISCSI_REDHAT_NAME}"
+        fi
+        if ( $RPM -q ${STGT_REDHAT_NAME} > $NULL 2>&1 ) && ( $RPM --queryformat "[%{VENDOR}]" -q ${STGT_REDHAT_NAME} | grep -i Voltaire > $NULL 2>&1 ); then
+            packs_to_remove="$packs_to_remove ${STGT_REDHAT_NAME}"
         fi
         ;;
         *)
