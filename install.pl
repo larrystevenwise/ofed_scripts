@@ -1606,7 +1606,7 @@ sub set_availability
     if ( ($arch =~ m/ppc64/ and
             $kernel =~ m/2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) or
        ($arch =~ m/x86_64/ and
-            $kernel =~ m/2.6.5|2.6.9-22|2.6.9-34|2.6.9-42|2.6.9-55|2.6.9-67|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) ) {
+            $kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) ) {
             $kernel_modules_info{'ipath'}{'available'} = 1;
             $packages_info{'libipathverbs'}{'available'} = 1;
             $packages_info{'libipathverbs-devel'}{'available'} = 1;
@@ -1614,7 +1614,7 @@ sub set_availability
     }
 
     # Iser
-    if ($kernel =~ m/2.6.9-34|2.6.9-42|2.6.9-55|2.6.9-67|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
+    if ($kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
             $kernel_modules_info{'iser'}{'available'} = 1;
             $packages_info{'open-iscsi-generic'}{'available'} = 1;
     }
@@ -1634,13 +1634,13 @@ sub set_availability
     }
 
     # ib-bonding
-    if ($kernel =~ m/2.6.9-34|2.6.9-42|2.6.9-55|2.6.9-67|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5|fc6/) {
+    if ($kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5|fc6/) {
             $packages_info{'ib-bonding'}{'available'} = 1;
             $packages_info{'ib-bonding-debuginfo'}{'available'} = 1;
     }
 
     # RDS
-    if ($arch =~ m/ppc64/ or $kernel =~ m/2.6.24/) {
+    if ($arch =~ m/ppc64/) {
             $kernel_modules_info{'rds'}{'available'} = 0;
             $packages_info{'rds-tools'}{'available'} = 0;
     }
