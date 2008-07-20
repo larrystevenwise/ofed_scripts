@@ -30,7 +30,7 @@
 
 Summary: OFED scripts
 Name: ofed-scripts
-Version: 1.3
+Version: 1.4
 Release: 0
 License: GPL/BSD
 Url: http://www.openfabrics.org
