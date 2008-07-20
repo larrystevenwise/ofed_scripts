@@ -365,7 +365,7 @@ my %kernel_modules_info = (
             { name => "qlgc_vnic", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'nfsrdma' =>
-            { name => "nfsrdma", available => 1, selected => 0,
+            { name => "nfsrdma", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
         );
 
