@@ -194,8 +194,6 @@ my @selected_kernel_modules = ();
 my $open_iscsi_ver_rh4 = '2.0-754.1';
 my $open_iscsi_ver_non_rh4 = '2.0-865.15.1';
 
-my $tgt_ver = '0.1-20080629';
-
 sub usage
 {
    print GREEN;
