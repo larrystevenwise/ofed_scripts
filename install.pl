@@ -264,7 +264,7 @@ my @prev_ofed_packages = (
 # List of all available packages sorted following dependencies
 my @kernel_packages = ("kernel-ib", "kernel-ib-devel", "ib-bonding", "ib-bonding-debuginfo");
 my @basic_kernel_modules = ("core", "mthca", "mlx4", "cxgb3", "nes", "ehca", "ipath", "ipoib");
-my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser");
+my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser", "nfsrdma");
 my @kernel_modules = (@basic_kernel_modules, @ulp_modules);
 
 my $kernel_configure_options;
@@ -366,6 +366,9 @@ my %kernel_modules_info = (
         'qlgc_vnic' =>
             { name => "qlgc_vnic", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
+        'nfsrdma' =>
+            { name => "nfsrdma", available => 1, selected => 0,
+            included_in_rpm => 0, requires => ["core", "ipoib"], },
         );
 
 my %packages_info = (
@@ -1640,6 +1643,11 @@ sub set_availability
     if ($arch =~ m/ppc64/ or $kernel =~ m/2.6.24/) {
             $kernel_modules_info{'rds'}{'available'} = 0;
             $packages_info{'rds-tools'}{'available'} = 0;
+    }
+
+    # NFSRDMA
+    if ($kernel =~ m/2.6.26/) {
+            $kernel_modules_info{'nfsrdma'}{'available'} = 1;
     }
 
     # mvapich, mvapich2 and openmpi
