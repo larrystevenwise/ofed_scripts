@@ -899,8 +899,8 @@ my %packages_info = (
             { name => "qperf", parent => "qperf",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs"],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
+            ofa_req_inst => ["libibverbs", "librdmacm"],
             install32 => 0, exception => 0, configure_options => '' },
         'qperf-debuginfo' =>
             { name => "qperf-debuginfo", parent => "qperf",
