@@ -839,8 +839,8 @@ my %packages_info = (
             { name => "qlvnictools", parent => "qlvnictools",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => ["ibvexdmtools", "qlgc_vnic_daemon"],
+            dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
+            ofa_req_inst => ["ibvexdmtools", "qlgc_vnic_daemon", "libibumad"],
             install32 => 0, exception => 0, configure_options => '' },
         'qlvnictools-debuginfo' =>
             { name => "qlvnictools-debuginfo", parent => "qlvnictools",
