@@ -810,8 +810,8 @@ my %packages_info = (
             { name => "ibvexdmtools", parent => "qlvnictools",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
+            dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
+            ofa_req_inst => ["libibumad"],
             install32 => 0, exception => 0, configure_options => '' },
         'qlgc_vnic_daemon' =>
             { name => "qlgc_vnic_daemon", parent => "qlvnictools",
