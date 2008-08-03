@@ -2411,6 +2411,8 @@ sub resolve_dependencies
 
 sub check_linux_dependencies
 {
+    my $err = 0;
+    my $p1 = 0;
     if (! $check_linux_deps) {
         return 0;
     }
@@ -2422,7 +2424,7 @@ sub check_linux_dependencies
                 if ( not -d "$kernel_sources/" ) {
                     print RED "$kernel_sources is required to build $package RPM.", RESET "\n";
                     print RED "Please install the corresponding kernel-source or kernel-devel RPM.", RESET "\n";
-                    exit 1;
+                    $err++;
                 }
             }
         }
@@ -2432,39 +2434,42 @@ sub check_linux_dependencies
                 my ($req_name, $req_version) = (split ('_',$req));
                 if (not is_installed($req_name)) {
                     print RED "$req_name rpm is required to build $package", RESET "\n";
-                    exit 1;
+                    $err++;
                 }
                 if ($req_version) {
                     my $inst_version = get_rpm_ver_inst($req_name);
                     print "check_linux_dependencies: $req_name installed version $inst_version, required $req_version\n" if ($verbose3);
                     if ($inst_version lt $req_version) {
                         print RED "$req_name-$req_version rpm is required to build $package", RESET "\n";
-                        exit 1;
+                        $err++;
                     }
                 }
             }
             if ($build32) {
                 if (not -f "/usr/lib/crt1.o") {
-                    print RED "glibc-devel 32bit is required to build 32-bit libraries.", RESET "\n";
-                    exit 1;
+                    if (! $p1) {
+                        print RED "glibc-devel 32bit is required to build 32-bit libraries.", RESET "\n";
+                        $p1 = 1;
+                        $err++;
+                    }
                 }
                 if ($arch eq "ppc64") {
                     my @libstdc32 = </usr/lib/libstdc++.so.*>;
                     if ($package eq "mstflint") {
                         if (not $#libstdc32) {
                             print RED "libstdc++ 32bit is required to build mstflint.", RESET "\n";
-                            exit 1;
+                            $err++;
                         }
                     }
                     elsif ($package eq "openmpi") {
                         my @libsysfs = </usr/lib/libsysfs.so>;
                         if (not $#libstdc32) {
                             print RED "libstdc++-devel 32bit is required to build openmpi.", RESET "\n";
-                            exit 1;
+                            $err++;
                         }
                         if (not $#libsysfs) {
                             print RED "$sysfsutils_devel 32bit is required to build openmpi.", RESET "\n";
-                            exit 1;
+                            $err++;
                         }
                     }
                 }
@@ -2476,43 +2481,49 @@ sub check_linux_dependencies
             my ($req_name, $req_version) = (split ('_',$req));
             if (not is_installed($req_name)) {
                 print RED "$req_name rpm is required to install $package", RESET "\n";
-                exit 1;
+                $err++;
             }
             if ($req_version) {
                 my $inst_version = get_rpm_ver_inst($req_name);
                 print "check_linux_dependencies: $req_name installed version $inst_version, required $req_version\n" if ($verbose3);
                 if ($inst_version lt $req_version) {
                     print RED "$req_name-$req_version rpm is required to install $package", RESET "\n";
-                    exit 1;
+                    $err++;
                 }
             }
         }
         if ($build32) {
             if (not -f "/usr/lib/crt1.o") {
-                print RED "glibc-devel 32bit is required to install 32-bit libraries.", RESET "\n";
-                exit 1;
+                if (! $p1) {
+                    print RED "glibc-devel 32bit is required to install 32-bit libraries.", RESET "\n";
+                    $p1 = 1;
+                    $err++;
+                }
             }
             if ($arch eq "ppc64") {
                 my @libstdc32 = </usr/lib/libstdc++.so.*>;
                 if ($package eq "mstflint") {
                     if (not $#libstdc32) {
                         print RED "libstdc++ 32bit is required to install mstflint.", RESET "\n";
-                        exit 1;
+                        $err++;
                     }
                 }
                 elsif ($package eq "openmpi") {
                     my @libsysfs = </usr/lib/libsysfs.so.*>;
                     if (not $#libstdc32) {
                         print RED "libstdc++ 32bit is required to install openmpi.", RESET "\n";
-                        exit 1;
+                        $err++;
                     }
                     if (not $#libsysfs) {
                         print RED "$sysfsutils 32bit is required to install openmpi.", RESET "\n";
-                        exit 1;
+                        $err++;
                     }
                 }
             }
         }
+    }
+    if ($err) {
+        exit 1;
     }
 }
 
