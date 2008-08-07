@@ -35,6 +35,11 @@ use Cwd;
 use Term::ANSIColor qw(:constants);
 use sigtrap 'handler', \&sig_handler, 'normal-signals';
 
+if ($<) {
+    print RED "Only root can run $0", RESET "\n";
+    exit 1;
+}
+
 $| = 1;
 my $LOCK_EXCLUSIVE = 2;
 my $UNLOCK         = 8;
@@ -2420,6 +2425,13 @@ sub check_linux_dependencies
         # Check rpmbuild requirements
         if ($package =~ /kernel-ib|ib-bonding/) {
             if (not $packages_info{$package}{'rpm_exist'}) {
+                # Check that required kernel is supported
+                if ($kernel !~ /2.6.9-42|2.6.9-55|2.6.9-67|2.6.1[6-9]|2.6.2[0-7]/) {
+                    print RED "Kernel $kernel is not supported.", RESET "\n";
+                    print BLUE "For the list of Supported Platforms and Operating Systems see", RESET "\n";
+                    print BLUE "$CWD/docs/OFED_release_notes.txt", RESET "\n";
+                    exit 1;
+                }
                 # kernel sources required
                 if ( not -d "$kernel_sources/" ) {
                     print RED "$kernel_sources is required to build $package RPM.", RESET "\n";
