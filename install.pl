@@ -238,6 +238,9 @@ else {
     $network_dir = "/etc/sysconfig/network-scripts";
 }
 
+my $setpci = '/sbin/setpci';
+my $lspci = '/sbin/lspci';
+
 # List of packages that were included in the previous OFED releases
 # for uninstall purpose
 my @prev_ofed_packages = (
@@ -266,7 +269,7 @@ my @prev_ofed_packages = (
 
 # List of all available packages sorted following dependencies
 my @kernel_packages = ("kernel-ib", "kernel-ib-devel", "ib-bonding", "ib-bonding-debuginfo");
-my @basic_kernel_modules = ("core", "mthca", "mlx4", "cxgb3", "nes", "ehca", "ipath", "ipoib");
+my @basic_kernel_modules = ("core", "mthca", "mlx4", "mlx4_en", "cxgb3", "nes", "ehca", "ipath", "ipoib");
 my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser", "nfsrdma");
 my @kernel_modules = (@basic_kernel_modules, @ulp_modules);
 
@@ -335,6 +338,9 @@ my %kernel_modules_info = (
             included_in_rpm => 0, requires => ["core"], },
         'mlx4' =>
             { name => "mlx4", available => 1, selected => 0,
+            included_in_rpm => 0, requires => ["core"], },
+        'mlx4_en' =>
+            { name => "mlx4_en", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'ehca' =>
             { name => "ehca", available => 0, selected => 0,
@@ -1580,6 +1586,10 @@ sub set_cfg
 sub set_availability
 {
     set_compilers();
+
+    if ($kernel =~ m/2.6.2[4-7]/) {
+            $kernel_modules_info{'mlx4_en'}{'available'} = 1;
+    }
 
     # Ehca
     if ($arch =~ m/ppc64|powerpc/ and
@@ -3650,6 +3660,15 @@ sub ipoib_config
         print "Press any key to continue ...";
         getch();
     }
+
+    if (-f "/etc/sysconfig/network/config") {
+        my $nm = `grep ^NETWORKMANAGER=yes /etc/sysconfig/network/config`;
+        chomp $nm;
+        if ($nm) {
+            print RED "Please set NETWORKMANAGER=no in the /etc/sysconfig/network/config", RESET "\n";
+        }
+    }
+
 }
 
 sub uninstall
@@ -3695,6 +3714,13 @@ sub uninstall
     if (is_installed("mpi-selector")) {
         system("rpm -e --allmatches mpi-selector >> $ofedlogs/ofed_uninstall.log 2>&1");
     }
+
+    if ( -d "/lib/modules/$kernel/kernel/drivers/net/mtnic" ) {
+        print "Uninstalling mtnic driver...\n" if (not $quiet);
+        system("/sbin/rmmod mtnic > /dev/null 2>&1");
+        system("/bin/rm -rf /lib/modules/$kernel/kernel/drivers/net/mtnic");
+    }
+
 }
 
 sub install
@@ -3748,6 +3774,41 @@ sub install
             install_kernel_rpm($package);
         }
     }
+}
+
+sub check_pcie_link
+{
+    open (PCI, "$lspci -d 15b3: -n|") or die "Failed to execute '$lspci -d 15b3: -n': $!";
+    while(<PCI>) {
+        my $devinfo = $_;
+        $devinfo =~ /(15b3:[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])/;
+        my $devid = $&;
+        my $link_width = `$setpci -d $devid 72 | cut -b1`;
+        chomp $link_width;
+
+        print BLUE "Device ($devid):\n";
+        print "\t" . `$lspci -d $devid`;
+
+        if ( $link_width eq "8" ) {
+            print "\tLink Width: 8x\n";
+        }
+        else {
+            print "\tLink Width is not 8x\n";
+        }
+        my $link_speed = `$setpci -d $devid 72 | cut -b2`;
+        chomp $link_speed;
+        if ( $link_speed eq "1" ) {
+            print "\tLink Speed: 2.5Gb/s\n";
+        }
+        elsif ( $link_speed eq "2" ) {
+            print "\tLink Speed: 5Gb/s\n";
+        }
+        else {
+            print "\tLink Speed: Unknown\n";
+        }
+        print "", RESET "\n";
+    }
+    close (PCI);
 }
 
 ### MAIN AREA ###
@@ -3914,6 +3975,11 @@ sub main
     if ($kernel_modules_info{'ipoib'}{'selected'}) {
         ipoib_config();
     }
+
+    if ( not $quiet ) {
+        check_pcie_link();
+    }
+
     print GREEN "\nInstallation finished successfully.", RESET;
     if ($interactive) {
         print GREEN "\nPress any key to continue...", RESET;
