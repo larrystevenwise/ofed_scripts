@@ -213,7 +213,10 @@ uninstall()
         for mpiselector in $MPI_SELECTOR_LIST
         do 
             if ( $RPM -q ${mpiselector} > $NULL 2>&1 ); then
-                ex "$RPM -e --allmatches ${mpiselector}"
+                if ! ( $RPM -e --allmatches ${mpiselector} > /dev/null 2>&1 ); then
+			echo "Cannot remove ${mpiselector}."
+			echo "There are RPMs that depend on it."
+                fi
             fi
         done    
     fi

@@ -3275,7 +3275,13 @@ sub install_rpm
         print RED "$package does not exist", RESET "\n";
         exit 1;
     }
-    $cmd = "rpm -iv";
+
+    if ($name eq "mpi-selector") {
+        $cmd = "rpm -Uv --force";
+    } else {
+        $cmd = "rpm -iv";
+    }
+
     $cmd .= " $package";
 
     print "Running $cmd\n" if ($verbose);
@@ -3665,6 +3671,7 @@ sub uninstall
     }
     my $cmd = "rpm -e --allmatches";
     for my $package (@all_packages, @hidden_packages, @prev_ofed_packages) {
+        next if ($package eq "mpi-selector");
         if (is_installed($package)) {
             $cmd .= " $package";
             $cnt ++;
@@ -3683,6 +3690,10 @@ sub uninstall
             print RED "See $ofedlogs/ofed_uninstall.log", RESET "\n";
             exit 1;
         }
+    }
+
+    if (is_installed("mpi-selector")) {
+        system("rpm -e --allmatches mpi-selector >> $ofedlogs/ofed_uninstall.log 2>&1");
     }
 }
 
