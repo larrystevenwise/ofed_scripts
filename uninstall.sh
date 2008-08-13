@@ -79,6 +79,7 @@ IB_ALL_PACKAGES="$IB_ALL_PACKAGES libsdp libsdp-devel libsdp-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES opensm opensm-libs opensm-devel opensm-debuginfo opensm-static"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES perftest perftest-debuginfo mstflint mstflint-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES compat-dapl compat-dapl-devel compat-dapl-devel-static compat-dapl-utils compat-dapl-debuginfo"
+IB_ALL_PACKAGES="$IB_ALL_PACKAGES compat-dapl-1.2.5 compat-dapl-devel-1.2.5 compat-dapl-devel-static-1.2.5 compat-dapl-utils-1.2.5 compat-dapl-debuginfo-1.2.5"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES dapl dapl-devel dapl-devel-static dapl-utils dapl-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES qlvnictools qlvnictools-debuginfo ibvexdmtools ibvexdmtools-debuginfo qlgc_vnic_daemon sdpnetstat sdpnetstat-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES srptools srptools-debuginfo rds-tools rds-tools-debuginfo"
@@ -179,7 +180,7 @@ uninstall()
         for mpi_name in $MVAPICH_LIST
         do 
             if ( $RPM -q ${mpi_name} > $NULL 2>&1 ); then
-                ex "$RPM -e ${mpi_name}"
+                ex "$RPM -e --allmatches ${mpi_name}"
             fi
         done    
     fi
@@ -190,7 +191,7 @@ uninstall()
         for mpi_name in $MVAPICH2_LIST
         do
             if ( $RPM -q ${mpi_name} > $NULL 2>&1 ); then
-                ex "$RPM -e ${mpi_name}"
+                ex "$RPM -e --allmatches ${mpi_name}"
             fi
         done
     fi
@@ -201,7 +202,7 @@ uninstall()
         for mpi_name in $OPENMPI_LIST
         do 
             if ( $RPM -q ${mpi_name} > $NULL 2>&1 ); then
-                ex "$RPM -e ${mpi_name}"
+                ex "$RPM -e --allmatches ${mpi_name}"
             fi
         done    
     fi
@@ -212,7 +213,7 @@ uninstall()
         for mpiselector in $MPI_SELECTOR_LIST
         do 
             if ( $RPM -q ${mpiselector} > $NULL 2>&1 ); then
-                ex "$RPM -e ${mpiselector}"
+                ex "$RPM -e --allmatches ${mpiselector}"
             fi
         done    
     fi
