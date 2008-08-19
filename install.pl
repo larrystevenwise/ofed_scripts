@@ -340,7 +340,7 @@ my %kernel_modules_info = (
             { name => "mlx4", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'mlx4_en' =>
-            { name => "mlx4_en", available => 0, selected => 0,
+            { name => "mlx4_en", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'ehca' =>
             { name => "ehca", available => 0, selected => 0,
@@ -1586,10 +1586,6 @@ sub set_cfg
 sub set_availability
 {
     set_compilers();
-
-    if ($kernel =~ m/2.6.2[4-7]/) {
-            $kernel_modules_info{'mlx4_en'}{'available'} = 1;
-    }
 
     # Ehca
     if ($arch =~ m/ppc64|powerpc/ and
