@@ -70,6 +70,7 @@ my $vendor_pre_uninstall = "";
 my $vendor_post_uninstall = "";
 
 my $distro;
+my $subdistro = "";
 
 my $build32 = 0;
 my $arch = `uname -m`;
@@ -81,9 +82,27 @@ chomp $kernel_sources;
 
 my $PACKAGE     = 'OFED';
 
+# Define RPMs environment
+my $dist_rpm;
+my $dist_rpm_ver = 0;
+my $dist_rpm_rel = 0;
+
+if (-f "/etc/issue") {
+    $dist_rpm = `rpm -qf /etc/issue | head -1`;
+    chomp $dist_rpm;
+    $dist_rpm_ver = get_rpm_ver_inst($dist_rpm);
+    $dist_rpm_rel = get_rpm_rel_inst($dist_rpm);
+}
+else {
+    $dist_rpm = "unsupported";
+}
+
 # Set Linux Distribution
 if ( -f "/etc/SuSE-release" ) {
     $distro = "SuSE";
+    if ($dist_rpm =~ /openSUSE/) {
+        $subdistro = "openSUSE";
+    }
 }
 elsif ( -f "/etc/fedora-release" ) {
     if ($kernel =~ m/fc6/) {
@@ -126,21 +145,6 @@ chdir $WDIR;
 my $CWD     = getcwd;
 my $TMPDIR  = '/tmp';
 my $netdir;
-
-# Define RPMs environment
-my $dist_rpm;
-my $dist_rpm_ver = 0;
-my $dist_rpm_rel = 0;
-
-if (-f "/etc/issue") {
-    $dist_rpm = `rpm -qf /etc/issue | head -1`;
-    chomp $dist_rpm;
-    $dist_rpm_ver = get_rpm_ver_inst($dist_rpm);
-    $dist_rpm_rel = get_rpm_rel_inst($dist_rpm);
-}
-else {
-    $dist_rpm = "unsupported";
-}
 
 my $SRPMS = $CWD . '/' . 'SRPMS/';
 chomp $SRPMS;
@@ -198,6 +202,9 @@ my @selected_kernel_modules = ();
 
 my $open_iscsi_ver_rh4 = '2.0-754.1';
 my $open_iscsi_ver_non_rh4 = '2.0-865.15.1';
+
+my $libstdc = ($subdistro eq "openSUSE") ? 'libstdc++42' : 'libstdc++';
+my $libstdc_devel = "$libstdc-devel";
 
 sub usage
 {
@@ -265,6 +272,10 @@ my @prev_ofed_packages = (
                         );
 
 
+my @suse_ofed_packages = (
+                        "libamso", "libamso-devel", "dapl2", "dapl2-devel", "mvapich2", "mvapich2-devel",
+                        "mvapich-devel"
+                        );
 
 
 # List of all available packages sorted following dependencies
@@ -412,7 +423,7 @@ my %packages_info = (
         'libibverbs' =>
             { name => "libibverbs", parent => "libibverbs",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["gcc_3.3.3", "glibc-devel","libstdc++"],
+            available => 1, mode => "user", dist_req_build => ["gcc_3.3.3", "glibc-devel","$libstdc"],
             dist_req_inst => [], ofa_req_build => [], ofa_req_inst => ["ofed-scripts"], 
             install32 => 1, exception => 0, configure_options => '' },
         'libibverbs-devel' =>
@@ -805,7 +816,7 @@ my %packages_info = (
         'mstflint' =>
             { name => "mstflint", parent => "mstflint",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["zlib-devel", "libstdc++-devel", "gcc-c++"],
+            available => 1, mode => "user", dist_req_build => ["zlib-devel", "$libstdc_devel", "gcc-c++"],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
@@ -909,8 +920,8 @@ my %packages_info = (
         'ibutils' =>
             { name => "ibutils", parent => "ibutils",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["tcl_8.4", "tcl-devel_8.4", "tk", "libstdc++-devel"],
-            dist_req_inst => ["tcl_8.4", "tk", "libstdc++"], ofa_req_build => ["libibverbs-devel", "opensm-libs", "opensm-devel"],
+            available => 1, mode => "user", dist_req_build => ["tcl_8.4", "tcl-devel_8.4", "tk", "$libstdc_devel"],
+            dist_req_inst => ["tcl_8.4", "tk", "$libstdc"], ofa_req_build => ["libibverbs-devel", "opensm-libs", "opensm-devel"],
             ofa_req_inst => ["libibcommon", "libibumad", "opensm-libs"],
             install32 => 0, exception => 0, configure_options => '' },
         'ibutils-debuginfo' =>
@@ -997,35 +1008,35 @@ my %packages_info = (
         'mvapich' =>
             { name => "mvapich", parent => "mvapich",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["libstdc++-devel"],
-            dist_req_inst => ["libstdc++"], ofa_req_build => ["libibumad-devel"],
+            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
+            dist_req_inst => ["$libstdc"], ofa_req_build => ["libibumad-devel"],
             ofa_req_inst => ["libibumad"],
             install32 => 0, exception => 0, configure_options => '' },
         'mvapich_gcc' =>
             { name => "mvapich_gcc", parent => "mvapich",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["libstdc++-devel"],
+            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
             ofa_req_inst => ["mpi-selector", "libibverbs", "libibcommon", "libibumad"],
             install32 => 0, exception => 0 },
         'mvapich_pgi' =>
             { name => "mvapich_pgi", parent => "mvapich",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["libstdc++-devel"],
+            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
             ofa_req_inst => ["mpi-selector", "libibverbs", "libibcommon", "libibumad"],
             install32 => 0, exception => 0 },
         'mvapich_intel' =>
             { name => "mvapich_intel", parent => "mvapich",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["libstdc++-devel"],
+            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
             ofa_req_inst => ["mpi-selector", "libibverbs", "libibcommon", "libibumad"],
             install32 => 0, exception => 0 },
         'mvapich_pathscale' =>
             { name => "mvapich_pathscale", parent => "mvapich",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["libstdc++-devel"],
+            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
             ofa_req_inst => ["mpi-selector", "libibverbs", "libibcommon", "libibumad"],
             install32 => 0, exception => 0 },
@@ -1033,35 +1044,35 @@ my %packages_info = (
         'mvapich2' =>
             { name => "mvapich2", parent => "mvapich2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [$sysfsutils, "libstdc++-devel"],
-            dist_req_inst => ["libstdc++"], ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
+            available => 0, mode => "user", dist_req_build => [$sysfsutils, "$libstdc_devel"],
+            dist_req_inst => ["$libstdc"], ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
             ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
             install32 => 0, exception => 0, configure_options => '' },
         'mvapich2_gcc' =>
             { name => "mvapich2_gcc", parent => "mvapich2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [$sysfsutils, "libstdc++-devel"],
+            available => 0, mode => "user", dist_req_build => [$sysfsutils, "$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel", "librdmacm-devel"],
             ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
             install32 => 0, exception => 0 },
         'mvapich2_pgi' =>
             { name => "mvapich2_pgi", parent => "mvapich2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [$sysfsutils, "libstdc++-devel"],
+            available => 0, mode => "user", dist_req_build => [$sysfsutils, "$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel", "librdmacm-devel"],
             ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
             install32 => 0, exception => 0 },
         'mvapich2_intel' =>
             { name => "mvapich2_intel", parent => "mvapich2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [$sysfsutils, "libstdc++-devel"],
+            available => 0, mode => "user", dist_req_build => [$sysfsutils, "$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel", "librdmacm-devel"],
             ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
             install32 => 0, exception => 0 },
         'mvapich2_pathscale' =>
             { name => "mvapich2_pathscale", parent => "mvapich2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [$sysfsutils, "libstdc++-devel"],
+            available => 0, mode => "user", dist_req_build => [$sysfsutils, "$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel", "librdmacm-devel"],
             ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
             install32 => 0, exception => 0 },
@@ -1069,35 +1080,35 @@ my %packages_info = (
         'openmpi' =>
             { name => "openmpi", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["libstdc++-devel"],
-            dist_req_inst => ["libstdc++"], ofa_req_build => ["libibverbs-devel"],
+            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
+            dist_req_inst => ["$libstdc"], ofa_req_build => ["libibverbs-devel"],
             ofa_req_inst => ["libibverbs", "mpi-selector"],
             install32 => 0, exception => 0, configure_options => '' },
         'openmpi_gcc' =>
             { name => "openmpi_gcc", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["libstdc++-devel"],
+            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
             ofa_req_inst => ["libibverbs", "mpi-selector"],
             install32 => 0, exception => 0 },
         'openmpi_pgi' =>
             { name => "openmpi_pgi", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["libstdc++-devel"],
+            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
             ofa_req_inst => ["libibverbs", "mpi-selector"],
             install32 => 0, exception => 0 },
         'openmpi_intel' =>
             { name => "openmpi_intel", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["libstdc++-devel"],
+            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
             ofa_req_inst => ["libibverbs", "mpi-selector"],
             install32 => 0, exception => 0 },
         'openmpi_pathscale' =>
             { name => "openmpi_pathscale", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["libstdc++-devel"],
+            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
             ofa_req_inst => ["libibverbs", "mpi-selector"],
             install32 => 0, exception => 0 },
@@ -2459,13 +2470,14 @@ sub check_linux_dependencies
         if (not $packages_info{$package}{'rpm_exist'}) {
             for my $req ( @{ $packages_info{$package}{'dist_req_build'} } ) {
                 my ($req_name, $req_version) = (split ('_',$req));
+                print BLUE "check_linux_dependencies: $req_name rpm is required to build $package", RESET "\n" if ($verbose3);
                 if (not is_installed($req_name)) {
                     print RED "$req_name rpm is required to build $package", RESET "\n";
                     $err++;
                 }
                 if ($req_version) {
                     my $inst_version = get_rpm_ver_inst($req_name);
-                    print "check_linux_dependencies: $req_name installed version $inst_version, required $req_version\n" if ($verbose3);
+                    print "check_linux_dependencies: $req_name installed version $inst_version, required at least $req_version\n" if ($verbose3);
                     if ($inst_version lt $req_version) {
                         print RED "$req_name-$req_version rpm is required to build $package", RESET "\n";
                         $err++;
@@ -2484,14 +2496,14 @@ sub check_linux_dependencies
                     my @libstdc32 = </usr/lib/libstdc++.so.*>;
                     if ($package eq "mstflint") {
                         if (not $#libstdc32) {
-                            print RED "libstdc++ 32bit is required to build mstflint.", RESET "\n";
+                            print RED "$libstdc 32bit is required to build mstflint.", RESET "\n";
                             $err++;
                         }
                     }
                     elsif ($package eq "openmpi") {
                         my @libsysfs = </usr/lib/libsysfs.so>;
                         if (not $#libstdc32) {
-                            print RED "libstdc++-devel 32bit is required to build openmpi.", RESET "\n";
+                            print RED "$libstdc_devel 32bit is required to build openmpi.", RESET "\n";
                             $err++;
                         }
                         if (not $#libsysfs) {
@@ -2531,14 +2543,14 @@ sub check_linux_dependencies
                 my @libstdc32 = </usr/lib/libstdc++.so.*>;
                 if ($package eq "mstflint") {
                     if (not $#libstdc32) {
-                        print RED "libstdc++ 32bit is required to install mstflint.", RESET "\n";
+                        print RED "$libstdc 32bit is required to install mstflint.", RESET "\n";
                         $err++;
                     }
                 }
                 elsif ($package eq "openmpi") {
                     my @libsysfs = </usr/lib/libsysfs.so.*>;
                     if (not $#libstdc32) {
-                        print RED "libstdc++ 32bit is required to install openmpi.", RESET "\n";
+                        print RED "$libstdc 32bit is required to install openmpi.", RESET "\n";
                         $err++;
                     }
                     if (not $#libsysfs) {
@@ -3681,10 +3693,13 @@ sub uninstall
     my $res = 0;
     my $sig = 0;
     my $cnt = 0;
-    print BLUE "Uninstalling the previous version of $PACKAGE", RESET "\n" if (not $quiet);
+
     if ( -f "/sbin/mlnx_en_uninstall.sh" ) {
+        print BLUE "Uninstalling MLNX_EN driver", RESET "\n" if (not $quiet);
         system("yes | /sbin/mlnx_en_uninstall.sh > $ofedlogs/mlnx_en_uninstall.log 2>&1");
     }
+
+    print BLUE "Uninstalling the previous version of $PACKAGE", RESET "\n" if (not $quiet);
     system("yes | ofed_uninstall.sh > $ofedlogs/ofed_uninstall.log 2>&1");
     $res = $? >> 8;
     $sig = $? & 127;
@@ -3693,6 +3708,30 @@ sub uninstall
         $res = $? >> 8;
         $sig = $? & 127;
     }
+
+    if ($distro eq "SuSE") {
+        my $suse_cnt = 0;
+        my $suse_rpms;
+        for my $package (@suse_ofed_packages) {
+            if (is_installed($package)) {
+                $suse_rpms .= "$package";
+                $suse_cnt ++;
+            }
+        }
+        for my $package (@user_packages) {
+            if (is_installed("$package-64bit")) {
+                $suse_rpms .= "$package-64bit";
+                $suse_cnt ++;
+            }
+        }
+        if ($suse_cnt) {
+            print RED "Please remove OFED RPMs coming from the Distribution.", RESET "\n";
+            print RED "Run:", RESET "\n";
+            print RED "rpm -e $suse_rpms", RESET "\n";
+            exit 1;
+        }
+    }
+
     my $cmd = "rpm -e --allmatches";
     for my $package (@all_packages, @hidden_packages, @prev_ofed_packages) {
         next if ($package eq "mpi-selector");
