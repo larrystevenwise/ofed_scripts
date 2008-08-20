@@ -1600,7 +1600,7 @@ sub set_availability
 
     # Ehca
     if ($arch =~ m/ppc64|powerpc/ and
-            $kernel =~ m/2.6.1[6-9]|2.6.2[0-9]|2.6.9-55|2.6.9-67/) {
+            $kernel =~ m/2.6.1[6-9]|2.6.2[0-9]|2.6.9-67|2.6.9-78/) {
             $kernel_modules_info{'ehca'}{'available'} = 1;
             $packages_info{'libehca'}{'available'} = 1;
             $packages_info{'libehca-devel-static'}{'available'} = 1;
@@ -1611,7 +1611,7 @@ sub set_availability
     if ( ($arch =~ m/ppc64/ and
             $kernel =~ m/2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) or
        ($arch =~ m/x86_64/ and
-            $kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) ) {
+            $kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) ) {
             $kernel_modules_info{'ipath'}{'available'} = 1;
             $packages_info{'libipathverbs'}{'available'} = 1;
             $packages_info{'libipathverbs-devel'}{'available'} = 1;
@@ -1619,7 +1619,7 @@ sub set_availability
     }
 
     # Iser
-    if ($kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
+    if ($kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
             $kernel_modules_info{'iser'}{'available'} = 0;
             $packages_info{'open-iscsi-generic'}{'available'} = 0;
     }
@@ -1630,7 +1630,7 @@ sub set_availability
     }
 
     # QLogic vnic
-    if ($kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.18-*/) {
+    if ($kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.18-*/) {
             $kernel_modules_info{'qlgc_vnic'}{'available'} = 1;
             $packages_info{'ibvexdmtools'}{'available'} = 1;
             $packages_info{'qlgc_vnic_daemon'}{'available'} = 1;
@@ -2412,12 +2412,12 @@ sub resolve_dependencies
         }
 
     for my $module ( @selected_modules_by_user ) {
-        if ($module eq "ehca" and $kernel =~ m/2.6.9-55/ and not -d "$kernel_sources/include/asm-ppc") {
-            print RED "\nTo install ib_ehca module please ensure that $kernel_sources/include/ contains directory asm-ppc.", RESET;
-            print RED "\nPlease install the kernel.src.rpm from redhat and copy the directory and the files into $kernel_sources/include/", RESET;
-            print "\nThen rerun this Script\n";
-            exit 1;
-        }
+        # if ($module eq "ehca" and $kernel =~ m/2.6.9-55/ and not -d "$kernel_sources/include/asm-ppc") {
+        #     print RED "\nTo install ib_ehca module please ensure that $kernel_sources/include/ contains directory asm-ppc.", RESET;
+        #     print RED "\nPlease install the kernel.src.rpm from redhat and copy the directory and the files into $kernel_sources/include/", RESET;
+        #     print "\nThen rerun this Script\n";
+        #     exit 1;
+        # }
         select_dependent_module($module);
     }
 
@@ -2443,7 +2443,7 @@ sub check_linux_dependencies
         if ($package =~ /kernel-ib|ib-bonding/) {
             if (not $packages_info{$package}{'rpm_exist'}) {
                 # Check that required kernel is supported
-                if ($kernel !~ /2.6.9-42|2.6.9-55|2.6.9-67|2.6.1[6-9]|2.6.2[0-7]/) {
+                if ($kernel !~ /2.6.9-42|2.6.9-55|2.6.9-67|2.6.9-78|2.6.1[6-9]|2.6.2[0-7]/) {
                     print RED "Kernel $kernel is not supported.", RESET "\n";
                     print BLUE "For the list of Supported Platforms and Operating Systems see", RESET "\n";
                     print BLUE "$CWD/docs/OFED_release_notes.txt", RESET "\n";
