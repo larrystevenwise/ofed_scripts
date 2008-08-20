@@ -3739,6 +3739,10 @@ sub uninstall
             $cmd .= " $package";
             $cnt ++;
         }
+        if (is_installed("$package-static")) {
+            $cmd .= " $package-static";
+            $cnt ++;
+        }
     }
     if ($cnt) {
         print "Running $cmd\n" if (not $quiet);
