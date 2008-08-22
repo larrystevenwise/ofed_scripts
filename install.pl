@@ -1302,7 +1302,7 @@ my $mvapich2_conf_blcr_home;
 my $mvapich2_conf_vcluster = "small";
 my $mvapich2_conf_io_bus;
 my $mvapich2_conf_link_speed;
-my $mvapich2_conf_dapl_provider = "ib0";
+my $mvapich2_conf_dapl_provider = "";
 my $mvapich2_comp_env;
 my $mvapich2_dat_lib;
 my $mvapich2_dat_include;
@@ -1881,7 +1881,7 @@ sub mvapich2_config
             $mvapich2_conf_link_speed = "sdr";
         }
 
-        print "\nDefault DAPL provider [ib0]: ";
+        print "\nDefault DAPL provider []: ";
         $ans = <STDIN>;
         chomp $ans;
         if ($ans) {
@@ -2922,55 +2922,55 @@ sub build_rpm
             }
 
             if ($mvapich2_conf_impl eq "ofa") {
-                print BLUE "Building the MVAPICH2 RPM in the OFA configuration. Please wait...", RESET "\n" if ($verbose);
+                if ($verbose) {
+                    print BLUE;
+                    print "Building the MVAPICH2 RPM [OFA]...\n";
+                    print RESET;
+                }
+
+                $cmd .= " --define 'rdma --with-rdma=gen2'";
+                $cmd .= " --define 'ib_include --with-ib-include=$prefix/include'";
+                $cmd .= " --define 'ib_libpath --with-ib-libpath=$prefix/lib";
+                $cmd .= "64" if $arch =~ m/x86_64|ppc64/;
+		$cmd .= "'";
+
                 if ($mvapich2_conf_ckpt) {
-                    $cmd .= " --define 'rdma_cm 0'";
-                    $cmd .= " --define 'blcr_home $mvapich2_conf_blcr_home'";
+                    $cmd .= " --define 'blcr 1'";
+                    $cmd .= " --define 'blcr_include --with-blcr-include=$mvapich2_conf_blcr_home/include'";
+                    $cmd .= " --define 'blcr_libpath --with-blcr-libpath=$mvapich2_conf_blcr_home/lib'";
                 }
-                else {
-                    $cmd .= " --define 'rdma_cm 1'";
-                }
-                $cmd .= " --define 'ckpt $mvapich2_conf_ckpt'";
             }
+
             elsif ($mvapich2_conf_impl eq "udapl") {
-                print BLUE "Building the MVAPICH2 RPM in the uDAPL configuration. Please wait...", RESET "\n" if ($verbose);
-                if (-d "$prefix/lib64") {
-                    $mvapich2_dat_lib = "$prefix/lib64";
+                if ($verbose) {
+                    print BLUE;
+                    print "Building the MVAPICH2 RPM [uDAPL]...\n";
+                    print RESET;
                 }
-                if (-d "$prefix/lib") {
-                    $mvapich2_dat_lib = "$prefix/lib";
-                }
-                else {
-                    print RED "Could not find a proper uDAPL lib directory.", RESET "\n";
-                    exit 1;
-                }
-                if (-d "$prefix/include") {
-                    $mvapich2_dat_include = "$prefix/include";
-                }
-                else {
-                    print RED "Could not find a proper uDAPL include directory.", RESET "\n";
-                    exit 1;
-                }
-                $cmd .= " --define 'vcluster $mvapich2_conf_vcluster'";
-                $cmd .= " --define 'io_bus $mvapich2_conf_io_bus'";
-                $cmd .= " --define 'link_speed $mvapich2_conf_link_speed'";
-                $cmd .= " --define 'dapl_provider $mvapich2_conf_dapl_provider'";
-                $cmd .= " --define 'dat_lib $mvapich2_dat_lib'";
-                $cmd .= " --define 'dat_include $mvapich2_dat_include'";
+
+                $cmd .= " --define 'rdma --with-rdma=udapl'";
+                $cmd .= " --define 'dapl_include --with-dapl-include=$prefix/include'";
+                $cmd .= " --define 'dapl_libpath --with-dapl-libpath=$prefix/lib";
+                $cmd .= "64" if $arch =~ m/x86_64|ppc64/;
+		$cmd .= "'";
+
+                $cmd .= " --define 'cluster_size --with-cluster-size=$mvapich2_conf_vcluster'";
+                $cmd .= " --define 'io_bus --with-io-bus=$mvapich2_conf_io_bus'";
+                $cmd .= " --define 'link_speed --with-link=$mvapich2_conf_link_speed'";
+                $cmd .= " --define 'dapl_provider --with-dapl-provider=$mvapich2_conf_dapl_provider'" if
+($mvapich2_conf_dapl_provider);
             }
 
             if ($packages_info{'mvapich2'}{'configure_options'}) {
                 $cmd .= " --define 'configure_options $packages_info{'mvapich2'}{'configure_options'}'";
             }
-            $cmd .= " --define 'open_ib_home $prefix'";
-            $cmd .= " --define '_usr $prefix'";
-            $cmd .= " --define 'shared_libs $mvapich2_conf_shared_libs'";
-            $cmd .= " --define 'romio $mvapich2_conf_romio'";
+
+            $cmd .= " --define 'shared_libs 1'" if $mvapich2_conf_shared_libs;
+            $cmd .= " --define 'romio 1'" if $mvapich2_conf_romio;
             $cmd .= " --define 'comp_env $mvapich2_comp_env'";
             $cmd .= " --define 'auto_req 0'";
             $cmd .= " --define 'mpi_selector $prefix/bin/mpi-selector'";
             $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
-            $cmd .= " --define 'ofa_build 0'";
         }
         elsif ($parent eq "openmpi") {
             my $compiler = (split('_', $name))[1];
