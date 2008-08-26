@@ -1240,28 +1240,21 @@ my %packages_info = (
         'tgt-generic' =>
             { name => ($distro eq 'SuSE') ? 'tgt': 'scsi-target-utils', parent => "tgt-generic",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["openssl-devel"],
+            available => 0, mode => "user", dist_req_build => ["openssl-devel"],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
             ofa_req_inst => ["librdmacm", "libibverbs-devel"],
             install32 => 0, exception => 1, configure_options => '' },
-        'stgt' =>
-            { name => "stgt", parent => "tgt-generic",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["openssl-devel"],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["librdmacm", "libibverbs-devel"],
-            install32 => 0, exception => 1 },
         'tgt' =>
             { name => "tgt", parent => "tgt-generic",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["openssl-devel"],
+            available => 0, mode => "user", dist_req_build => ["openssl-devel"],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
             ofa_req_inst => ["librdmacm", "libibverbs-devel"],
             install32 => 0, exception => 1 },
         'scsi-target-utils' =>
             { name => "scsi-target-utils", parent => "tgt-generic",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["openssl-devel"],
+            available => 0, mode => "user", dist_req_build => ["openssl-devel"],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
             ofa_req_inst => ["librdmacm", "libibverbs-devel"],
             install32 => 0, exception => 1 },
@@ -1625,8 +1618,11 @@ sub set_availability
     }
 
     # tgt
-    if ($kernel =~ m/2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
+    if ($arch !~ m/ppc64|powerpc|ia64/ and
+            $kernel =~ m/2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
             $packages_info{'tgt-generic'}{'available'} = 1;
+            $packages_info{'tgt'}{'available'} = 1;
+            $packages_info{'scsi-target-utils'}{'available'} = 1;
     }
 
     # QLogic vnic
@@ -2111,15 +2107,6 @@ sub select_packages
                     next;
                 }
 
-                if ($package eq "stgt") {
-                    if ( $selected eq 'y' ) {
-                       push (@selected_by_user, "tgt-generic");
-                       print "select_package: selected tgt-generic\n" if ($verbose2);
-                       $cnt ++;
-                       next;
-                    }
-                }
-
 		if (substr($package,0,length("vendor_config")) eq "vendor_config") {
 		       next;
 		}
@@ -2310,9 +2297,6 @@ sub select_packages
         if ("iser" =~ m/$tmp/) {
             check_open_iscsi();
             push (@selected_by_user, "open-iscsi-generic");
-        }
-        if ("stgt" =~ m/$tmp/) {
-            push (@selected_by_user, "tgt-generic");
         }
         flock CONFIG, $UNLOCK;
     }
