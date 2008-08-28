@@ -2434,8 +2434,8 @@ sub check_linux_dependencies
                     exit 1;
                 }
                 # kernel sources required
-                if ( not -d "$kernel_sources/" ) {
-                    print RED "$kernel_sources is required to build $package RPM.", RESET "\n";
+                if ( not -d "$kernel_sources/scripts" ) {
+                    print RED "$kernel_sources/scripts is required to build $package RPM.", RESET "\n";
                     print RED "Please install the corresponding kernel-source or kernel-devel RPM.", RESET "\n";
                     $err++;
                 }
