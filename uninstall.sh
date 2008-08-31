@@ -199,12 +199,14 @@ uninstall()
     OPENMPI_LIST=$(rpm -qa | grep ${OPENMPI_NAME})
 
     if [ -n "$OPENMPI_LIST" ]; then
+        ompi_packs_to_remove=""
         for mpi_name in $OPENMPI_LIST
         do 
             if ( $RPM -q ${mpi_name} > $NULL 2>&1 ); then
-                ex "$RPM -e --allmatches ${mpi_name}"
+                ompi_packs_to_remove="$ompi_packs_to_remove ${mpi_name}"	
             fi
-        done    
+        done   
+        ex "$RPM -e --allmatches $ompi_packs_to_remove" 
     fi
 
     MPI_SELECTOR_LIST=$(rpm -qa | grep ${MPI_SELECTOR_NAME})
