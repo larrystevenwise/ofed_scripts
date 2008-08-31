@@ -2422,6 +2422,7 @@ sub check_linux_dependencies
     if (! $check_linux_deps) {
         return 0;
     }
+
     for my $package ( @selected_packages ) {
         # Check rpmbuild requirements
         if ($package =~ /kernel-ib|ib-bonding/) {
@@ -2439,6 +2440,13 @@ sub check_linux_dependencies
                     print RED "Please install the corresponding kernel-source or kernel-devel RPM.", RESET "\n";
                     $err++;
                 }
+            }
+        }
+
+        if ($distro eq "redhat" or $distro eq "fedora" or $distro eq 'redhat5') {
+            if (not is_installed("rpm-build")) {
+                print RED "rpm-build is required to build OFED", RESET "\n";
+                $err++;
             }
         }
 
