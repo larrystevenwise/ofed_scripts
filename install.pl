@@ -1635,7 +1635,7 @@ sub set_availability
     }
 
     # ib-bonding
-    if ($kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5|fc6/) {
+    if ($kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5|fc6/) {
             $packages_info{'ib-bonding'}{'available'} = 1;
             $packages_info{'ib-bonding-debuginfo'}{'available'} = 1;
     }
