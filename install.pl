@@ -3996,6 +3996,9 @@ sub main
 	    }
     }
     install();
+
+    system("/sbin/ldconfig > /dev/null 2>&1");
+
     if (length($vendor_pre_uninstall) > 0) {
 	    system "cp $vendor_pre_uninstall $prefix/sbin/vendor_pre_uninstall.sh";
     }
