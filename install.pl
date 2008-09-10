@@ -3885,7 +3885,7 @@ sub main
 {
     if ($print_available) {
         set_availability();
-        open(CONFIG, ">>$config") || die "Can't open $config: $!";;
+        open(CONFIG, ">>$config") || die "Can't open $config: $!";
         flock CONFIG, $LOCK_EXCLUSIVE;
         for my $package ( @all_packages, @hidden_packages) {
             next if (not $packages_info{$package}{'available'});
@@ -4027,6 +4027,26 @@ sub main
     install();
 
     system("/sbin/ldconfig > /dev/null 2>&1");
+
+    if (-f "/etc/modprobe.conf.dist") {
+        open(MDIST, "/etc/modprobe.conf.dist") or die "Can't open /etc/modprobe.conf.dist: $!";
+        my @mdist_lines;
+        while (<MDIST>) {
+            push @mdist_lines, $_;
+        }
+        close(MDIST);
+
+        open(MDIST, ">/etc/modprobe.conf.dist") or die "Can't open /etc/modprobe.conf.dist: $!";
+        foreach my $line (@mdist_lines) {
+            chomp $line;
+            if ($line =~ /^\s*install ib_core/) {
+                print MDIST "# $line\n";
+            } else {
+                print MDIST "$line\n";
+            }
+        }
+        close(MDIST);
+    }
 
     if (length($vendor_pre_uninstall) > 0) {
 	    system "cp $vendor_pre_uninstall $prefix/sbin/vendor_pre_uninstall.sh";
