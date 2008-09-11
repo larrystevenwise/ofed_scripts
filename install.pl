@@ -1303,6 +1303,7 @@ my %intel = ('icc' => 0, 'icpc' => 0, 'ifort' => 0);
 
 # mvapich2 environment
 my $mvapich2_conf_impl = "ofa";
+my $mvapich2_conf_pm = "mpirun";
 my $mvapich2_conf_romio = 1;
 my $mvapich2_conf_shared_libs = 1;
 my $mvapich2_conf_ckpt = 0;
@@ -1793,6 +1794,31 @@ sub mvapich2_config
         }
     }
 
+    print "\nPlease choose a process manager:\n\n";
+    print "1) New scalable mpirun_rsh framework\n";
+    print "2) Traditional mpd/mpiexec\n";
+
+    $done = 0;
+
+    while (not $done) {
+        print "Implementation [1]: ";
+        $ans = getch();
+
+        if (ord($ans) == $KEY_ENTER or $ans eq "1") {
+            $mvapich2_conf_pm = "mpirun";
+            $done = 1;
+        }
+
+        elsif ($ans eq "2") {
+            $mvapich2_conf_pm = "mpd";
+            $done = 1;
+        }
+
+        else {
+            $done = 0;
+        }
+    }
+
     print "\nEnable ROMIO support [Y/n]: ";
     $ans = getch();
     if ($ans =~ m/Nn/) {
@@ -1824,6 +1850,7 @@ sub mvapich2_config
                 chomp $tmp;
                 if (-d "$tmp") {
                     $mvapich2_conf_blcr_home = $tmp;
+                    $mvapich2_conf_pm = "mpd";
                     $done = 1;
                 }
                 else {
@@ -1909,6 +1936,7 @@ sub mvapich2_config
     flock CONFIG, $LOCK_EXCLUSIVE;
 
     print CONFIG "mvapich2_conf_impl=$mvapich2_conf_impl\n";
+    print CONFIG "mvapich2_conf_pm=$mvapich2_conf_pm\n";
     print CONFIG "mvapich2_conf_romio=$mvapich2_conf_romio\n";
     print CONFIG "mvapich2_conf_shared_libs=$mvapich2_conf_shared_libs\n";
     print CONFIG "mvapich2_conf_ckpt=$mvapich2_conf_ckpt\n";
@@ -2193,6 +2221,10 @@ sub select_packages
                 # mvapich2 configuration environment
                 if ($package eq "mvapich2_conf_impl") {
                     $mvapich2_conf_impl = $selected;
+                    next;
+                }
+                elsif ($package eq "mvapich2_conf_pm") {
+                    $mvapich2_conf_pm = $selected;
                     next;
                 }
                 elsif ($package eq "mvapich2_conf_romio") {
@@ -2948,7 +2980,7 @@ sub build_rpm
                 $cmd .= " --define 'ib_include --with-ib-include=$prefix/include'";
                 $cmd .= " --define 'ib_libpath --with-ib-libpath=$prefix/lib";
                 $cmd .= "64" if $arch =~ m/x86_64|ppc64/;
-		$cmd .= "'";
+                $cmd .= "'";
 
                 if ($mvapich2_conf_ckpt) {
                     $cmd .= " --define 'blcr 1'";
@@ -2968,7 +3000,7 @@ sub build_rpm
                 $cmd .= " --define 'dapl_include --with-dapl-include=$prefix/include'";
                 $cmd .= " --define 'dapl_libpath --with-dapl-libpath=$prefix/lib";
                 $cmd .= "64" if $arch =~ m/x86_64|ppc64/;
-		$cmd .= "'";
+                $cmd .= "'";
 
                 $cmd .= " --define 'cluster_size --with-cluster-size=$mvapich2_conf_vcluster'";
                 $cmd .= " --define 'io_bus --with-io-bus=$mvapich2_conf_io_bus'";
@@ -2987,6 +3019,7 @@ sub build_rpm
             $cmd .= " --define 'auto_req 0'";
             $cmd .= " --define 'mpi_selector $prefix/bin/mpi-selector'";
             $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
+            $cmd .= " --define '_pm --with-pm=$mvapich2_conf_pm'";
         }
         elsif ($parent eq "openmpi") {
             my $compiler = (split('_', $name))[1];
