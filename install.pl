@@ -328,7 +328,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
 
 my @basic_kernel_packages = ("kernel-ib");
 my @basic_user_packages = ("libibverbs", "libibverbs-utils", "libmthca", "libmlx4",
-                            "libehca", "libcxgb3", "libnes", @misc_packages);
+                            "libehca", "libcxgb3", "libnes", "libipathverbs", @misc_packages);
 
 my @hpc_kernel_packages = ("kernel-ib", "ib-bonding");
 my @hpc_kernel_modules = (@basic_kernel_modules);
