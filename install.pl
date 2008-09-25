@@ -423,7 +423,10 @@ my %packages_info = (
         'libibverbs' =>
             { name => "libibverbs", parent => "libibverbs",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["gcc_3.3.3", "glibc-devel","$libstdc"],
+            available => 1, mode => "user", dist_req_build => 
+            ( $distro eq 'SuSE' && $arch eq "ppc64" )?( $build32 == 1 )?
+            ["gcc_3.3.3", "glibc-devel-64bit","glibc-devel","$libstdc"]:["gcc_3.3.3", "glibc-devel-64bit","$libstdc"]:
+            ["gcc_3.3.3", "glibc-devel","$libstdc"],
             dist_req_inst => [], ofa_req_build => [], ofa_req_inst => ["ofed-scripts"], 
             install32 => 1, exception => 0, configure_options => '' },
         'libibverbs-devel' =>
@@ -816,7 +819,8 @@ my %packages_info = (
         'mstflint' =>
             { name => "mstflint", parent => "mstflint",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["zlib-devel", "$libstdc_devel", "gcc-c++"],
+            available => 1, mode => "user", dist_req_build => ( $distro eq 'SuSE' && $arch eq "ppc64" )?
+            ["zlib-devel-64bit", "$libstdc_devel-64bit", "gcc-c++"]: ["zlib-devel", "$libstdc_devel", "gcc-c++"],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
