@@ -2708,6 +2708,7 @@ sub build_kernel_rpm
     }
 
     $cmd .= " --define '_prefix $prefix'";
+    $cmd .= " --define '__arch_install_post %{nil}'";
     $cmd .= " $main_packages{$name}{'srpmpath'}";
 
     print "Running $cmd\n" if ($verbose);
