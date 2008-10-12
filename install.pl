@@ -1776,17 +1776,21 @@ sub mvapich2_config
     print "1) OFA (IB and iWARP)\n";
     print "2) uDAPL\n";
     $done = 0;
+
     while (not $done) {
         print "Implementation [1]: ";
         $ans = getch();
+
         if (ord($ans) == $KEY_ENTER or $ans eq "1") {
             $mvapich2_conf_impl = "ofa";
             $done = 1;
         }
+
         elsif ($ans eq "2") {
             $mvapich2_conf_impl = "udapl";
             $done = 1;
         }
+
         else {
             $done = 0;
         }
@@ -1819,18 +1823,22 @@ sub mvapich2_config
 
     print "\nEnable ROMIO support [Y/n]: ";
     $ans = getch();
+
     if ($ans =~ m/Nn/) {
         $mvapich2_conf_romio = 0;
     }
+
     else {
         $mvapich2_conf_romio = 1;
     }
 
     print "\nEnable shared library support [Y/n]: ";
     $ans = getch();
+
     if ($ans =~ m/Nn/) {
         $mvapich2_conf_shared_libs = 0;
     }
+
     else {
         $mvapich2_conf_shared_libs = 1;
     }
@@ -1838,29 +1846,35 @@ sub mvapich2_config
     # OFA specific options.
     if ($mvapich2_conf_impl eq "ofa") {
         $done = 0;
+
         while (not $done) {
             print "\nEnable Checkpoint-Restart support [y/N]: ";
             $ans = getch();
+
             if ($ans =~ m/[Yy]/) {
                 $mvapich2_conf_ckpt = 1;
                 print "\nBLCR installation directory [or nothing if not installed]: ";
                 my $tmp = <STDIN>;
                 chomp $tmp;
+
                 if (-d "$tmp") {
                     $mvapich2_conf_blcr_home = $tmp;
                     $mvapich2_conf_pm = "mpd";
                     $done = 1;
                 }
+
                 else {
                     print RED "\nBLCR installation directory not found.", RESET "\n";
                 }
             }
+
             else {
                 $mvapich2_conf_ckpt = 0;
                 $done = 1;
             }
         }
     }
+
     else {
         $mvapich2_conf_ckpt = 0;
     }
@@ -1869,17 +1883,21 @@ sub mvapich2_config
     if ($mvapich2_conf_impl eq "udapl") {
         print "\nCluster size:\n\n1) Small\n2) Medium\n3) Large\n";
         $done = 0;
+
         while (not $done) {
             print "Cluster size [1]: ";
             $ans = getch();
+
             if (ord($ans) == $KEY_ENTER or $ans eq "1") {
                 $mvapich2_conf_vcluster = "small";
                 $done = 1;
             }
+
             elsif ($ans eq "2") {
                 $mvapich2_conf_vcluster = "medium";
                 $done = 1;
             }
+
             elsif ($ans eq "3") {
                 $mvapich2_conf_vcluster = "large";
                 $done = 1;
@@ -1888,46 +1906,55 @@ sub mvapich2_config
 
         print "\nI/O Bus:\n\n1) PCI-Express\n2) PCI-X\n";
         $done = 0;
+
         while (not $done) {
             print "I/O Bus [1]: ";
             $ans = getch();
+
             if (ord($ans) == $KEY_ENTER or $ans eq "1") {
-                $mvapich2_conf_io_bus = "pci-ex";
+                $mvapich2_conf_io_bus = "PCI_EX";
                 $done = 1;
             }
+
             elsif ($ans eq "2") {
-                $mvapich2_conf_io_bus = "pci-x";
+                $mvapich2_conf_io_bus = "PCI_X";
                 $done = 1;
             }
         }
 
-        if ($mvapich2_conf_io_bus eq "pci-ex") {
+        if ($mvapich2_conf_io_bus eq "PCI_EX") {
             print "\nLink Speed:\n\n1) SDR\n2) DDR\n";
             $done = 0;
+
             while (not $done) {
                 print "Link Speed [1]: ";
                 $ans = getch();
+
                 if (ord($ans) == $KEY_ENTER or $ans eq "1") {
-                    $mvapich2_conf_link_speed = "sdr";
+                    $mvapich2_conf_link_speed = "SDR";
                     $done = 1;
                 }
+
                 elsif ($ans eq "2") {
-                    $mvapich2_conf_link_speed = "ddr";
+                    $mvapich2_conf_link_speed = "DDR";
                     $done = 1;
                 }
             }
         }
+
         else {
-            $mvapich2_conf_link_speed = "sdr";
+            $mvapich2_conf_link_speed = "SDR";
         }
 
         print "\nDefault DAPL provider []: ";
         $ans = <STDIN>;
         chomp $ans;
+
         if ($ans) {
             $mvapich2_conf_dapl_provider = $ans;
         }
     }
+
     $mvapich2_conf_done = 1;
 
     open(CONFIG, ">>$config") || die "Can't open $config: $!";;
@@ -2221,38 +2248,47 @@ sub select_packages
                     $mvapich2_conf_impl = $selected;
                     next;
                 }
+
                 elsif ($package eq "mvapich2_conf_pm") {
                     $mvapich2_conf_pm = $selected;
                     next;
                 }
+
                 elsif ($package eq "mvapich2_conf_romio") {
                     $mvapich2_conf_romio = $selected;
                     next;
                 }
+
                 elsif ($package eq "mvapich2_conf_shared_libs") {
                     $mvapich2_conf_shared_libs = $selected;
                     next;
                 }
+
                 elsif ($package eq "mvapich2_conf_ckpt") {
                     $mvapich2_conf_ckpt = $selected;
                     next;
                 }
+
                 elsif ($package eq "mvapich2_conf_blcr_home") {
                     $mvapich2_conf_blcr_home = $selected;
                     next;
                 }
+
                 elsif ($package eq "mvapich2_conf_vcluster") {
                     $mvapich2_conf_vcluster = $selected;
                     next;
                 }
+		
                 elsif ($package eq "mvapich2_conf_io_bus") {
                     $mvapich2_conf_io_bus = $selected;
                     next;
                 }
+
                 elsif ($package eq "mvapich2_conf_link_speed") {
                     $mvapich2_conf_link_speed = $selected;
                     next;
                 }
+
                 elsif ($package eq "mvapich2_conf_dapl_provider") {
                     $mvapich2_conf_dapl_provider = $selected;
                     next;
@@ -2949,19 +2985,23 @@ sub build_rpm
                     if ($arch eq "ppc64") {
                         $mvapich2_comp_env = 'CC="gcc -m64" CXX="g++ -m64" F77="gfortran -m64" F90="gfortran -m64"';
                     }
+
                     else {
                         $mvapich2_comp_env = "CC=gcc CXX=g++ F77=gfortran F90=gfortran";
                     }
                 }
+
                 elsif ($gcc{'g77'}) {
                     if ($arch eq "ppc64") {
                         $mvapich2_comp_env = 'CC="gcc -m64" CXX="g++ -m64" F77="g77 -m64" F90=/bin/false';
                     }
+
                     else {
                         $mvapich2_comp_env = "CC=gcc CXX=g++ F77=g77 F90=/bin/false";
                     }
                 }
             }
+
             elsif ($compiler eq "pathscale") {
                 $mvapich2_comp_env = "CC=pathcc CXX=pathCC F77=pathf90 F90=pathf90";
                 # On i686 the PathScale compiler requires -g optimization
@@ -2970,15 +3010,18 @@ sub build_rpm
                     $mvapich2_comp_env .= " OPT_FLAG=-g";
                 }
             }
+
             elsif ($compiler eq "pgi") {
                 $mvapich2_comp_env = "CC=pgcc CXX=pgCC F77=pgf77 F90=pgf90";
             }
+
             elsif ($compiler eq "intel") {
                 if ($mvapich2_conf_shared_libs) {
                     # The -i-dynamic flag is required for MVAPICH2 in the shared
                     # library configuration.
                     $mvapich2_comp_env = 'CC="icc -i-dynamic" CXX="icpc -i-dynamic" F77="ifort -i-dynamic" F90="ifort -i-dynamic"';
                 }
+
                 else {
                     $mvapich2_comp_env = "CC=icc CXX=icpc F77=ifort F90=ifort";
                 }
