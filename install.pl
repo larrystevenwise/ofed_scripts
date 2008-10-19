@@ -281,7 +281,13 @@ my @suse_ofed_packages = (
 # List of all available packages sorted following dependencies
 my @kernel_packages = ("kernel-ib", "kernel-ib-devel", "ib-bonding", "ib-bonding-debuginfo");
 my @basic_kernel_modules = ("core", "mthca", "mlx4", "mlx4_en", "cxgb3", "nes", "ehca", "ipath", "ipoib");
-my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser", "nfsrdma");
+my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser");
+
+# kernel modules in "technology preview" status can be installed by
+# adding "module=y" to the ofed.conf file in unattended installation mode
+# or by selecting the module in custom installation mode during interactive installation
+my @tech_preview = ("nfsrdma");
+
 my @kernel_modules = (@basic_kernel_modules, @ulp_modules);
 
 my $kernel_configure_options;
@@ -2061,7 +2067,7 @@ sub select_packages
 
                     if ($package eq "kernel-ib") {
                         # Select kernel modules to be installed
-                        for my $module ( @kernel_modules ) {
+                        for my $module ( @kernel_modules, @tech_preview ) {
                             next if (not $kernel_modules_info{$module}{'available'});
                             if ($module eq "iser") {
                                 print "Install $module module? (open-iscsi will also be installed) [y/N]:";
@@ -2262,7 +2268,7 @@ sub select_packages
                 }
 
                 if (not $packages_info{$package}{'parent'}) {
-                    my $modules = "@kernel_modules";
+                    my $modules = "@kernel_modules @tech_preview";
                     chomp $modules;
                     $modules =~ s/ /|/g;
                     if ($package =~ m/$modules/) {
