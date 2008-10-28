@@ -30,7 +30,12 @@
 #
 # Description: OFED package uninstall script
 
-RPM=/bin/rpm
+RPM=`which rpm 2>/dev/null`
+if [ ! -n "$RPM" ]; then
+	echo "Please install rpm package to continue"
+	exit 1
+fi
+
 RM=/bin/rm
 NULL=/dev/null
 

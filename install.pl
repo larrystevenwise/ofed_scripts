@@ -71,6 +71,8 @@ my $vendor_post_uninstall = "";
 
 my $distro;
 my $subdistro = "";
+my $rpmbuild_flags = "";
+my $rpminstall_flags = "";
 
 my $build32 = 0;
 my $arch = `uname -m`;
@@ -88,14 +90,32 @@ my $dist_rpm_ver = 0;
 my $dist_rpm_rel = 0;
 
 if (-f "/etc/issue") {
-    $dist_rpm = `rpm -qf /etc/issue | head -1`;
-    chomp $dist_rpm;
-    $dist_rpm_ver = get_rpm_ver_inst($dist_rpm);
-    $dist_rpm_rel = get_rpm_rel_inst($dist_rpm);
+    if (-f "/usr/bin/dpkg") {
+        if (-f "/etc/lsb-release") {
+            open (LSB, "/etc/lsb-release") || die "";
+            while (<LSB>) {
+                if (/DISTRIB_DESCRIPTION/) {
+                    $dist_rpm = (split '=', $_)[1];
+                    $dist_rpm =~ s/"//g;
+                    $dist_rpm =~ s/ /_/g;
+                }
+            }
+            close LSB;
+        }
+        else {
+            $dist_rpm = "debian";
+        }
+    }
+    else {
+        $dist_rpm = `rpm -qf /etc/issue | head -1`;
+        $dist_rpm_ver = get_rpm_ver_inst($dist_rpm);
+        $dist_rpm_rel = get_rpm_rel_inst($dist_rpm);
+    }
 }
 else {
     $dist_rpm = "unsupported";
 }
+chomp $dist_rpm;
 
 # Set Linux Distribution
 if ( -f "/etc/SuSE-release" ) {
@@ -1462,6 +1482,12 @@ if ($kernel_given and not $kernel_source_given) {
 my $kernel_rel = $kernel;
 $kernel_rel =~ s/-/_/g;
 
+if ($distro == "debian") {
+    $check_linux_deps = 0;
+    $rpmbuild_flags .= ' --nodeps';
+    $rpminstall_flags .= ' --nodeps';
+}
+
 sub sig_handler
 {
     exit 1;
@@ -1506,7 +1532,13 @@ sub get_rpm_rel
 # Get RPM name and version of the INSTALLED package
 sub get_rpm_ver_inst
 {
-    my $ret = `rpm --queryformat '[%{VERSION}]\n' -q @_ | uniq`;
+    my $ret;
+    if ($distro == "debian") {
+        $ret = `dpkg-query -W -f='\${Version}\n' @_ | cut -d ':' -f 2 | uniq`;
+    }
+    else {
+        $ret = `rpm --queryformat '[%{VERSION}]\n' -q @_ | uniq`;
+    }
     chomp $ret;
     return $ret;
 }
@@ -1724,7 +1756,7 @@ sub set_availability
     }
 
     # debuginfo RPM currently are not supported on SuSE
-    if ($distro eq 'SuSE') {
+    if ($distro eq 'SuSE' or $distro eq 'debian') {
         for my $package (@all_packages) {
             if ($package =~ m/-debuginfo/) {
                 $packages_info{$package}{'available'} = 0;
@@ -2691,7 +2723,7 @@ sub build_kernel_rpm
     my $sig = 0;
     my $TMPRPMS;
 
-    $cmd = "rpmbuild --rebuild --define '_topdir $TOPDIR'";
+    $cmd = "rpmbuild --rebuild $rpmbuild_flags --define '_topdir $TOPDIR'";
 
     if ($name eq 'ofa_kernel') {
         $kernel_configure_options .= " $packages_info{'ofa_kernel'}{'configure_options'}";
@@ -2709,6 +2741,10 @@ sub build_kernel_rpm
             else {
                 $kernel_configure_options .= " --with-$module-mod";
             }
+        }
+
+        if ($distro == "debian") {
+                $kernel_configure_options .= " --without-modprobe";
         }
 
         $cmd .= " --define 'configure_options $kernel_configure_options'";
@@ -2787,7 +2823,7 @@ sub build_rpm_32
     $pref_env32 .= " FFLAGS='$fflags32'";
     $pref_env32 .= " LDLIBS='$ldlibs32'";
 
-    $cmd = "$pref_env32 rpmbuild --rebuild --define '_topdir $TOPDIR'";
+    $cmd = "$pref_env32 rpmbuild --rebuild $rpmbuild_flags --define '_topdir $TOPDIR'";
     $cmd .= " --target $target_cpu32";
     $cmd .= " --define '_prefix $prefix'";
     $cmd .= " --define 'dist %{nil}'";
@@ -2927,7 +2963,7 @@ sub build_rpm
             $pref_env   .= " LDLIBS='$ldlibs'";
         }
 
-        $cmd = "$pref_env rpmbuild --rebuild --define '_topdir $TOPDIR'";
+        $cmd = "$pref_env rpmbuild --rebuild $rpmbuild_flags --define '_topdir $TOPDIR'";
         $cmd .= " --define 'dist %{nil}'";
         $cmd .= " --target $target_cpu";
 
@@ -3291,7 +3327,7 @@ sub install_kernel_rpm
         exit 1;
     }
 
-    $cmd = "rpm -iv";
+    $cmd = "rpm -iv $rpminstall_flags";
     if ($distro eq "SuSE") {
         # W/A for ksym dependencies on SuSE
         $cmd .= " --nodeps";
@@ -3326,7 +3362,7 @@ sub install_rpm_32
         # exit 1;
     }
 
-    $cmd = "rpm -iv";
+    $cmd = "rpm -iv $rpminstall_flags";
     if ($distro eq "SuSE" and $dist_rpm_rel gt 15.2) {
         $cmd .= " --force";
     }
@@ -3395,9 +3431,9 @@ sub install_rpm
     }
 
     if ($name eq "mpi-selector") {
-        $cmd = "rpm -Uv --force";
+        $cmd = "rpm -Uv $rpminstall_flags --force";
     } else {
-        $cmd = "rpm -iv";
+        $cmd = "rpm -iv $rpminstall_flags";
     }
 
     $cmd .= " $package";
@@ -3436,7 +3472,12 @@ sub is_installed
     my $res = 0;
     my $name = shift @_;
     
-    system("rpm -q $name > /dev/null 2>&1");
+    if ($distro == "debian") {
+        system("dpkg-query -W -f='\${Package} \${Version}\n' $name > /dev/null 2>&1");
+    }
+    else {
+        system("rpm -q $name > /dev/null 2>&1");
+    }
     $res = $? >> 8;
 
     return not $res;
