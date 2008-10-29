@@ -3433,6 +3433,9 @@ sub install_rpm
     if ($name eq "mpi-selector") {
         $cmd = "rpm -Uv $rpminstall_flags --force";
     } else {
+        if ($name eq "opensm" and $distro eq "debian") {
+            $rpminstall_flags .= " --nopost";
+        }
         $cmd = "rpm -iv $rpminstall_flags";
     }
 
