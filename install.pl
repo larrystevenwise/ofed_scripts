@@ -3961,37 +3961,38 @@ sub install
 
 sub check_pcie_link
 {
-    open (PCI, "$lspci -d 15b3: -n|") or die "Failed to execute '$lspci -d 15b3: -n': $!";
-    while(<PCI>) {
-        my $devinfo = $_;
-        $devinfo =~ /(15b3:[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])/;
-        my $devid = $&;
-        my $link_width = `$setpci -d $devid 72 | cut -b1`;
-        chomp $link_width;
+    if (open (PCI, "$lspci -d 15b3: -n|")) {
+        while(<PCI>) {
+            my $devinfo = $_;
+            $devinfo =~ /(15b3:[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])/;
+            my $devid = $&;
+            my $link_width = `$setpci -d $devid 72 | cut -b1`;
+            chomp $link_width;
 
-        print BLUE "Device ($devid):\n";
-        print "\t" . `$lspci -d $devid`;
+            print BLUE "Device ($devid):\n";
+            print "\t" . `$lspci -d $devid`;
 
-        if ( $link_width eq "8" ) {
-            print "\tLink Width: 8x\n";
+            if ( $link_width eq "8" ) {
+                print "\tLink Width: 8x\n";
+            }
+            else {
+                print "\tLink Width is not 8x\n";
+            }
+            my $link_speed = `$setpci -d $devid 72 | cut -b2`;
+            chomp $link_speed;
+            if ( $link_speed eq "1" ) {
+                print "\tLink Speed: 2.5Gb/s\n";
+            }
+            elsif ( $link_speed eq "2" ) {
+                print "\tLink Speed: 5Gb/s\n";
+            }
+            else {
+                print "\tLink Speed: Unknown\n";
+            }
+            print "", RESET "\n";
         }
-        else {
-            print "\tLink Width is not 8x\n";
-        }
-        my $link_speed = `$setpci -d $devid 72 | cut -b2`;
-        chomp $link_speed;
-        if ( $link_speed eq "1" ) {
-            print "\tLink Speed: 2.5Gb/s\n";
-        }
-        elsif ( $link_speed eq "2" ) {
-            print "\tLink Speed: 5Gb/s\n";
-        }
-        else {
-            print "\tLink Speed: Unknown\n";
-        }
-        print "", RESET "\n";
+        close (PCI);
     }
-    close (PCI);
 }
 
 ### MAIN AREA ###
