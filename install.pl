@@ -108,6 +108,7 @@ if (-f "/etc/issue") {
     }
     else {
         $dist_rpm = `rpm -qf /etc/issue | head -1`;
+        chomp $dist_rpm;
         $dist_rpm_ver = get_rpm_ver_inst($dist_rpm);
         $dist_rpm_rel = get_rpm_rel_inst($dist_rpm);
     }
@@ -1482,7 +1483,7 @@ if ($kernel_given and not $kernel_source_given) {
 my $kernel_rel = $kernel;
 $kernel_rel =~ s/-/_/g;
 
-if ($distro == "debian") {
+if ($distro eq "debian") {
     $check_linux_deps = 0;
     $rpmbuild_flags .= ' --nodeps';
     $rpminstall_flags .= ' --nodeps';
@@ -1533,7 +1534,7 @@ sub get_rpm_rel
 sub get_rpm_ver_inst
 {
     my $ret;
-    if ($distro == "debian") {
+    if ($distro eq "debian") {
         $ret = `dpkg-query -W -f='\${Version}\n' @_ | cut -d ':' -f 2 | uniq`;
     }
     else {
@@ -2743,7 +2744,7 @@ sub build_kernel_rpm
             }
         }
 
-        if ($distro == "debian") {
+        if ($distro eq "debian") {
                 $kernel_configure_options .= " --without-modprobe";
         }
 
@@ -3475,7 +3476,7 @@ sub is_installed
     my $res = 0;
     my $name = shift @_;
     
-    if ($distro == "debian") {
+    if ($distro eq "debian") {
         system("dpkg-query -W -f='\${Package} \${Version}\n' $name > /dev/null 2>&1");
     }
     else {
