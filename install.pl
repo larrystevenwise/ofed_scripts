@@ -92,9 +92,6 @@ my $dist_rpm_rel = 0;
 # Set Linux Distribution
 if ( -f "/etc/SuSE-release" ) {
     $distro = "SuSE";
-    if ($dist_rpm =~ /openSUSE/) {
-        $subdistro = "openSUSE";
-    }
 }
 elsif ( -f "/etc/fedora-release" ) {
     if ($kernel =~ m/fc6/) {
@@ -160,6 +157,10 @@ else {
     $dist_rpm = "unsupported";
 }
 chomp $dist_rpm;
+
+if ($dist_rpm =~ /openSUSE/) {
+    $subdistro = "openSUSE";
+}
 
 my $WDIR    = dirname($0);
 chdir $WDIR;
