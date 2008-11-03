@@ -3868,8 +3868,9 @@ sub uninstall
         }
     }
 
+    my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep ofed`;
     my $cmd = "rpm -e --allmatches";
-    for my $package (@all_packages, @hidden_packages, @prev_ofed_packages) {
+    for my $package (@all_packages, @hidden_packages, @prev_ofed_packages, @other_ofed_rpms) {
         next if ($package eq "mpi-selector");
         if (is_installed($package)) {
             $cmd .= " $package";
