@@ -89,35 +89,6 @@ my $dist_rpm;
 my $dist_rpm_ver = 0;
 my $dist_rpm_rel = 0;
 
-if (-f "/etc/issue") {
-    if (-f "/usr/bin/dpkg") {
-        if (-f "/etc/lsb-release") {
-            open (LSB, "/etc/lsb-release") || die "";
-            while (<LSB>) {
-                if (/DISTRIB_DESCRIPTION/) {
-                    $dist_rpm = (split '=', $_)[1];
-                    $dist_rpm =~ s/"//g;
-                    $dist_rpm =~ s/ /_/g;
-                }
-            }
-            close LSB;
-        }
-        else {
-            $dist_rpm = "debian";
-        }
-    }
-    else {
-        $dist_rpm = `rpm -qf /etc/issue | head -1`;
-        chomp $dist_rpm;
-        $dist_rpm_ver = get_rpm_ver_inst($dist_rpm);
-        $dist_rpm_rel = get_rpm_rel_inst($dist_rpm);
-    }
-}
-else {
-    $dist_rpm = "unsupported";
-}
-chomp $dist_rpm;
-
 # Set Linux Distribution
 if ( -f "/etc/SuSE-release" ) {
     $distro = "SuSE";
@@ -160,6 +131,35 @@ elsif ( -f "/etc/debian_version" ) {
 else {
     $distro = "unsupported";
 }
+
+if (-f "/etc/issue") {
+    if (-f "/usr/bin/dpkg") {
+        if (-f "/etc/lsb-release") {
+            open (LSB, "/etc/lsb-release") || die "";
+            while (<LSB>) {
+                if (/DISTRIB_DESCRIPTION/) {
+                    $dist_rpm = (split '=', $_)[1];
+                    $dist_rpm =~ s/"//g;
+                    $dist_rpm =~ s/ /_/g;
+                }
+            }
+            close LSB;
+        }
+        else {
+            $dist_rpm = "debian";
+        }
+    }
+    else {
+        $dist_rpm = `rpm -qf /etc/issue | head -1`;
+        chomp $dist_rpm;
+        $dist_rpm_ver = get_rpm_ver_inst($dist_rpm);
+        $dist_rpm_rel = get_rpm_rel_inst($dist_rpm);
+    }
+}
+else {
+    $dist_rpm = "unsupported";
+}
+chomp $dist_rpm;
 
 my $WDIR    = dirname($0);
 chdir $WDIR;
