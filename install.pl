@@ -3661,6 +3661,9 @@ sub config_interface
                 print "Device $eth_dev is not present\n" if (not $quiet);
                 return;
             }
+            if ( is_carrier ($eth_dev) ) {
+                $found_eth_up = 1;
+            }
         }
         else {
             # Take the first existing Eth interface
