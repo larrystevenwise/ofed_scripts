@@ -2546,16 +2546,17 @@ sub check_linux_dependencies
             if ($package eq 'kernel-ib' and $kernel_modules_info{'nfsrdma'}{'selected'}) {
                 my $req_name = 'nfs-utils';
                 my $req_version = '1.1.1';
-                if (is_installed($req_name)) {
-                    my $inst_version = get_rpm_ver_inst($req_name);
+                my $mount = `mount.nfs -V 2> /dev/null`;
+                if ($mount =~ /$req_name (\d.\d.\d)/) {
+                    my $inst_version = $1;
                     print "check_linux_dependencies: $req_name installed version $inst_version, required at least $req_version\n" if ($verbose3);
                     if ($inst_version lt $req_version) {
-                        print RED "$req_name-$req_version rpm is required to build $package", RESET "\n";
+                        print RED "$req_name-$req_version is required to build $package", RESET "\n";
                         $err++;
                     }
                 }
                 else {
-                    print RED "$req_name-$req_version rpm is required to build $package", RESET "\n";
+                    print RED "$req_name-$req_version is required to build $package", RESET "\n";
                     $err++;
                 }
             }
