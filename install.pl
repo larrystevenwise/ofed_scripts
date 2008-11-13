@@ -4163,7 +4163,7 @@ sub main
         open(MDIST, ">/etc/modprobe.conf.dist") or die "Can't open /etc/modprobe.conf.dist: $!";
         foreach my $line (@mdist_lines) {
             chomp $line;
-            if ($line =~ /^\s*install ib_core/) {
+            if ($line =~ /^\s*install ib_core|^\s*alias ib|^\s*alias net-pf-26 ib_sdp/) {
                 print MDIST "# $line\n";
             } else {
                 print MDIST "$line\n";
