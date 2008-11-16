@@ -211,7 +211,7 @@ uninstall()
                 ompi_packs_to_remove="$ompi_packs_to_remove ${mpi_name}"	
             fi
         done   
-        ex "$RPM -e --allmatches $ompi_packs_to_remove" 
+        ex "$RPM -e --allmatches $ompi_packs_to_remove > /dev/null 2>&1"
     fi
 
     MPI_SELECTOR_LIST=$(rpm -qa | grep ${MPI_SELECTOR_NAME})
