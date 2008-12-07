@@ -323,6 +323,7 @@ if [[ "$ans_r" == "y" || "$ans_r" == "Y" || "$ans_r" == "yes" ]]; then
         cp $STACK_PREFIX/sbin/vendor_post_uninstall.sh /tmp/$$-ofed_vendor_post_uninstall.sh
     uninstall
     [ -x /tmp/$$-ofed_vendor_post_uninstall.sh ] && ex /tmp/$$-ofed_vendor_post_uninstall.sh
+    exit 0
 else    
     exit 1
 fi
