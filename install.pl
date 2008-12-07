@@ -3851,6 +3851,11 @@ sub uninstall
         system("yes | $CWD/uninstall.sh > $ofedlogs/ofed_uninstall.log 2>&1");
         $res = $? >> 8;
         $sig = $? & 127;
+        if ($sig or $res) {
+            print RED "Failed to uninstall the previous installation", RESET "\n";
+            print RED "See $ofedlogs/ofed_uninstall.log", RESET "\n";
+            exit 1;
+        }
     }
 
     if ($distro eq "SuSE") {
