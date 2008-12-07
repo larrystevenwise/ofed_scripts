@@ -261,16 +261,7 @@ uninstall()
             echo
             echo "  Removing MVAPI..."
             ex "yes | /usr/mellanox/uninstall.sh"
-        else
-            echo
-            echo "  Removing /usr/mellanox ..."
-            echo
-            /bin/rm -rf /usr/mellanox
         fi  
-    fi
-
-    if [ -d /usr/mst ]; then
-        /bin/rm -rf /usr/mst
     fi
 
     if [ -z ${STACK_PREFIX} ] && [ -x /etc/infiniband/info ]; then
