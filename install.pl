@@ -2569,7 +2569,7 @@ sub check_linux_dependencies
             }
         }
 
-        if ($package =~ /debuginfo/ and ($distro eq 'redhat' or $distro eq 'fedora' or $distro eq 'redhat5')) {
+        if ($package =~ /debuginfo/ and ($distro =~ /redhat|fedora/)) {
             if (not $packages_info{$package}{'rpm_exist'}) {
                 if (not is_installed("redhat-rpm-config")) {
                     print RED "redhat-rpm-config rpm is required to build $package", RESET "\n";
