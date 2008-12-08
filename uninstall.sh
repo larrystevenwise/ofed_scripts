@@ -245,6 +245,13 @@ uninstall()
         STACK_PREFIX=$($RPM -ql libibverbs | grep "libibverbs.so" | head -1 | sed -e 's@/lib.*/libibverbs.so.*@@')            
     fi
 
+    if [ -x /etc/infiniband/info ]; then
+        if [ -z ${STACK_PREFIX} ]; then
+            STACK_PREFIX=`/etc/infiniband/info | grep -w prefix | cut -d '=' -f 2`
+        fi
+        KVERSION=`/etc/infiniband/info | grep -w Kernel | cut -d '=' -f 2`
+    fi
+
     if [ -n "${packs_to_remove}" ]; then
         ex "$RPM -e --allmatches $packs_to_remove"
     fi
@@ -262,10 +269,6 @@ uninstall()
             echo "  Removing MVAPI..."
             ex "yes | /usr/mellanox/uninstall.sh"
         fi  
-    fi
-
-    if [ -z ${STACK_PREFIX} ] && [ -x /etc/infiniband/info ]; then
-        STACK_PREFIX=`/etc/infiniband/info | grep -w prefix | cut -d '=' -f 2`
     fi
 
     # Remove /usr/local/ofed* if exist
@@ -297,6 +300,15 @@ uninstall()
     voltaire_rpms=$($RPM -qa | grep -i "Voltaire" | grep "4.0.0_5")
     if [ -n "${voltaire_rpms}" ]; then
         ex $RPM -e ${voltaire_rpms}
+    fi
+
+    if [ ! -z "${KVERSION}" ]; then
+        # Remove OFED kernel modules from updates directory
+        LIB_MOD_DIR=/lib/modules/${KVERSION}/updates
+        /bin/rm -rf ${LIB_MOD_DIR}/kernel/drivers/infiniband
+        /bin/rm -rf ${LIB_MOD_DIR}/kernel/drivers/net/mlx4
+        /bin/rm -rf ${LIB_MOD_DIR}/kernel/drivers/net/cxgb3
+        /bin/rm -rf ${LIB_MOD_DIR}/kernel/net/rds
     fi
 
     perl -ni -e "print unless (/mlx4_core/)" /etc/modprobe.conf
