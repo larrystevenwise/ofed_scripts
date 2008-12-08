@@ -89,11 +89,11 @@ IB_ALL_PACKAGES="$IB_ALL_PACKAGES dapl dapl-devel dapl-devel-static dapl-utils d
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES qlvnictools qlvnictools-debuginfo ibvexdmtools ibvexdmtools-debuginfo qlgc_vnic_daemon sdpnetstat sdpnetstat-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES srptools srptools-debuginfo rds-tools rds-tools-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibsim ibsim-debuginfo"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibutils ibutils-debuginfo infiniband-diags infiniband-diags-debuginfo qperf qperf-debuginfo"
+IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibutils ibutils-debuginfo ibutils-libs ibutils-devel infiniband-diags infiniband-diags-debuginfo qperf qperf-debuginfo"
+IB_ALL_PACKAGES="$IB_ALL_PACKAGES openib-mstflint openib-tvflash openib-srptools openib-perftest"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES ofed-docs ofed-scripts"
 
-ALL_PACKAGES="${IB_ALL_PACKAGES} mpi-selector mvapich mvapich2 openmpi openmpi-libs openmpi-devel mpitests ibutils mft"
-ALL_PACKAGES="${IB_ALL_PACKAGES} ibutils-libs ibutils-devel openib-mstflint openib-tvflash openib-srptools openib-perftest"
+ALL_PACKAGES="$IB_ALL_PACKAGES mpi-selector mvapich mvapich2 openmpi openmpi-libs openmpi-devel mpitests mft"
 
 PREV_RELEASE_PACKAGES="mpich_mlx ibtsal openib opensm opensm-devel mpi_ncsa thca ib-osm osm diags ibadm ib-diags ibgdiag ibdiag ib-management"
 PREV_RELEASE_PACKAGES="$PREV_RELEASE_PACKAGES ib-verbs ib-ipoib ib-cm ib-sdp ib-dapl udapl udapl-devel libdat libibat ib-kdapl ib-srp ib-srp_target oiscsi-iser-support"
