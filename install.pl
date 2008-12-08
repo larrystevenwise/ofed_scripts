@@ -436,7 +436,7 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "kernel", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [], },
+            ofa_req_inst => ["kernel-ib"], },
         'ib-bonding' =>
             { name => "ib-bonding", parent => "ib-bonding",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
