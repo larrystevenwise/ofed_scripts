@@ -312,6 +312,10 @@ uninstall()
     fi
 
     perl -ni -e "print unless (/mlx4_core/)" /etc/modprobe.conf
+
+    if [ -f /etc/modprobe.d/ipv6 ]; then
+        perl -ni -e "s@# install ipv6 \/bin\/true@install ipv6 /bin/true@;print" /etc/modprobe.d/ipv6
+    fi
 }
 
 echo

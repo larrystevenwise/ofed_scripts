@@ -4206,6 +4206,27 @@ sub main
                 close MODPROBE_CONF;
             }
         }
+
+        # BUG: https://bugs.openfabrics.org/show_bug.cgi?id=1449
+        if (-f "/etc/modprobe.d/ipv6") {
+            open(IPV6, "/etc/modprobe.d/ipv6") or die "Can't open /etc/modprobe.d/ipv6: $!";
+            my @ipv6_lines;
+            while (<IPV6>) {
+                push @ipv6_lines, $_;
+            }
+            close(IPV6);
+
+            open(IPV6, ">/etc/modprobe.d/ipv6") or die "Can't open /etc/modprobe.d/ipv6: $!";
+            foreach my $line (@ipv6_lines) {
+                chomp $line;
+                if ($line =~ /^\s*install ipv6/) {
+                    print IPV6 "# $line\n";
+                } else {
+                    print IPV6 "$line\n";
+                }
+            }
+            close(IPV6);
+        }
     }
 
     if ( not $quiet ) {
