@@ -93,7 +93,7 @@ IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibutils ibutils-debuginfo ibutils-libs ibutils
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES openib-mstflint openib-tvflash openib-srptools openib-perftest"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES ofed-docs ofed-scripts"
 
-ALL_PACKAGES="$IB_ALL_PACKAGES mpi-selector mvapich mvapich2 openmpi openmpi-libs openmpi-devel mpitests mft"
+ALL_PACKAGES="$IB_ALL_PACKAGES mvapich mvapich2 openmpi openmpi-libs openmpi-devel mpitests mft"
 
 PREV_RELEASE_PACKAGES="mpich_mlx ibtsal openib opensm opensm-devel mpi_ncsa thca ib-osm osm diags ibadm ib-diags ibgdiag ibdiag ib-management"
 PREV_RELEASE_PACKAGES="$PREV_RELEASE_PACKAGES ib-verbs ib-ipoib ib-cm ib-sdp ib-dapl udapl udapl-devel libdat libibat ib-kdapl ib-srp ib-srp_target oiscsi-iser-support"
