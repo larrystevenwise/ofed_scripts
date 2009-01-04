@@ -2445,7 +2445,8 @@ sub select_dependent
 {
     my $package = shift @_;
 
-    if (not $packages_info{$package}{'rpm_exist'}) {
+    if ( (not $packages_info{$package}{'rpm_exist'}) or
+         ($build32 and not $packages_info{$package}{'rpm_exist32'}) ) {
         for my $req ( @{ $packages_info{$package}{'ofa_req_build'} } ) {
             print "resolve_dependencies: $package requires $req for rpmbuild\n" if ($verbose2);
             if (not $packages_info{$req}{'selected'}) {
