@@ -1048,7 +1048,7 @@ my %packages_info = (
             { name => "mpi-selector", parent => "mpi-selector",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => ["tcsh"],
-            dist_req_inst => [], ofa_req_build => [],
+            dist_req_inst => ["tcsh"], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
 
