@@ -362,7 +362,7 @@ my @hpc_kernel_packages = ("kernel-ib", "ib-bonding");
 my @hpc_kernel_modules = (@basic_kernel_modules);
 my @hpc_user_packages = (@basic_user_packages, "librdmacm",
                         "librdmacm-utils", "compat-dapl", "compat-dapl-devel", "dapl", "dapl-devel", "dapl-devel-static", "dapl-utils",
-                        "infiniband-diags", "ibutils", "qperf", "mstflint", @mpi_packages);
+                        "infiniband-diags", "ibutils", "qperf", "mstflint", "perftest", @mpi_packages);
 
 # all_packages is required to save ordered (following dependencies) list of
 # packages. Hash does not saves the order
