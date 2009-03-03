@@ -356,13 +356,13 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
 
 my @basic_kernel_packages = ("kernel-ib");
 my @basic_user_packages = ("libibverbs", "libibverbs-utils", "libmthca", "libmlx4",
-                            "libehca", "libcxgb3", "libnes", "libipathverbs", @misc_packages);
+                            "libehca", "libcxgb3", "libnes", "libipathverbs", "mstflint", @misc_packages);
 
 my @hpc_kernel_packages = ("kernel-ib", "ib-bonding");
 my @hpc_kernel_modules = (@basic_kernel_modules);
 my @hpc_user_packages = (@basic_user_packages, "librdmacm",
                         "librdmacm-utils", "compat-dapl", "compat-dapl-devel", "dapl", "dapl-devel", "dapl-devel-static", "dapl-utils",
-                        "infiniband-diags", "ibutils", "qperf", @mpi_packages);
+                        "infiniband-diags", "ibutils", "qperf", "mstflint", @mpi_packages);
 
 # all_packages is required to save ordered (following dependencies) list of
 # packages. Hash does not saves the order
