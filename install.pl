@@ -160,6 +160,8 @@ chomp $dist_rpm;
 
 if ($dist_rpm =~ /openSUSE/) {
     $subdistro = "openSUSE";
+} elsif ($dist_rpm =~ /sles-release-11/) {
+    $subdistro = "SLES11";
 }
 
 my $WDIR    = dirname($0);
@@ -225,8 +227,13 @@ my @selected_kernel_modules = ();
 my $open_iscsi_ver_rh4 = '2.0-754.1';
 my $open_iscsi_ver_non_rh4 = '2.0-869.2';
 
-my $libstdc = ($subdistro eq "openSUSE") ? 'libstdc++42' : 'libstdc++';
+my $libstdc = ($subdistro eq "openSUSE") ? 'libstdc++42' : ($subdistro eq "SLES11") ? 'libstdc++43' : 'libstdc++';
 my $libstdc_devel = "$libstdc-devel";
+
+# Suffix for 32 and 64 bit packages
+my $is_suse_suff64 = $arch eq "ppc64" && $subdistro ne "SLES11";
+my $suffix_32bit = ($distro eq "SuSE" && !$is_suse_suff64) ? "-32bit" : "";
+my $suffix_64bit = ($distro eq "SuSE" &&  $is_suse_suff64) ? "-64bit" : "";
 
 sub usage
 {
@@ -452,9 +459,8 @@ my %packages_info = (
             { name => "libibverbs", parent => "libibverbs",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => 
-            ( $distro eq 'SuSE' && $arch eq "ppc64" )?( $build32 == 1 )?
-            ["gcc_3.3.3", "glibc-devel-64bit","glibc-devel","$libstdc"]:["gcc_3.3.3", "glibc-devel-64bit","$libstdc"]:
-            ["gcc_3.3.3", "glibc-devel","$libstdc"],
+            ( $build32 == 1 )?["gcc_3.3.3", "glibc-devel$suffix_64bit","glibc-devel$suffix_32bit","$libstdc"]:
+            ["gcc_3.3.3", "glibc-devel$suffix_64bit","$libstdc"],
             dist_req_inst => [], ofa_req_build => [], ofa_req_inst => ["ofed-scripts"], 
             install32 => 1, exception => 0, configure_options => '' },
         'libibverbs-devel' =>
@@ -847,8 +853,8 @@ my %packages_info = (
         'mstflint' =>
             { name => "mstflint", parent => "mstflint",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ( $distro eq 'SuSE' && $arch eq "ppc64" )?
-            ["zlib-devel-64bit", "$libstdc_devel-64bit", "gcc-c++"]: ["zlib-devel", "$libstdc_devel", "gcc-c++"],
+            available => 1, mode => "user", 
+            dist_req_build => ["zlib-devel$suffix_64bit", "$libstdc_devel$suffix_64bit", "gcc-c++"],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
@@ -3878,14 +3884,14 @@ sub uninstall
         my $suse_cnt = 0;
         my $suse_rpms;
         for my $package (@suse_ofed_packages) {
-            if (is_installed($package)) {
-                $suse_rpms .= "$package";
+            if (is_installed("$package$suffix_32bit")) {
+                $suse_rpms .= "$package$suffix_32bit";
                 $suse_cnt ++;
             }
         }
         for my $package (@user_packages) {
-            if (is_installed("$package-64bit")) {
-                $suse_rpms .= "$package-64bit";
+            if (is_installed("$package$suffix_64bit")) {
+                $suse_rpms .= "$package$suffix_64bit";
                 $suse_cnt ++;
             }
         }
