@@ -349,7 +349,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "compat-dapl", "compat-dapl-devel",
                      "dapl", "dapl-devel", "dapl-devel-static", "dapl-utils", "dapl-debuginfo",
                      "perftest", "mstflint", "tvflash",
-                     "qlvnictools", "sdpnetstat", "srptools", "rds-tools",
+                     "qlvnictools", "sdpnetstat", "srptools", "rds-tools", "rnfs-utils",
                      "ibutils", "infiniband-diags", "qperf", "qperf-debuginfo",
                      "ofed-docs", "ofed-scripts", "tgt-generic", @mpi_packages
                      );
@@ -931,6 +931,21 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibcommon-devel", "libibumad-devel"],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+
+        'rnfs-utils' =>
+            { name => "rnfs-utils", parent => "rnfs-utils",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0, configure_options => '' },
+        'rnfs-utils-debuginfo' =>
+            { name => "rnfs-utils-debuginfo", parent => "rnfs-utils",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
 
@@ -2916,7 +2931,7 @@ sub build_rpm
                 if ($parent eq "openmpi") {
                     $openmpi_comp_env .= ' LDFLAGS="-m64 -O2 -L/usr/lib/gcc/powerpc64-suse-linux/4.1.2/64"';
                 }
-                if ($parent eq "sdpnetstat" or $parent eq "rds-tools") {
+                if ($parent eq "sdpnetstat" or $parent eq "rds-tools" or $parent eq "rnfs-utils") {
                     $ldflags    = " -g -O2";
                     $cflags     = " -g -O2";
                     $cppflags   = " -g -O2";
@@ -2926,7 +2941,7 @@ sub build_rpm
                 }
             }
             else {
-                if ($parent eq "sdpnetstat" or $parent eq "rds-tools") {
+                if ($parent eq "sdpnetstat" or $parent eq "rds-tools" or $parent eq "rnfs-utils") {
                     # Override compilation flags on RHEL 4.0 and 5.0 PPC64
                     $ldflags    = " -g -O2";
                     $cflags     = " -g -O2";
