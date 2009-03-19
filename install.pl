@@ -1721,19 +1721,19 @@ sub set_availability
     }
 
     # NFSRDMA
-    if ($kernel =~ m/2.6.2[6-7]/) {
+    if ($kernel =~ m/2.6.22|2.6.2[6-7]/) {
             $kernel_modules_info{'nfsrdma'}{'available'} = 1;
     }
-    # if ($kernel =~ m/2.6.16.60-[0-9.]*-[A-Za-z0-9.]*|2.6.2[6-7]/) {
-    #         $kernel_modules_info{'nfsrdma'}{'available'} = 1;
-    # }
-    # if ($kernel =~ m/el5/) {
-    #         my $minor = (split '-', $kernel)[1];
-    #         $minor =~ s/(\.el5).*//;
-    #         if ($minor ge 53 and $minor lt 84) {
-    #             $kernel_modules_info{'nfsrdma'}{'available'} = 1;
-    #         }
-    # }
+    elsif ($kernel =~ m/2.6.16.60-[0-9.]*-[A-Za-z0-9.]*/) {
+            $kernel_modules_info{'nfsrdma'}{'available'} = 1;
+    }
+    elsif ($kernel =~ m/el5/) {
+            my $minor = (split '-', $kernel)[1];
+            $minor =~ s/(\.el5).*//;
+            if ($minor ge 53) {
+                $kernel_modules_info{'nfsrdma'}{'available'} = 1;
+            }
+    }
 
     # mvapich, mvapich2 and openmpi
     if ($gcc{'gcc'}) {
