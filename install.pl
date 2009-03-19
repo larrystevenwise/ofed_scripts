@@ -943,14 +943,14 @@ my %packages_info = (
         'rnfs-utils' =>
             { name => "rnfs-utils", parent => "rnfs-utils",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
         'rnfs-utils-debuginfo' =>
             { name => "rnfs-utils-debuginfo", parent => "rnfs-utils",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
@@ -1723,15 +1723,21 @@ sub set_availability
     # NFSRDMA
     if ($kernel =~ m/2.6.22|2.6.2[6-7]/) {
             $kernel_modules_info{'nfsrdma'}{'available'} = 1;
+            $packages_info{'rnfs-utils'}{'available'} = 1;
+            $packages_info{'rnfs-utils-debuginfo'}{'available'} = 1;
     }
     elsif ($kernel =~ m/2.6.16.60-[0-9.]*-[A-Za-z0-9.]*/) {
             $kernel_modules_info{'nfsrdma'}{'available'} = 1;
+            $packages_info{'rnfs-utils'}{'available'} = 1;
+            $packages_info{'rnfs-utils-debuginfo'}{'available'} = 1;
     }
     elsif ($kernel =~ m/el5/) {
             my $minor = (split '-', $kernel)[1];
             $minor =~ s/(\.el5).*//;
             if ($minor ge 53) {
                 $kernel_modules_info{'nfsrdma'}{'available'} = 1;
+                $packages_info{'rnfs-utils'}{'available'} = 1;
+                $packages_info{'rnfs-utils-debuginfo'}{'available'} = 1;
             }
     }
 
