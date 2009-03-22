@@ -1734,7 +1734,7 @@ sub set_availability
     elsif ($kernel =~ m/el5/) {
             my $minor = (split '-', $kernel)[1];
             $minor =~ s/(\.el5).*//;
-            if ($minor ge 53) {
+            if ($minor > 53) {
                 $kernel_modules_info{'nfsrdma'}{'available'} = 1;
                 $packages_info{'rnfs-utils'}{'available'} = 1;
                 $packages_info{'rnfs-utils-debuginfo'}{'available'} = 1;
