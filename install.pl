@@ -310,12 +310,12 @@ my @suse_ofed_packages = (
 # List of all available packages sorted following dependencies
 my @kernel_packages = ("kernel-ib", "kernel-ib-devel", "ib-bonding", "ib-bonding-debuginfo");
 my @basic_kernel_modules = ("core", "mthca", "mlx4", "mlx4_en", "cxgb3", "nes", "ehca", "ipath", "ipoib");
-my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser");
+my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser", "nfsrdma");
 
 # kernel modules in "technology preview" status can be installed by
 # adding "module=y" to the ofed.conf file in unattended installation mode
 # or by selecting the module in custom installation mode during interactive installation
-my @tech_preview = ("nfsrdma");
+my @tech_preview;
 
 my @kernel_modules = (@basic_kernel_modules, @ulp_modules);
 
