@@ -256,14 +256,17 @@ sub usage
 
 my $sysfsutils;
 my $sysfsutils_devel;
+my $e2fsprogs_devel;
 
 if ($distro eq "SuSE" or $distro eq "redhat" or $distro eq "fedora" or $distro eq "Rocks") {
     $sysfsutils = "sysfsutils";
     $sysfsutils_devel = "sysfsutils-devel";
+    $e2fsprogs_devel = "e2fsprogs-devel";
 }
 else {
     $sysfsutils = "libsysfs";
     $sysfsutils_devel = "libsysfs-devel";
+    $e2fsprogs_devel = "libe2fsprogs-devel";
 }
 
 my $network_dir;
@@ -2634,6 +2637,12 @@ sub check_linux_dependencies
                         }
                     }
                 }
+            }
+            if ($arch eq "ppc64" and $package eq "rnfs-utils") {
+		if (not -e "/usr/lib/libblkid.so") {
+                    print RED "$e2fsprogs_devel 32bit is required to build rnfs-utils.", RESET "\n";
+                    $err++;
+		}
             }
         }
 
