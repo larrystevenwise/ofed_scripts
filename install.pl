@@ -261,12 +261,10 @@ my $e2fsprogs_devel;
 if ($distro eq "SuSE" or $distro eq "redhat" or $distro eq "fedora" or $distro eq "Rocks") {
     $sysfsutils = "sysfsutils";
     $sysfsutils_devel = "sysfsutils-devel";
-    $e2fsprogs_devel = "e2fsprogs-devel";
 }
 else {
     $sysfsutils = "libsysfs";
     $sysfsutils_devel = "libsysfs-devel";
-    $e2fsprogs_devel = "libe2fsprogs-devel";
 }
 
 my $network_dir;
@@ -2638,11 +2636,30 @@ sub check_linux_dependencies
                     }
                 }
             }
-            if ($arch eq "ppc64" and $package eq "rnfs-utils") {
-		if (not -e "/usr/lib/libblkid.so") {
-                    print RED "$e2fsprogs_devel 32bit is required to build rnfs-utils.", RESET "\n";
+            if ($package eq "rnfs-utils") {
+                if ($distro eq "redhat" or $distro eq "fedora" or $distro eq 'redhat5') {
+                    if (not is_installed("krb5-libs")) {
+                        print RED "krb5-libs is required to build rnfs-utils.", RESET "\n";
+                        $err++;
+                    }
+                    if (not is_installed("krb5-devel")) {
+                        print RED "krb5-devel is required to build rnfs-utils.", RESET "\n";
+                        $err++;
+                    }
+                } else {
+                    if (not is_installed("krb5")) {
+                        print RED "krb5 is required to build rnfs-utils.", RESET "\n";
+                        $err++;
+                    }
+                    if ($arch eq "ppc64" and not is_installed("tcp-devel")) {
+                        print RED "tcp-devel is required to build rnfs-utils.", RESET "\n";
+                        $err++;
+                    }
+                }
+                if ($arch eq "ppc64" and not -e "/usr/lib/libblkid.so") {
+                    print RED "e2fsprogs-devel 32bit is required to build rnfs-utils.", RESET "\n";
                     $err++;
-		}
+                }
             }
         }
 
