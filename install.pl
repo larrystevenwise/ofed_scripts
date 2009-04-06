@@ -2651,8 +2651,8 @@ sub check_linux_dependencies
                         print RED "krb5 is required to build rnfs-utils.", RESET "\n";
                         $err++;
                     }
-                    if ($arch eq "ppc64" and not is_installed("tcp-devel")) {
-                        print RED "tcp-devel is required to build rnfs-utils.", RESET "\n";
+                    if ($arch eq "ppc64" and not is_installed("tcpd-devel")) {
+                        print RED "tcpd-devel is required to build rnfs-utils.", RESET "\n";
                         $err++;
                     }
                 }
