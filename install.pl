@@ -2637,13 +2637,13 @@ sub check_linux_dependencies
                 }
             }
             if ($package eq "rnfs-utils") {
+                if (not is_installed("krb5-devel")) {
+                    print RED "krb5-devel is required to build rnfs-utils.", RESET "\n";
+                    $err++;
+                }
                 if ($distro eq "redhat" or $distro eq "fedora" or $distro eq 'redhat5') {
                     if (not is_installed("krb5-libs")) {
                         print RED "krb5-libs is required to build rnfs-utils.", RESET "\n";
-                        $err++;
-                    }
-                    if (not is_installed("krb5-devel")) {
-                        print RED "krb5-devel is required to build rnfs-utils.", RESET "\n";
                         $err++;
                     }
                 } else {
