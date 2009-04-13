@@ -2651,12 +2651,8 @@ sub check_linux_dependencies
                         print RED "krb5 is required to build rnfs-utils.", RESET "\n";
                         $err++;
                     }
-                    if ($arch eq "ppc64" and not is_installed("tcpd-devel")) {
-                        print RED "tcpd-devel is required to build rnfs-utils.", RESET "\n";
-                        $err++;
-                    }
                 }
-                if ($arch eq "ppc64" and not -e "/usr/lib/libblkid.so") {
+                if ($arch =~ m/powerpc|ppc64/ and not -e "/usr/lib/libblkid.so") {
                     print RED "e2fsprogs-devel 32bit is required to build rnfs-utils.", RESET "\n";
                     $err++;
                 }
