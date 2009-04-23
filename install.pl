@@ -2652,19 +2652,14 @@ sub check_linux_dependencies
                         $err++;
                     }
                 }
-                if ($arch =~ m/powerpc|ppc64/ and not -e "/usr/lib/libblkid.so") {
-                    if ($kernel =~ m/2.6.2[6-7]/ and $distro eq "SuSE") {
-                        print RED "libblkid-devel-32bit is required to build rnfs-utils.", RESET "\n";
-                    } else {
-                        print RED "e2fsprogs-devel-32bit is required to build rnfs-utils.", RESET "\n";
-                    }
-                    $err++;
-                } elsif (not -e "/usr/lib64/libblkid.so") {
-                    if ($kernel =~ m/2.6.2[6-7]/ and $distro eq "SuSE") {
-                        print RED "libblkid-devel is required to build rnfs-utils.", RESET "\n";
-                    } else {
-                        print RED "e2fsprogs-devel is required to build rnfs-utils.", RESET "\n";
-                    }
+
+                my $blkid_so = ($arch =~ m/x86_64/) ? "/usr/lib64/libblkid.so" : "/usr/lib/libblkid.so";
+                my $blkid_pkg = ($kernel =~ m/2.6.2[6-7]/ and $distro eq "SuSE") ? "libblkid-devel" :
+                                "e2fsprogs-devel";
+                $blkid_pkg .= ($arch =~ m/powerpc|ppc64/) ? "-32bit" : "";
+
+                if (not -e $blkid_so) {
+                    print RED "$blkid_pkg is required to build rnfs-utils.", RESET "\n";
                     $err++;
                 }
             }
