@@ -2645,9 +2645,43 @@ sub check_linux_dependencies
                         print RED "krb5-libs is required to build rnfs-utils.", RESET "\n";
                         $err++;
                     }
+                    if (not is_installed("libevent-devel")) {
+                        print RED "libevent-devel is required to build rnfs-utils.", RESET "\n";
+                        $err++;
+                    }
+                    if (not is_installed("nfs-utils-lib-devel")) {
+                        print RED "nfs-utils-lib-devel is required to build rnfs-utils.", RESET "\n";
+                        $err++;
+                    }
+                    if (not is_installed("openldap-devel")) {
+                        print RED "openldap-devel is required to build rnfs-utils.", RESET "\n";
+                        $err++;
+                    }
                 } else {
+                    if ($subdistro eq "SLES11") {
+                        if (not is_installed("libevent-devel")) {
+                            print RED "libevent-devel is required to build rnfs-utils.", RESET "\n";
+                            $err++;
+                        }
+                        if (not is_installed("nfsidmap-devel")) {
+                            print RED "nfsidmap-devel is required to build rnfs-utils.", RESET "\n";
+                            $err++;
+                        }
+                        if (not is_installed("libopenssl-devel")) {
+                            print RED "libopenssl-devel is required to build rnfs-utils.", RESET "\n";
+                            $err++;
+                        }
+                    }
                     if (not is_installed("krb5")) {
                         print RED "krb5 is required to build rnfs-utils.", RESET "\n";
+                        $err++;
+                    }
+                    if (not is_installed("openldap2-devel")) {
+                        print RED "openldap2-devel is required to build rnfs-utils.", RESET "\n";
+                        $err++;
+                    }
+                    if (not is_installed("cyrus-sasl-devel")) {
+                        print RED "cyrus-sasl-devel is required to build rnfs-utils.", RESET "\n";
                         $err++;
                     }
                 }
