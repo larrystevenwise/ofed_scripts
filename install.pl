@@ -395,10 +395,10 @@ my %kernel_modules_info = (
             { name => "ipath", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'cxgb3' =>
-            { name => "cxgb3", available => 1, selected => 0,
+            { name => "cxgb3", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'nes' =>
-            { name => "nes", available => 1, selected => 0,
+            { name => "nes", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'ipoib' =>
             { name => "ipoib", available => 1, selected => 0,
@@ -407,13 +407,13 @@ my %kernel_modules_info = (
             { name => "sdp", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
         'srp' =>
-            { name => "srp", available => 1, selected => 0,
+            { name => "srp", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
         'srpt' =>
-            { name => "srpt", available => 1, selected => 0,
+            { name => "srpt", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'rds' =>
-            { name => "rds", available => 1, selected => 0,
+            { name => "rds", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
         'iser' =>
             { name => "iser", available => 0, selected => 0,
@@ -1643,8 +1643,10 @@ sub set_availability
     set_compilers();
 
     # Ehca
+    # if ($arch =~ m/ppc64|powerpc/ and
+    #         $kernel =~ m/2.6.1[6-9]|2.6.2[0-9]/) {
     if ($arch =~ m/ppc64|powerpc/ and
-            $kernel =~ m/2.6.1[6-9]|2.6.2[0-9]/) {
+            $kernel =~ m/2.6.30/) {
             $kernel_modules_info{'ehca'}{'available'} = 1;
             $packages_info{'libehca'}{'available'} = 1;
             $packages_info{'libehca-devel-static'}{'available'} = 1;
@@ -1652,10 +1654,14 @@ sub set_availability
     }
 
     # Ipath
+    # if ( ($arch =~ m/ppc64/ and
+    #         $kernel =~ m/2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) or
+    #    ($arch =~ m/x86_64/ and
+    #         $kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) ) {
     if ( ($arch =~ m/ppc64/ and
-            $kernel =~ m/2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) or
+            $kernel =~ m/2.6.30/) or
        ($arch =~ m/x86_64/ and
-            $kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) ) {
+            $kernel =~ m/2.6.30/) ) {
             $kernel_modules_info{'ipath'}{'available'} = 1;
             $packages_info{'libipathverbs'}{'available'} = 1;
             $packages_info{'libipathverbs-devel'}{'available'} = 1;
@@ -1663,7 +1669,7 @@ sub set_availability
     }
 
     # Iser
-    if ($kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
+    if ($kernel =~ m/2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
             $kernel_modules_info{'iser'}{'available'} = 1;
             $packages_info{'open-iscsi-generic'}{'available'} = 1;
     }
@@ -1676,23 +1682,46 @@ sub set_availability
             $packages_info{'scsi-target-utils'}{'available'} = 1;
     }
 
-    # QLogic vnic
-    if ($kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.18-*/) {
-            $kernel_modules_info{'qlgc_vnic'}{'available'} = 1;
-            $packages_info{'ibvexdmtools'}{'available'} = 1;
-            $packages_info{'qlgc_vnic_daemon'}{'available'} = 1;
-            $packages_info{'qlvnictools'}{'available'} = 1;
-            $packages_info{'qlvnictools-debuginfo'}{'available'} = 1;
+#    # QLogic vnic
+#    if ($kernel =~ m/2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.18-*/) {
+#            $kernel_modules_info{'qlgc_vnic'}{'available'} = 1;
+#            $packages_info{'ibvexdmtools'}{'available'} = 1;
+#            $packages_info{'qlgc_vnic_daemon'}{'available'} = 1;
+#            $packages_info{'qlvnictools'}{'available'} = 1;
+#            $packages_info{'qlvnictools-debuginfo'}{'available'} = 1;
+#    }
+
+    if ($kernel =~ m/2.6.30/) {
+            $kernel_modules_info{'rds'}{'available'} = 1;
+    } else {
+            $packages_info{'rds-tools'}{'available'} = 0;
+            $packages_info{'rds-tools-debuginfo'}{'available'} = 0;
+    }
+
+    if ($kernel =~ m/2.6.30/) {
+            $kernel_modules_info{'cxgb3'}{'available'} = 1;
+    } else {
+            $packages_info{'libcxgb3'}{'available'} = 0;
+            $packages_info{'libcxgb3-devel'}{'available'} = 0;
+            $packages_info{'libcxgb3-debuginfo'}{'available'} = 0;
+    }
+
+    if ($kernel =~ m/2.6.30/) {
+            $kernel_modules_info{'nes'}{'available'} = 1;
+    } else {
+            $packages_info{'libnes'}{'available'} = 0;
+            $packages_info{'libnes-devel-static'}{'available'} = 0;
+            $packages_info{'libnes-debuginfo'}{'available'} = 0;
     }
 
     # ib-bonding
-    if ($kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5|fc6/) {
+    if ($kernel =~ m/2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5|fc6/) {
             $packages_info{'ib-bonding'}{'available'} = 1;
             $packages_info{'ib-bonding-debuginfo'}{'available'} = 1;
     }
 
     # NFSRDMA
-    if ($kernel =~ m/2.6.22|2.6.2[6-7]/) {
+    if ($kernel =~ m/2.6.22|2.6.2[6-9]|2.6.30/) {
             $kernel_modules_info{'nfsrdma'}{'available'} = 1;
             $packages_info{'rnfs-utils'}{'available'} = 1;
             $packages_info{'rnfs-utils-debuginfo'}{'available'} = 1;
