@@ -1722,7 +1722,7 @@ sub set_availability
     }
 
     # NFSRDMA
-    if ($kernel =~ m/2.6.22|2.6.2[6-9]|2.6.30/) {
+    if ($kernel =~ m/2.6.2[25]|2.6.30/) {
             $kernel_modules_info{'nfsrdma'}{'available'} = 1;
             $packages_info{'rnfs-utils'}{'available'} = 1;
             $packages_info{'rnfs-utils-debuginfo'}{'available'} = 1;
@@ -1735,7 +1735,7 @@ sub set_availability
     elsif ($kernel =~ m/el5/) {
             my $minor = (split '-', $kernel)[1];
             $minor =~ s/(\.el5).*//;
-            if ($minor >= 53) {
+            if ($minor > 53) {
                 $kernel_modules_info{'nfsrdma'}{'available'} = 1;
                 $packages_info{'rnfs-utils'}{'available'} = 1;
                 $packages_info{'rnfs-utils-debuginfo'}{'available'} = 1;
