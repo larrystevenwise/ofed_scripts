@@ -1669,7 +1669,8 @@ sub set_availability
     }
 
     # Iser
-    if ($kernel =~ m/2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
+    # if ($kernel =~ m/2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
+    if ($kernel =~ m/2.6.30/) {
             $kernel_modules_info{'iser'}{'available'} = 1;
             $packages_info{'open-iscsi-generic'}{'available'} = 1;
     }
