@@ -309,7 +309,7 @@ my @suse_ofed_packages = (
 
 # List of all available packages sorted following dependencies
 my @kernel_packages = ("kernel-ib", "kernel-ib-devel", "ib-bonding", "ib-bonding-debuginfo");
-my @basic_kernel_modules = ("core", "mthca", "mlx4", "mlx4_en", "cxgb3", "nes", "ehca", "ipath", "ipoib");
+my @basic_kernel_modules = ("core", "mthca", "mlx4", "mlx4_en", "cxgb3", "nes", "ehca", "qib", "ipoib");
 my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser", "nfsrdma");
 
 # kernel modules in "technology preview" status can be installed by
@@ -393,6 +393,9 @@ my %kernel_modules_info = (
             included_in_rpm => 0, requires => ["core"], },
         'ipath' =>
             { name => "ipath", available => 0, selected => 0,
+            included_in_rpm => 0, requires => ["core"], },
+        'qib' =>
+            { name => "qib", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'cxgb3' =>
             { name => "cxgb3", available => 0, selected => 0,
@@ -1658,11 +1661,9 @@ sub set_availability
     #         $kernel =~ m/2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) or
     #    ($arch =~ m/x86_64/ and
     #         $kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) ) {
-    if ( ($arch =~ m/ppc64/ and
-            $kernel =~ m/2.6.30/) or
-       ($arch =~ m/x86_64/ and
+    if ( ($arch =~ m/x86_64/ and
             $kernel =~ m/2.6.30/) ) {
-            $kernel_modules_info{'ipath'}{'available'} = 1;
+            $kernel_modules_info{'qib'}{'available'} = 1;
             $packages_info{'libipathverbs'}{'available'} = 1;
             $packages_info{'libipathverbs-devel'}{'available'} = 1;
             $packages_info{'libipathverbs-debuginfo'}{'available'} = 1;
@@ -2813,6 +2814,9 @@ sub build_kernel_rpm
             }
             elsif ($module eq "ipath") {
                 $kernel_configure_options .= " --with-ipath_inf-mod";
+            }
+            elsif ($module eq "qib") {
+                $kernel_configure_options .= " --with-qib-mod";
             }
             elsif ($module eq "srpt") {
                 $kernel_configure_options .= " --with-srp-target-mod";
