@@ -398,10 +398,10 @@ my %kernel_modules_info = (
             { name => "qib", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'cxgb3' =>
-            { name => "cxgb3", available => 0, selected => 0,
+            { name => "cxgb3", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'nes' =>
-            { name => "nes", available => 0, selected => 0,
+            { name => "nes", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'ipoib' =>
             { name => "ipoib", available => 1, selected => 0,
@@ -1698,22 +1698,6 @@ sub set_availability
     } else {
             $packages_info{'rds-tools'}{'available'} = 0;
             $packages_info{'rds-tools-debuginfo'}{'available'} = 0;
-    }
-
-    if ($kernel =~ m/2.6.30/) {
-            $kernel_modules_info{'cxgb3'}{'available'} = 1;
-    } else {
-            $packages_info{'libcxgb3'}{'available'} = 0;
-            $packages_info{'libcxgb3-devel'}{'available'} = 0;
-            $packages_info{'libcxgb3-debuginfo'}{'available'} = 0;
-    }
-
-    if ($kernel =~ m/2.6.30/) {
-            $kernel_modules_info{'nes'}{'available'} = 1;
-    } else {
-            $packages_info{'libnes'}{'available'} = 0;
-            $packages_info{'libnes-devel-static'}{'available'} = 0;
-            $packages_info{'libnes-debuginfo'}{'available'} = 0;
     }
 
     # ib-bonding
