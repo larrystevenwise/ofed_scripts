@@ -3904,33 +3904,20 @@ sub uninstall
         system("yes | /sbin/mlnx_en_uninstall.sh > $ofedlogs/mlnx_en_uninstall.log 2>&1");
     }
 
-    print BLUE "Uninstalling the previous version of $PACKAGE", RESET "\n" if (not $quiet);
-    system("yes | ofed_uninstall.sh > $ofedlogs/ofed_uninstall.log 2>&1");
-    $res = $? >> 8;
-    $sig = $? & 127;
-    if ($sig or $res) {
-        system("yes | $CWD/uninstall.sh > $ofedlogs/ofed_uninstall.log 2>&1");
-        $res = $? >> 8;
-        $sig = $? & 127;
-        if ($sig or $res) {
-            print RED "Failed to uninstall the previous installation", RESET "\n";
-            print RED "See $ofedlogs/ofed_uninstall.log", RESET "\n";
-            exit 1;
-        }
-    }
-
     if ($distro eq "SuSE") {
         my $suse_cnt = 0;
         my $suse_rpms;
         for my $package (@suse_ofed_packages) {
-            if (is_installed("$package$suffix_32bit")) {
-                $suse_rpms .= "$package$suffix_32bit";
+            if (is_installed("$package")) {
+                $suse_rpms .= " $package";
                 $suse_cnt ++;
             }
-        }
-        for my $package (@user_packages) {
-            if (is_installed("$package$suffix_64bit")) {
-                $suse_rpms .= "$package$suffix_64bit";
+            if ($suffix_32bit and is_installed("$package$suffix_32bit")) {
+                $suse_rpms .= " $package$suffix_32bit";
+                $suse_cnt ++;
+            }
+            if ($suffix_64bit and is_installed("$package$suffix_64bit")) {
+                $suse_rpms .= " $package$suffix_64bit";
                 $suse_cnt ++;
             }
         }
@@ -3942,31 +3929,51 @@ sub uninstall
         }
     }
 
-    my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep ofed`;
-    my $cmd = "rpm -e --allmatches";
-    for my $package (@all_packages, @hidden_packages, @prev_ofed_packages, @other_ofed_rpms) {
-        next if ($package eq "mpi-selector");
-        if (is_installed($package)) {
-            $cmd .= " $package";
-            $cnt ++;
-        }
-        if (is_installed("$package-static")) {
-            $cmd .= " $package-static";
-            $cnt ++;
-        }
-    }
-    if ($cnt) {
-        print "Running $cmd\n" if (not $quiet);
-        open (LOG, "+>$ofedlogs/ofed_uninstall.log");
-        print LOG "Running $cmd\n";
-        close LOG;
-        system("$cmd >> $ofedlogs/ofed_uninstall.log 2>&1");
+    print BLUE "Uninstalling the previous version of $PACKAGE", RESET "\n" if (not $quiet);
+    system("yes | ofed_uninstall.sh > $ofedlogs/ofed_uninstall.log 2>&1");
+    $res = $? >> 8;
+    $sig = $? & 127;
+    if ($sig or $res) {
+        system("yes | $CWD/uninstall.sh > $ofedlogs/ofed_uninstall.log 2>&1");
         $res = $? >> 8;
         $sig = $? & 127;
         if ($sig or $res) {
-            print RED "Failed to uninstall the previous installation", RESET "\n";
-            print RED "See $ofedlogs/ofed_uninstall.log", RESET "\n";
-            exit 1;
+            # Last try to uninstall
+            my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep ofed`;
+            my $cmd = "rpm -e --allmatches";
+            for my $package (@all_packages, @hidden_packages, @prev_ofed_packages, @other_ofed_rpms) {
+                next if ($package eq "mpi-selector");
+                if (is_installed($package)) {
+                    $cmd .= " $package";
+                    $cnt ++;
+                }
+                if (is_installed("$package-static")) {
+                    $cmd .= " $package-static";
+                    $cnt ++;
+                }
+                if ($suffix_32bit and is_installed("$package$suffix_32bit")) {
+                    $cmd .= " $package$suffix_32bit";
+                    $cnt ++;
+                }
+                if ($suffix_64bit and is_installed("$package$suffix_64bit")) {
+                    $cmd .= " $package$suffix_64bit";
+                    $cnt ++;
+                }
+            }
+            if ($cnt) {
+                print "Running $cmd\n" if (not $quiet);
+                open (LOG, "+>$ofedlogs/ofed_uninstall.log");
+                print LOG "Running $cmd\n";
+                close LOG;
+                system("$cmd >> $ofedlogs/ofed_uninstall.log 2>&1");
+                $res = $? >> 8;
+                $sig = $? & 127;
+                if ($sig or $res) {
+                    print RED "Failed to uninstall the previous installation", RESET "\n";
+                    print RED "See $ofedlogs/ofed_uninstall.log", RESET "\n";
+                    exit 1;
+                }
+            }
         }
     }
 
