@@ -1646,10 +1646,8 @@ sub set_availability
     set_compilers();
 
     # Ehca
-    # if ($arch =~ m/ppc64|powerpc/ and
-    #         $kernel =~ m/2.6.1[6-9]|2.6.2[0-9]/) {
     if ($arch =~ m/ppc64|powerpc/ and
-            $kernel =~ m/2.6.30/) {
+            $kernel =~ m/2.6.1[6-9]|2.6.2[0-9]|2.6.30/) {
             $kernel_modules_info{'ehca'}{'available'} = 1;
             $packages_info{'libehca'}{'available'} = 1;
             $packages_info{'libehca-devel-static'}{'available'} = 1;
