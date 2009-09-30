@@ -1659,8 +1659,8 @@ sub set_availability
     #         $kernel =~ m/2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) or
     #    ($arch =~ m/x86_64/ and
     #         $kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) ) {
-    if ( ($arch =~ m/x86_64/ and
-            $kernel =~ m/2.6.30/) ) {
+    if ($arch =~ m/x86_64/ and
+	     $kernel =~ m/2.6.9-67|2.6.9-78|2\.6\.18-8[4-9]\..*el5.*|2\.6\.18-9[0-9]\..*el5.*|2\.6\.18-1[0-9][0-9]\..*el5.*|2\.6\.16\.[6-9][0-9]-.*-.*|2\.6\.27\..*-.*/) {
             $kernel_modules_info{'qib'}{'available'} = 1;
             $packages_info{'libipathverbs'}{'available'} = 1;
             $packages_info{'libipathverbs-devel'}{'available'} = 1;
