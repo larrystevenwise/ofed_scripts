@@ -1720,6 +1720,14 @@ sub set_availability
             }
     }
 
+    # RDS - cause kernel panic on RHEL4.
+    # BUG: https://bugs.openfabrics.org/show_bug.cgi?id=1766 
+    if ($kernel =~ m/2.6.9/) {
+            $kernel_modules_info{'rds'}{'available'} = 0;
+            $packages_info{'rds-tools'}{'available'} = 0;
+            $packages_info{'rds-tools-debuginfo'}{'available'} = 0;
+    }
+
     # mvapich, mvapich2 and openmpi
     if ($gcc{'gcc'}) {
         if ($gcc{'g77'} or $gcc{'gfortran'}) {
