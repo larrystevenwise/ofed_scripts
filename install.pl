@@ -411,10 +411,10 @@ my %kernel_modules_info = (
             { name => "sdp", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
         'srp' =>
-            { name => "srp", available => 0, selected => 0,
+            { name => "srp", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
         'srpt' =>
-            { name => "srpt", available => 0, selected => 0,
+            { name => "srpt", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'rds' =>
             { name => "rds", available => 1, selected => 0,
