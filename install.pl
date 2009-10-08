@@ -3944,6 +3944,8 @@ sub uninstall
             print RED "Please remove OFED RPMs coming from the Distribution.", RESET "\n";
             print RED "Run:", RESET "\n";
             print RED "rpm -e $suse_rpms", RESET "\n";
+            print RED "\nIf this command fails to uninstall ofed or opensm RPMs, then", RESET "\n";
+            print RED "edit /etc/sysconfig/services, set DISABLE_STOP_ON_REMOVAL=\"yes\"", RESET "\n";
             exit 1;
         }
     }
