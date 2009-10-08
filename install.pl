@@ -304,7 +304,7 @@ my @prev_ofed_packages = (
 my @suse_ofed_packages = (
                         "libamso", "libamso-devel", "dapl2", "dapl2-devel", "mvapich2", "mvapich2-devel",
                         "mvapich-devel", "libboost_mpi1_36_0", "boost-devel", "libmthca-rdmav2", "libcxgb3-rdmav2",
-                        "libibmad1", "libibumad1", "libibcommon1"
+                        "libmlx4-rdmav2", "libibmad1", "libibumad1", "libibcommon1", "ofed"
                         );
 
 
@@ -3923,9 +3923,27 @@ sub uninstall
             }
         }
         if ($suse_cnt) {
+            # Get the list of other RPMs coming with distribution
+            my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep ofed`;
+            for my $package (@all_packages, @hidden_packages, @prev_ofed_packages, @other_ofed_rpms) {
+                chomp $package;
+                next if ($package eq "mpi-selector");
+                if (is_installed($package)) {
+                    $suse_rpms .= " $package";
+                }
+                if (is_installed("$package-static")) {
+                    $suse_rpms .= " $package-static";
+                }
+                if ($suffix_32bit and is_installed("$package$suffix_32bit")) {
+                    $suse_rpms .= " $package$suffix_32bit";
+                }
+                if ($suffix_64bit and is_installed("$package$suffix_64bit")) {
+                    $suse_rpms .= " $package$suffix_64bit";
+                }
+            }
             print RED "Please remove OFED RPMs coming from the Distribution.", RESET "\n";
             print RED "Run:", RESET "\n";
-            print RED "rpm -e $suse_rpms ...", RESET "\n";
+            print RED "rpm -e $suse_rpms", RESET "\n";
             exit 1;
         }
     }
@@ -3943,6 +3961,7 @@ sub uninstall
             my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep ofed`;
             my $cmd = "rpm -e --allmatches";
             for my $package (@all_packages, @hidden_packages, @prev_ofed_packages, @other_ofed_rpms) {
+                chomp $package;
                 next if ($package eq "mpi-selector");
                 if (is_installed($package)) {
                     $cmd .= " $package";
