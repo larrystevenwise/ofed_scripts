@@ -3908,6 +3908,14 @@ sub uninstall
     if ($distro eq "SuSE") {
         my $suse_cnt = 0;
         my $suse_rpms;
+        if (open (SUSE_RPMS, 'rpm -qa ofed-kmp* |')) {
+            while(<SUSE_RPMS>) {
+                chomp $_;
+                $suse_rpms .= " $_";
+                $suse_cnt ++;
+            }
+            close SUSE_RPMS;
+        }
         for my $package (@suse_ofed_packages) {
             if (is_installed("$package")) {
                 $suse_rpms .= " $package";
@@ -3924,7 +3932,7 @@ sub uninstall
         }
         if ($suse_cnt) {
             # Get the list of other RPMs coming with distribution
-            my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep ofed`;
+            my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep ofed | grep -v kmp`;
             for my $package (@all_packages, @hidden_packages, @prev_ofed_packages, @other_ofed_rpms) {
                 chomp $package;
                 next if ($package eq "mpi-selector");
