@@ -248,8 +248,9 @@ sub usage
    print "\n           -s|--kernel-sources  <path to the kernel sources>. Default on this system: $kernel_sources";
    print "\n           --build32            Build 32-bit libraries. Relevant for x86_64 and ppc64 platforms";
    print "\n           --without-depcheck   Skip Distro's libraries check";
-   print "\n           -v|-vv|-vvv.         Set verbosity level";
-   print "\n           -q.                  Set quiet - no messages will be printed";
+   print "\n           -v|-vv|-vvv          Set verbosity level";
+   print "\n           -q                   Set quiet - no messages will be printed";
+   print "\n           --force              Force uninstall RPM coming with Distribution";
    print "\n\n           --all|--hpc|--basic    Install all,hpc or basic packages correspondingly";
    print RESET "\n\n";
 }
@@ -1353,6 +1354,7 @@ my $kernel_given = 0;
 my $kernel_source_given = 0;
 my $install_option;
 my $check_linux_deps = 1;
+my $force = 0;
 
 while ( $#ARGV >= 0 ) {
 
@@ -1376,6 +1378,8 @@ while ( $#ARGV >= 0 ) {
         $kernel_source_given = 1;
     } elsif ( $cmd_flag eq "-p" or $cmd_flag eq "--print-available" ) {
         $print_available = 1;
+    } elsif ( $cmd_flag eq "--force" ) {
+        $force = 1;
     } elsif ( $cmd_flag eq "--all" ) {
         $interactive = 0;
         $install_option = 'all';
@@ -3982,12 +3986,26 @@ sub uninstall
                     $suse_rpms .= " $package$suffix_64bit";
                 }
             }
-            print RED "Please remove OFED RPMs coming from the Distribution.", RESET "\n";
-            print RED "Run:", RESET "\n";
-            print RED "rpm -e $suse_rpms", RESET "\n";
-            print RED "\nIf this command fails to uninstall ofed or opensm RPMs, then", RESET "\n";
-            print RED "edit /etc/sysconfig/services, set DISABLE_STOP_ON_REMOVAL=\"yes\"", RESET "\n";
-            exit 1;
+            if ($force) {
+                print BLUE "Uninstalling OFED RPMs coming from the Distribution", RESET "\n" if (not $quiet);
+                system("rpm -e --allmatches $suse_rpms >> $ofedlogs/dist_rpms_uninstall.log 2>&1");
+                $res = $? >> 8;
+                $sig = $? & 127;
+                if ($sig or $res) {
+                    print RED "Failed to uninstall RPMs coming from the Distribution", RESET "\n";
+                    system("echo rpm -e --allmatches $suse_rpms >> $ofedlogs/dist_rpms_uninstall.log 2>&1");
+                    print RED "See $ofedlogs/dist_rpms_uninstall.log", RESET "\n";
+                    print RED "Edit /etc/sysconfig/services, set DISABLE_STOP_ON_REMOVAL=\"yes\"", RESET "\n";
+                    exit 1;
+                }
+            } else {
+                print RED "Please remove OFED RPMs coming from the Distribution.", RESET "\n";
+                print RED "Run:", RESET "\n";
+                print RED "rpm -e $suse_rpms", RESET "\n";
+                print RED "\nIf this command fails to uninstall ofed or opensm RPMs, then", RESET "\n";
+                print RED "edit /etc/sysconfig/services, set DISABLE_STOP_ON_REMOVAL=\"yes\"", RESET "\n";
+                exit 1;
+            }
         }
     }
 
