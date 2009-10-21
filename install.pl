@@ -307,6 +307,9 @@ my @suse_ofed_packages = (
                         "libmlx4-rdmav2", "libibmad1", "libibumad1", "libibcommon1", "ofed"
                         );
 
+my @mlnx_en_packages = (
+                       "mlnx_en", "mlnx-en-devel", "mlnx_en-devel", "mlnx_en-doc", "mlnx-ofc", "mlnx-ofc-debuginfo"
+                        );
 
 # List of all available packages sorted following dependencies
 my @kernel_packages = ("kernel-ib", "kernel-ib-devel", "ib-bonding", "ib-bonding-debuginfo");
@@ -3903,6 +3906,36 @@ sub uninstall
     if ( -f "/sbin/mlnx_en_uninstall.sh" ) {
         print BLUE "Uninstalling MLNX_EN driver", RESET "\n" if (not $quiet);
         system("yes | /sbin/mlnx_en_uninstall.sh > $ofedlogs/mlnx_en_uninstall.log 2>&1");
+        $res = $? >> 8;
+        $sig = $? & 127;
+        if ($sig or $res) {
+            print RED "Failed to uninstall MLNX_EN driver", RESET "\n";
+            print RED "See $ofedlogs/mlnx_en_uninstall.log", RESET "\n";
+            exit 1;
+        }
+    }
+
+    my $mlnx_en_cnt = 0;
+    my $mlnx_en_rpms;
+    for my $package (@mlnx_en_packages) {
+        if (is_installed($package)) {
+            $mlnx_en_rpms .= " $package";
+            $mlnx_en_cnt ++;
+        }
+    }
+
+    if ($mlnx_en_cnt) {
+            my $cmd = "rpm -e --allmatches";
+            $cmd .= " $mlnx_en_rpms";
+            print BLUE "Uninstalling MLNX_EN driver", RESET "\n" if (not $quiet);
+            system("$cmd >> $ofedlogs/mlnx_en_uninstall.log 2>&1");
+            $res = $? >> 8;
+            $sig = $? & 127;
+            if ($sig or $res) {
+                print RED "Failed to uninstall MLNX_EN driver", RESET "\n";
+                print RED "See $ofedlogs/mlnx_en_uninstall.log", RESET "\n";
+                exit 1;
+            }
     }
 
     if ($distro eq "SuSE") {
