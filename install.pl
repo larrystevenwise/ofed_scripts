@@ -1653,6 +1653,10 @@ sub set_availability
 {
     set_compilers();
 
+    if ($arch =~ m/ia64/) {
+            $kernel_modules_info{'mlx4_en'}{'available'} = 0;
+    }
+
     # Ehca
     if ($arch =~ m/ppc64|powerpc/ and
             $kernel =~ m/2.6.1[6-9]|2.6.2[0-9]|2.6.30/) {
