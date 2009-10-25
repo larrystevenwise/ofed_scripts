@@ -3925,7 +3925,9 @@ sub uninstall
 
     my $mlnx_en_cnt = 0;
     my $mlnx_en_rpms;
-    for my $package (@mlnx_en_packages) {
+    my @other_mlnx_en_rpms = `rpm -qa *mlnx-en* 2> /dev/null`;
+    for my $package (@mlnx_en_packages, @other_mlnx_en_rpms) {
+        chomp $package;
         if (is_installed($package)) {
             $mlnx_en_rpms .= " $package";
             $mlnx_en_cnt ++;
