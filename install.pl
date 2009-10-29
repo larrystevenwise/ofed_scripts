@@ -303,8 +303,8 @@ my @prev_ofed_packages = (
 
 
 my @suse_ofed_packages = (
-                        "libamso", "libamso-devel", "dapl2", "dapl2-devel", "mvapich2", "mvapich2-devel",
-                        "mvapich-devel", "libboost_mpi1_36_0", "boost-devel", "libmthca-rdmav2", "libcxgb3-rdmav2",
+                        "libamso", "libamso-devel", "dapl2", "dapl2-devel", "mvapich", "mvapich2", "mvapich2-devel",
+                        "mvapich-devel", "libboost_mpi1_36_0", "boost-devel", "boost-doc", "libmthca-rdmav2", "libcxgb3-rdmav2",
                         "libmlx4-rdmav2", "libibmad1", "libibumad1", "libibcommon1", "ofed"
                         );
 
