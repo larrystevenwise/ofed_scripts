@@ -2449,6 +2449,10 @@ sub module_in_rpm
         return 1;
     }
 
+    if ($module eq "nfsrdma") {
+        $module = "xprtrdma";
+    }
+
     open(LIST, "rpm -qlp $package |") or die "Can't run 'rpm -qlp $package': $!\n";
     while (<LIST>) {
         if (/$module[a-z_]*.ko/) {
