@@ -3000,6 +3000,14 @@ sub build_rpm
                     $fflags     = " -g -O2";
                     $ldlibs     = " -g -O2";
                 }
+                # SLES 10 SP3
+                if ($dist_rpm_rel ge 15.45.8) {
+                    if ($parent eq "tvflash") {
+                        build_rpm_32($name);
+                        $packages_info{$name}{'rpm_exist'} = 1;
+                        return;
+                    }
+                }
             }
             else {
                 if ($parent eq "sdpnetstat" or $parent eq "rds-tools" or $parent eq "rnfs-utils") {
@@ -3487,9 +3495,11 @@ sub install_rpm
         }
     }
 
-    if ($arch eq "ppc64" and $distro eq "redhat" and $name =~ m/tvflash/) {
-        install_rpm_32($name);
-        return;
+    if ($arch eq "ppc64" and $name =~ m/tvflash/) {
+        if ($distro eq "redhat" or ($distro eq "SuSE" and $dist_rpm_rel ge 15.45.8)) {
+            install_rpm_32($name);
+            return;
+        }
     }
 
     my $version = $main_packages{$packages_info{$name}{'parent'}}{'version'};
