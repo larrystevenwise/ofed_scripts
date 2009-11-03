@@ -162,6 +162,8 @@ if ($dist_rpm =~ /openSUSE/) {
     $subdistro = "openSUSE";
 } elsif ($dist_rpm =~ /sles-release-11/) {
     $subdistro = "SLES11";
+} elsif ($dist_rpm =~ /sles-release-10/) {
+    $subdistro = "SLES10";
 }
 
 my $WDIR    = dirname($0);
@@ -2671,6 +2673,15 @@ sub check_linux_dependencies
                         }
                         if (not is_installed("libopenssl-devel")) {
                             print RED "libopenssl-devel is required to build rnfs-utils.", RESET "\n";
+                            $err++;
+                        }
+                    } elsif ($subdistro eq "SLES10") {
+                        if (not is_installed("libevent")) {
+                            print RED "libevent is required to build rnfs-utils.", RESET "\n";
+                            $err++;
+                        }
+                        if (not is_installed("nfsidmap")) {
+                            print RED "nfsidmap is required to build rnfs-utils.", RESET "\n";
                             $err++;
                         }
                     }
