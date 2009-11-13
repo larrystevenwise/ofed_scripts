@@ -1713,24 +1713,11 @@ sub set_availability
     }
 
     # NFSRDMA
-    if ($subdistro ne "openSUSE" and $kernel =~ m/2.6.2[25]|2.6.27.*-*|2.6.30/) {
+    if (($distro eq "redhat5" or $subdistro eq "SLES10" or $subdistro eq "SLES11") and
+	 $kernel =~ m/2.6.16.60-[0-9.]*-[A-Za-z0-9.]*|2.6.2[25]|2.6.27.*-*|2.6.30|el5/) {
             $kernel_modules_info{'nfsrdma'}{'available'} = 1;
             $packages_info{'rnfs-utils'}{'available'} = 1;
             $packages_info{'rnfs-utils-debuginfo'}{'available'} = 1;
-    }
-    elsif ($kernel =~ m/2.6.16.60-[0-9.]*-[A-Za-z0-9.]*/) {
-            $kernel_modules_info{'nfsrdma'}{'available'} = 1;
-            $packages_info{'rnfs-utils'}{'available'} = 1;
-            $packages_info{'rnfs-utils-debuginfo'}{'available'} = 1;
-    }
-    elsif ($kernel =~ m/el5/) {
-            my $minor = (split '-', $kernel)[1];
-            $minor =~ s/(\.el5).*//;
-            if ($minor > 53) {
-                $kernel_modules_info{'nfsrdma'}{'available'} = 1;
-                $packages_info{'rnfs-utils'}{'available'} = 1;
-                $packages_info{'rnfs-utils-debuginfo'}{'available'} = 1;
-            }
     }
 
     # RDS - cause kernel panic on RHEL4.
