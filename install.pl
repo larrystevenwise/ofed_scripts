@@ -4148,7 +4148,7 @@ sub check_pcie_link
             my $devinfo = $_;
             $devinfo =~ /(15b3:[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])/;
             my $devid = $&;
-            my $link_width = `$setpci -d $devid 72 | cut -b1`;
+            my $link_width = `$setpci -d $devid 72.B | cut -b1`;
             chomp $link_width;
 
             print BLUE "Device ($devid):\n";
@@ -4160,7 +4160,7 @@ sub check_pcie_link
             else {
                 print "\tLink Width is not 8x\n";
             }
-            my $link_speed = `$setpci -d $devid 72 | cut -b2`;
+            my $link_speed = `$setpci -d $devid 72.B | cut -b2`;
             chomp $link_speed;
             if ( $link_speed eq "1" ) {
                 print "\tLink Speed: 2.5Gb/s\n";
