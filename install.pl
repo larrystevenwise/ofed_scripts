@@ -4181,10 +4181,22 @@ sub check_pcie_link
 sub main
 {
     if ($print_available) {
+        my @list = ();
         set_availability();
-        open(CONFIG, ">>$config") || die "Can't open $config: $!";
+        $config = $TMPDIR . "/ofed-$install_option.conf";
+        chomp $config;
+        if ($install_option eq 'all') {
+            @list = (@all_packages, @hidden_packages);
+        }
+        elsif ($install_option eq 'hpc') {
+            @list = (@hpc_user_packages, @hpc_kernel_packages, @hidden_packages);
+        }
+        elsif ($install_option eq 'basic') {
+            @list = (@basic_user_packages, @basic_kernel_packages, @hidden_packages);
+        }
+        open(CONFIG, ">>$config") || die "Can't open $config: $!";;
         flock CONFIG, $LOCK_EXCLUSIVE;
-        for my $package ( @all_packages, @hidden_packages) {
+        for my $package ( @list ) {
             next if (not $packages_info{$package}{'available'});
             if ($package eq "kernel-ib") {
                 print "Kernel modules: ";
