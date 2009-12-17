@@ -1683,7 +1683,7 @@ sub set_availability
 
     # Iser
     # if ($kernel =~ m/2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
-    if ($kernel =~ m/2.6.30/) {
+    if ($kernel =~ m/2.6.3[0-2]/) {
             $kernel_modules_info{'iser'}{'available'} = 1;
             $packages_info{'open-iscsi-generic'}{'available'} = 1;
     }
@@ -2549,7 +2549,7 @@ sub check_linux_dependencies
         if ($package =~ /kernel-ib|ib-bonding/) {
             if (not $packages_info{$package}{'rpm_exist'}) {
                 # Check that required kernel is supported
-                if ($kernel !~ /2.6.9-67|2.6.9-78|2.6.9-89|2.6.16.60-[0-9.]*-[A-Za-z0-9.]*|2.6.1[8-9]|2.6.2[0-9]|2.6.3[0-1]/) {
+                if ($kernel !~ /2.6.9-67|2.6.9-78|2.6.9-89|2.6.16.60-[0-9.]*-[A-Za-z0-9.]*|2.6.1[8-9]|2.6.2[0-9]|2.6.3[0-2]/) {
                     print RED "Kernel $kernel is not supported.", RESET "\n";
                     print BLUE "For the list of Supported Platforms and Operating Systems see", RESET "\n";
                     print BLUE "$CWD/docs/OFED_release_notes.txt", RESET "\n";
