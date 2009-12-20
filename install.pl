@@ -4183,7 +4183,12 @@ sub main
     if ($print_available) {
         my @list = ();
         set_availability();
-        $config = $TMPDIR . "/ofed-$install_option.conf";
+
+        if (!$install_option) {
+            $install_option = 'all';
+        }
+
+        $config = $CWD . "/ofed-$install_option.conf";
         chomp $config;
         if ($install_option eq 'all') {
             @list = (@all_packages, @hidden_packages);
