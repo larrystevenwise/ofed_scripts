@@ -158,7 +158,9 @@ else {
 }
 chomp $dist_rpm;
 
-if ($dist_rpm =~ /openSUSE/) {
+if ($dist_rpm =~ /openSUSE-release-11.2/) {
+    $subdistro = "openSUSE11.2";
+} elsif ($dist_rpm =~ /openSUSE/) {
     $subdistro = "openSUSE";
 } elsif ($dist_rpm =~ /sles-release-11/) {
     $subdistro = "SLES11";
@@ -229,7 +231,16 @@ my @selected_kernel_modules = ();
 my $open_iscsi_ver_rh4 = '2.0-754.1';
 my $open_iscsi_ver_non_rh4 = '2.0-869.2';
 
-my $libstdc = ($subdistro eq "openSUSE") ? 'libstdc++42' : ($subdistro eq "SLES11") ? 'libstdc++43' : 'libstdc++';
+my $libstdc;
+if ($subdistro eq "openSUSE11.2") {
+    $libstdc = 'libstdc++44';
+} elsif ($subdistro eq "openSUSE") {
+    $libstdc = 'libstdc++42';
+} elsif ($subdistro eq "SLES11") {
+    $libstdc = 'libstdc++43';
+} else {
+    $libstdc = 'libstdc++';
+}
 my $libstdc_devel = "$libstdc-devel";
 
 # Suffix for 32 and 64 bit packages
