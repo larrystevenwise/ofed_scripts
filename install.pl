@@ -3698,34 +3698,42 @@ sub config_interface
         }
         print "\nEnter an IP Adress: ";
         $ip = <STDIN>;
+        chomp $ip;
         $ret = is_valid_ipv4($ip);
         while ($ret) {
             print "\nEnter a valid IPv4 Adress: ";
             $ip = <STDIN>;
+            chomp $ip;
             $ret = is_valid_ipv4($ip);
         }
         print "\nEnter the Netmask: ";
         $nm = <STDIN>;
+        chomp $nm;
         $ret = is_valid_ipv4($nm);
         while ($ret) {
             print "\nEnter a valid Netmask: ";
             $nm = <STDIN>;
+            chomp $nm;
             $ret = is_valid_ipv4($nm);
         }
         print "\nEnter the Network: ";
         $nw = <STDIN>;
+        chomp $nw;
         $ret = is_valid_ipv4($nw);
         while ($ret) {
             print "\nEnter a valid Network: ";
             $nw = <STDIN>;
+            chomp $nw;
             $ret = is_valid_ipv4($nw);
         }
         print "\nEnter the Broadcast Adress: ";
         $bc = <STDIN>;
+        chomp $bc;
         $ret = is_valid_ipv4($bc);
         while ($ret) {
             print "\nEnter a valid Broadcast Adress: ";
             $bc = <STDIN>;
+            chomp $bc;
             $ret = is_valid_ipv4($bc);
         }
         print "\nStart Device On Boot? [Y/n]:";
