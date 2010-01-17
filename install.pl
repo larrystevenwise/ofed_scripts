@@ -4219,9 +4219,11 @@ sub main
         }
         elsif ($install_option eq 'hpc') {
             @list = (@hpc_user_packages, @hpc_kernel_packages, @hidden_packages);
+            @kernel_modules = (@hpc_kernel_modules);
         }
         elsif ($install_option eq 'basic') {
             @list = (@basic_user_packages, @basic_kernel_packages, @hidden_packages);
+            @kernel_modules = (@basic_kernel_modules);
         }
         open(CONFIG, ">>$config") || die "Can't open $config: $!";;
         flock CONFIG, $LOCK_EXCLUSIVE;
