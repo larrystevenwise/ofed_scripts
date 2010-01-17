@@ -4225,7 +4225,7 @@ sub main
             @list = (@basic_user_packages, @basic_kernel_packages);
             @kernel_modules = (@basic_kernel_modules);
         }
-        open(CONFIG, ">>$config") || die "Can't open $config: $!";;
+        open(CONFIG, ">$config") || die "Can't open $config: $!";;
         flock CONFIG, $LOCK_EXCLUSIVE;
         print "\nUser-level packages: ";
         for my $package ( @list ) {
