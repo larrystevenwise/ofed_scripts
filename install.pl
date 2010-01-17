@@ -2085,7 +2085,7 @@ sub select_packages
             $ok = 1;
         }
         if ($inp == $BASIC) {
-            for my $package (@basic_user_packages, @basic_kernel_packages, @hidden_packages) {
+            for my $package (@basic_user_packages, @basic_kernel_packages) {
                 next if (not $packages_info{$package}{'available'});
                 push (@selected_by_user, $package);
                 print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
@@ -2098,7 +2098,7 @@ sub select_packages
             }
         }
         elsif ($inp == $HPC) {
-            for my $package ( @hpc_user_packages, @hpc_kernel_packages, @hidden_packages ) {
+            for my $package ( @hpc_user_packages, @hpc_kernel_packages ) {
                 next if (not $packages_info{$package}{'available'});
                 push (@selected_by_user, $package);
                 print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
@@ -4218,11 +4218,11 @@ sub main
             @list = (@all_packages, @hidden_packages);
         }
         elsif ($install_option eq 'hpc') {
-            @list = (@hpc_user_packages, @hpc_kernel_packages, @hidden_packages);
+            @list = (@hpc_user_packages, @hpc_kernel_packages);
             @kernel_modules = (@hpc_kernel_modules);
         }
         elsif ($install_option eq 'basic') {
-            @list = (@basic_user_packages, @basic_kernel_packages, @hidden_packages);
+            @list = (@basic_user_packages, @basic_kernel_packages);
             @kernel_modules = (@basic_kernel_modules);
         }
         open(CONFIG, ">>$config") || die "Can't open $config: $!";;
