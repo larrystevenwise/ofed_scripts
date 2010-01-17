@@ -4227,10 +4227,11 @@ sub main
         }
         open(CONFIG, ">>$config") || die "Can't open $config: $!";;
         flock CONFIG, $LOCK_EXCLUSIVE;
+        print "\nUser-level packages: ";
         for my $package ( @list ) {
             next if (not $packages_info{$package}{'available'});
             if ($package eq "kernel-ib") {
-                print "Kernel modules: ";
+                print "\nKernel modules: ";
                 for my $module ( @kernel_modules ) {
                     next if (not $kernel_modules_info{$module}{'available'});
                     print $module . ' ';
