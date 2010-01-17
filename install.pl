@@ -2833,15 +2833,15 @@ sub build_kernel_rpm
             else {
                 $kernel_configure_options .= " --with-$module-mod";
             }
-
-            # WA for Fedora C12
-            if ($distro =~ /fedora/) {
-                $cmd .= " --define '__spec_install_pre %{___build_pre}'";
-            }
         }
 
         if ($distro eq "debian") {
                 $kernel_configure_options .= " --without-modprobe";
+        }
+
+        # WA for Fedora C12
+        if ($distro =~ /fedora/) {
+            $cmd .= " --define '__spec_install_pre %{___build_pre}'";
         }
 
         $cmd .= " --define 'configure_options $kernel_configure_options'";
