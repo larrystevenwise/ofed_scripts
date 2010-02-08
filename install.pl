@@ -4227,7 +4227,7 @@ sub main
         }
         open(CONFIG, ">$config") || die "Can't open $config: $!";;
         flock CONFIG, $LOCK_EXCLUSIVE;
-        print "\nUser-level packages: ";
+        print "\nOFED packages: ";
         for my $package ( @list ) {
             next if (not $packages_info{$package}{'available'});
             if ($package eq "kernel-ib") {
@@ -4237,7 +4237,7 @@ sub main
                     print $module . ' ';
                     print CONFIG "$module=y\n";
                 }
-                print "\nOther packages: ";
+                print "\nRPMs: ";
             }
             print $package . ' ';
             print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
