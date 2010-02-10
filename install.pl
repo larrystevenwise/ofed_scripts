@@ -372,7 +372,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "opensm", "opensm-libs", "opensm-devel", "opensm-debuginfo", "opensm-static",
                      "compat-dapl", "compat-dapl-devel",
                      "dapl", "dapl-devel", "dapl-devel-static", "dapl-utils", "dapl-debuginfo",
-                     "perftest", "mstflint", "tvflash",
+                     "perftest", "mstflint",
                      "qlvnictools", "sdpnetstat", "srptools", "rds-tools", "rnfs-utils",
                      "ibutils", "infiniband-diags", "qperf", "qperf-debuginfo",
                      "ofed-docs", "ofed-scripts", "tgt-generic", @mpi_packages
@@ -852,21 +852,6 @@ my %packages_info = (
             install32 => 0, exception => 0, configure_options => '' },
         'mstflint-debuginfo' =>
             { name => "mstflint-debuginfo", parent => "mstflint",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
-        'tvflash' =>
-            { name => "tvflash", parent => "tvflash",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["pciutils-devel"],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0, configure_options => '' },
-        'tvflash-debuginfo' =>
-            { name => "tvflash-debuginfo", parent => "tvflash",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
@@ -1779,10 +1764,6 @@ sub set_availability
         }
         $packages_info{'openmpi_intel'}{'available'} = 1;
         $packages_info{'mpitests_openmpi_intel'}{'available'} = 1;
-    }
-
-    if (is_installed('openSUSE-release')) {
-        $packages_info{'tvflash'}{'available'} = 0;
     }
 
     # debuginfo RPM currently are not supported on SuSE
@@ -3014,14 +2995,6 @@ sub build_rpm
                     $fflags     = " -g -O2";
                     $ldlibs     = " -g -O2";
                 }
-                # SLES 10 SP3
-                if ($dist_rpm_rel ge 15.45.8) {
-                    if ($parent eq "tvflash") {
-                        build_rpm_32($name);
-                        $packages_info{$name}{'rpm_exist'} = 1;
-                        return;
-                    }
-                }
             }
             else {
                 if ($parent eq "sdpnetstat" or $parent eq "rds-tools" or $parent eq "rnfs-utils") {
@@ -3032,11 +3005,6 @@ sub build_rpm
                     $cxxflags   = " -g -O2";
                     $fflags     = " -g -O2";
                     $ldlibs     = " -g -O2";
-                }
-                elsif ($distro eq "redhat" and $parent eq "tvflash") {
-                    build_rpm_32($name);
-                    $packages_info{$name}{'rpm_exist'} = 1;
-                    return;
                 }
                 else {
                     $ldflags    .= " $optflags -m64 -g -O2 -L/usr/lib64";
@@ -3506,13 +3474,6 @@ sub install_rpm
                 print RED "See $ofedlogs/$name.rpmuninstall.log", RESET "\n";
                 exit 1;
             }
-        }
-    }
-
-    if ($arch eq "ppc64" and $name =~ m/tvflash/) {
-        if ($distro eq "redhat" or ($distro eq "SuSE" and $dist_rpm_rel ge 15.45.8)) {
-            install_rpm_32($name);
-            return;
         }
     }
 
