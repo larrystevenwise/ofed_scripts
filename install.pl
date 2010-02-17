@@ -63,6 +63,7 @@ my $print_available = 0;
 
 my $clear_string = `clear`;
 my $upgrade_open_iscsi = 0;
+my $bonding_force_all_os = 0;
 
 my $vendor_pre_install = "";
 my $vendor_post_install = "";
@@ -2207,6 +2208,13 @@ sub select_packages
                     next;
                 }
 
+                if ($package eq "bonding_force_all_os") {
+                    if ($selected =~ m/[Yy]|[Yy][Ee][Ss]/) {
+                        $bonding_force_all_os = 1;
+                    }
+                    next;
+                }
+
 		if (substr($package,0,length("vendor_config")) eq "vendor_config") {
 		       next;
 		}
@@ -2835,6 +2843,7 @@ sub build_kernel_rpm
     elsif ($name eq 'ib-bonding') {
         $cmd .= " --define 'KVERSION $kernel'";
         $cmd .= " --define '_release $kernel_rel'";
+        $cmd .= " --define 'force_all_os $bonding_force_all_os'";
     }
 
     $cmd .= " --define '_prefix $prefix'";
