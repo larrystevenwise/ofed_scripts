@@ -2041,7 +2041,7 @@ sub select_packages
 {
     my $cnt = 0;
     if ($interactive) {
-        open(CONFIG, ">>$config") || die "Can't open $config: $!";;
+        open(CONFIG, ">$config") || die "Can't open $config: $!";;
         flock CONFIG, $LOCK_EXCLUSIVE;
         my $ok = 0;
         my $inp;
@@ -2359,7 +2359,7 @@ sub select_packages
             }
         }
         else {
-            open(CONFIG, ">>$config") || die "Can't open $config: $!";
+            open(CONFIG, ">$config") || die "Can't open $config: $!";
             flock CONFIG, $LOCK_EXCLUSIVE;
             if ($install_option eq 'all') {
                 for my $package ( @all_packages ) {
