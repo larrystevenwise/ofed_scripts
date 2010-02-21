@@ -1680,7 +1680,7 @@ sub set_availability
 
     # Iser
     # if ($kernel =~ m/2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
-    if ($kernel =~ m/2.6.3[0-2]/) {
+    if ($kernel =~ m/2.6.3[0-2]|2.6.18-164/) {
             $kernel_modules_info{'iser'}{'available'} = 1;
             $packages_info{'open-iscsi-generic'}{'available'} = 1;
     }
@@ -2776,17 +2776,6 @@ sub check_open_iscsi
                 my $ans = getch();
                 if ( $ans eq 'Y' or $ans eq 'y' ) {
                     $upgrade_open_iscsi = 1;
-                }
-                else {
-                    print RED "Please uninstall $oiscsi_name before installing $PACKAGE with iSER support.", RESET "\n";
-                    exit 1;
-                }
-            }
-            else {
-                if (not $upgrade_open_iscsi) {
-                    print RED "Please uninstall $oiscsi_name before installing $PACKAGE with iSER support.", RESET "\n";
-                    print RED "  Or put \"upgrade_open_iscsi=yes\" in the $config:", RESET "\n";
-                    exit 1;
                 }
             }
         }
