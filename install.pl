@@ -187,11 +187,9 @@ my $config = $CWD . '/ofed.conf';
 chomp $config;
 my $config_net;
 
-my $TOPDIR = "/var/tmp/" . $PACKAGE . "_topdir";
-chomp $TOPDIR;
+my $builddir = "/var/tmp/";
+chomp $builddir;
 
-rmtree ("$TOPDIR");
-mkpath([$TOPDIR . '/BUILD' ,$TOPDIR . '/RPMS',$TOPDIR . '/SOURCES',$TOPDIR . '/SPECS',$TOPDIR . '/SRPMS']);
 my $ofedlogs = "/tmp/$PACKAGE.$$.logs";
 mkpath([$ofedlogs]);
 
@@ -265,6 +263,7 @@ sub usage
    print "\n           -v|-vv|-vvv          Set verbosity level";
    print "\n           -q                   Set quiet - no messages will be printed";
    print "\n           --force              Force uninstall RPM coming with Distribution";
+   print "\n           --builddir           Change build directory. Default: $builddir";
    print "\n\n           --all|--hpc|--basic    Install all,hpc or basic packages correspondingly";
    print RESET "\n\n";
 }
@@ -1394,6 +1393,8 @@ while ( $#ARGV >= 0 ) {
         }
     } elsif ( $cmd_flag eq "--without-depcheck" ) {
         $check_linux_deps = 0;
+    } elsif ( $cmd_flag eq "--builddir" ) {
+        $builddir = shift(@ARGV);
     } elsif ( $cmd_flag eq "-q" ) {
         $quiet = 1;
     } elsif ( $cmd_flag eq "-v" ) {
@@ -1410,6 +1411,12 @@ while ( $#ARGV >= 0 ) {
         exit 1;
     }
 }
+
+my $TOPDIR = $builddir . '/' . $PACKAGE . "_topdir";
+chomp $TOPDIR;
+
+rmtree ("$TOPDIR");
+mkpath([$TOPDIR . '/BUILD' ,$TOPDIR . '/RPMS',$TOPDIR . '/SOURCES',$TOPDIR . '/SPECS',$TOPDIR . '/SRPMS']);
 
 if ($config_given and $install_option) {
     print RED "\nError: '-c' option can't be used with '--all|--hpc|--basic'", RESET "\n";
