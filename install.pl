@@ -252,7 +252,8 @@ sub usage
    print GREEN;
    print "\n Usage: $0 [-c <packages config_file>|--all|--hpc|--basic] [-n|--net <network config_file>]\n";
 
-   print "\n           -c|--config <packages config_file>. Example of the config file can be found under docs.";
+   print "\n           -c|--config <packages config_file>. Example of the config file can be found under docs (ofed.conf-example).";
+   print "\n           -n|--net <network config_file>      Example of the config file can be found under docs (ofed_net.conf-example).";
    print "\n           -l|--prefix          Set installation prefix.";
    print "\n           -p|--print-available Print available packages for current platform.";
    print "\n                                And create corresponding ofed.conf file.";
