@@ -1127,8 +1127,8 @@ my %packages_info = (
             { name => "openmpi", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
-            dist_req_inst => ["$libstdc"], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "mpi-selector"],
+            dist_req_inst => ["$libstdc"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
+            ofa_req_inst => ["libibverbs", "mpi-selector", "librdmacm"],
             install32 => 0, exception => 0, configure_options => '' },
         'openmpi_gcc' =>
             { name => "openmpi_gcc", parent => "openmpi",
