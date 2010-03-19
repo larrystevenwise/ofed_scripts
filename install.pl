@@ -432,7 +432,7 @@ my %kernel_modules_info = (
             { name => "srp", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
         'srpt' =>
-            { name => "srpt", available => 1, selected => 0,
+            { name => "srpt", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'rds' =>
             { name => "rds", available => 1, selected => 0,
@@ -1731,6 +1731,11 @@ sub set_availability
             $kernel_modules_info{'rds'}{'available'} = 0;
             $packages_info{'rds-tools'}{'available'} = 0;
             $packages_info{'rds-tools-debuginfo'}{'available'} = 0;
+    }
+
+    # SRP Target
+    if ($subdistro =~ /SLES10|SLES11|RHEL5.[34]/ or $kernel =~ m/2.6.2[7-9]|2.6.3[0-2]/) {
+            $kernel_modules_info{'srpt'}{'available'} = 1;
     }
 
     # mvapich, mvapich2 and openmpi
