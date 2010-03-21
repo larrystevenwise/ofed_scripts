@@ -319,7 +319,8 @@ my @prev_ofed_packages = (
 my @suse_ofed_packages = (
                         "libamso", "libamso-devel", "dapl2", "dapl2-devel", "mvapich", "mvapich2", "mvapich2-devel",
                         "mvapich-devel", "libboost_mpi1_36_0", "boost-devel", "boost-doc", "libmthca-rdmav2", "libcxgb3-rdmav2",
-                        "libmlx4-rdmav2", "libibmad1", "libibumad1", "libibcommon1", "ofed"
+                        "libmlx4-rdmav2", "libibmad1", "libibumad1", "libibcommon1", "ofed",
+                        "scsi-target-utils", "rdma-ofa-agent"
                         );
 
 my @mlnx_en_packages = (
@@ -4010,6 +4011,7 @@ sub uninstall
                     system("echo rpm -e --allmatches $suse_rpms >> $ofedlogs/dist_rpms_uninstall.log 2>&1");
                     print RED "See $ofedlogs/dist_rpms_uninstall.log", RESET "\n";
                     print RED "Edit /etc/sysconfig/services, set DISABLE_STOP_ON_REMOVAL=\"yes\"", RESET "\n";
+                    print RED "Some RPMs may depend on the RPMs above. Please uninstall them manually.", RESET "\n";
                     exit 1;
                 }
             } else {
@@ -4018,6 +4020,7 @@ sub uninstall
                 print RED "rpm -e $suse_rpms", RESET "\n";
                 print RED "\nIf this command fails to uninstall ofed or opensm RPMs, then", RESET "\n";
                 print RED "edit /etc/sysconfig/services, set DISABLE_STOP_ON_REMOVAL=\"yes\"", RESET "\n";
+                print RED "Some RPMs may depend on the RPMs above. Please uninstall them manually.", RESET "\n";
                 exit 1;
             }
         }
