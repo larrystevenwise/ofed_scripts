@@ -316,7 +316,7 @@ my @prev_ofed_packages = (
                         );
 
 
-my @suse_ofed_packages = (
+my @distro_ofed_packages = (
                         "libamso", "libamso-devel", "dapl2", "dapl2-devel", "mvapich", "mvapich2", "mvapich2-devel",
                         "mvapich-devel", "libboost_mpi1_36_0", "boost-devel", "boost-doc", "libmthca-rdmav2", "libcxgb3-rdmav2",
                         "libmlx4-rdmav2", "libibmad1", "libibumad1", "libibcommon1", "ofed",
@@ -3958,57 +3958,57 @@ sub uninstall
     }
 
     if ($distro eq "SuSE") {
-        my $suse_cnt = 0;
-        my $suse_rpms;
-        if (open (SUSE_RPMS, 'rpm -qa ofed-kmp* |')) {
-            while(<SUSE_RPMS>) {
+        my $distro_cnt = 0;
+        my $distro_rpms;
+        if (open (DISTRO_RPMS, 'rpm -qa ofed-kmp* |')) {
+            while(<DISTRO_RPMS>) {
                 chomp $_;
-                $suse_rpms .= " $_";
-                $suse_cnt ++;
+                $distro_rpms .= " $_";
+                $distro_cnt ++;
             }
-            close SUSE_RPMS;
+            close DISTRO_RPMS;
         }
-        for my $package (@suse_ofed_packages) {
+        for my $package (@distro_ofed_packages) {
             if (is_installed("$package")) {
-                $suse_rpms .= " $package";
-                $suse_cnt ++;
+                $distro_rpms .= " $package";
+                $distro_cnt ++;
             }
             if ($suffix_32bit and is_installed("$package$suffix_32bit")) {
-                $suse_rpms .= " $package$suffix_32bit";
-                $suse_cnt ++;
+                $distro_rpms .= " $package$suffix_32bit";
+                $distro_cnt ++;
             }
             if ($suffix_64bit and is_installed("$package$suffix_64bit")) {
-                $suse_rpms .= " $package$suffix_64bit";
-                $suse_cnt ++;
+                $distro_rpms .= " $package$suffix_64bit";
+                $distro_cnt ++;
             }
         }
-        if ($suse_cnt) {
+        if ($distro_cnt) {
             # Get the list of other RPMs coming with distribution
             my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep ofed | grep -v kmp`;
             for my $package (@all_packages, @hidden_packages, @prev_ofed_packages, @other_ofed_rpms) {
                 chomp $package;
                 next if ($package eq "mpi-selector");
                 if (is_installed($package)) {
-                    $suse_rpms .= " $package";
+                    $distro_rpms .= " $package";
                 }
                 if (is_installed("$package-static")) {
-                    $suse_rpms .= " $package-static";
+                    $distro_rpms .= " $package-static";
                 }
                 if ($suffix_32bit and is_installed("$package$suffix_32bit")) {
-                    $suse_rpms .= " $package$suffix_32bit";
+                    $distro_rpms .= " $package$suffix_32bit";
                 }
                 if ($suffix_64bit and is_installed("$package$suffix_64bit")) {
-                    $suse_rpms .= " $package$suffix_64bit";
+                    $distro_rpms .= " $package$suffix_64bit";
                 }
             }
             if ($force) {
                 print BLUE "Uninstalling OFED RPMs coming from the Distribution", RESET "\n" if (not $quiet);
-                system("rpm -e --allmatches $suse_rpms >> $ofedlogs/dist_rpms_uninstall.log 2>&1");
+                system("rpm -e --allmatches $distro_rpms >> $ofedlogs/dist_rpms_uninstall.log 2>&1");
                 $res = $? >> 8;
                 $sig = $? & 127;
                 if ($sig or $res) {
                     print RED "Failed to uninstall RPMs coming from the Distribution", RESET "\n";
-                    system("echo rpm -e --allmatches $suse_rpms >> $ofedlogs/dist_rpms_uninstall.log 2>&1");
+                    system("echo rpm -e --allmatches $distro_rpms >> $ofedlogs/dist_rpms_uninstall.log 2>&1");
                     print RED "See $ofedlogs/dist_rpms_uninstall.log", RESET "\n";
                     print RED "Edit /etc/sysconfig/services, set DISABLE_STOP_ON_REMOVAL=\"yes\"", RESET "\n";
                     print RED "Some RPMs may depend on the RPMs above. Please uninstall them manually.", RESET "\n";
@@ -4017,7 +4017,7 @@ sub uninstall
             } else {
                 print RED "Please remove OFED RPMs coming from the Distribution.", RESET "\n";
                 print RED "Run:", RESET "\n";
-                print RED "rpm -e $suse_rpms", RESET "\n";
+                print RED "rpm -e $distro_rpms", RESET "\n";
                 print RED "\nIf this command fails to uninstall ofed or opensm RPMs, then", RESET "\n";
                 print RED "edit /etc/sysconfig/services, set DISABLE_STOP_ON_REMOVAL=\"yes\"", RESET "\n";
                 print RED "Some RPMs may depend on the RPMs above. Please uninstall them manually.", RESET "\n";
