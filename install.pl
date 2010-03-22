@@ -167,6 +167,16 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
     $subdistro = "SLES11";
 } elsif ($dist_rpm =~ /sles-release-10/) {
     $subdistro = "SLES10";
+} elsif ($dist_rpm =~ /redhat-release-5Server-5.4|centos-release-5-4/) {
+    $subdistro = "RHEL5.4";
+} elsif ($dist_rpm =~ /redhat-release-5Server-5.3|centos-release-5-3/) {
+    $subdistro = "RHEL5.3";
+} elsif ($dist_rpm =~ /redhat-release-4AS-9/) {
+    $subdistro = "RHEL4.8";
+} elsif ($dist_rpm =~ /redhat-release-4AS-8/) {
+    $subdistro = "RHEL4.7";
+} elsif ($dist_rpm =~ /fedora-release-12/) {
+    $subdistro = "FC12";
 }
 
 my $WDIR    = dirname($0);
@@ -1258,7 +1268,7 @@ my %packages_info = (
         'open-iscsi-generic' =>
             { name => ($distro eq 'SuSE') ? 'open-iscsi': 'iscsi-initiator-utils', parent => "open-iscsi-generic",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => [($subdistro eq 'FC12') ? "glibc-static" : ""],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 1, configure_options => '' },
@@ -2480,6 +2490,7 @@ sub select_dependent
     if ( (not $packages_info{$package}{'rpm_exist'}) or
          ($build32 and not $packages_info{$package}{'rpm_exist32'}) ) {
         for my $req ( @{ $packages_info{$package}{'ofa_req_build'} } ) {
+            next if not $req;
             print "resolve_dependencies: $package requires $req for rpmbuild\n" if ($verbose2);
             if (not $packages_info{$req}{'selected'}) {
                 select_dependent($req);
@@ -2488,6 +2499,7 @@ sub select_dependent
     }
 
     for my $req ( @{ $packages_info{$package}{'ofa_req_inst'} } ) {
+        next if not $req;
         print "resolve_dependencies: $package requires $req for rpm install\n" if ($verbose2);
         if (not $packages_info{$req}{'selected'}) {
             select_dependent($req);
@@ -2597,6 +2609,7 @@ sub check_linux_dependencies
         if (not $packages_info{$package}{'rpm_exist'}) {
             for my $req ( @{ $packages_info{$package}{'dist_req_build'} } ) {
                 my ($req_name, $req_version) = (split ('_',$req));
+                next if not $req_name;
                 print BLUE "check_linux_dependencies: $req_name rpm is required to build $package", RESET "\n" if ($verbose3);
                 if (not is_installed($req_name)) {
                     print RED "$req_name rpm is required to build $package", RESET "\n";
@@ -2715,6 +2728,7 @@ sub check_linux_dependencies
         # Check installation requirements
         for my $req ( @{ $packages_info{$package}{'dist_req_inst'} } ) {
             my ($req_name, $req_version) = (split ('_',$req));
+            next if not $req_name;
             if (not is_installed($req_name)) {
                 print RED "$req_name rpm is required to install $package", RESET "\n";
                 $err++;
