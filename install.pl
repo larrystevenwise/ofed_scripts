@@ -4400,8 +4400,8 @@ sub main
         # Decrease send/receive queue sizes on 32-bit arcitecture
         # BUG: https://bugs.openfabrics.org/show_bug.cgi?id=1420
         if ($arch =~ /i[3-6]86/) {
-            if (-f "/etc/modprobe.conf") {
-                open(MODPROBE_CONF, ">>/etc/modprobe.conf");
+            if (-f "/etc/modprobe.d/ib_ipoib.conf") {
+                open(MODPROBE_CONF, ">>/etc/modprobe.d/ib_ipoib.conf");
                 print MODPROBE_CONF "options ib_ipoib send_queue_size=64 recv_queue_size=128\n";
                 close MODPROBE_CONF;
             }
