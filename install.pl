@@ -322,7 +322,8 @@ my @prev_ofed_packages = (
                         "openib-diags", "openib-mstflint", "openib-perftest", "openib-srptools", "openib-tvflash",
                         "openmpi", "openmpi-devel", "openmpi-libs",
                         "ibutils", "ibutils-devel", "ibutils-libs",
-                        "libnes", "libnes-devel"
+                        "libnes", "libnes-devel",
+                        "infinipath-psm", "infinipath-psm-devel"
                         );
 
 
@@ -387,7 +388,8 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "perftest", "mstflint",
                      "qlvnictools", "sdpnetstat", "srptools", "rds-tools", "rnfs-utils",
                      "ibutils", "infiniband-diags", "qperf", "qperf-debuginfo",
-                     "ofed-docs", "ofed-scripts", "tgt-generic", @mpi_packages
+                     "ofed-docs", "ofed-scripts", "tgt-generic", @mpi_packages,
+                     "infinipath-psm", "infinipath-psm-devel"
                      );
 
 my @basic_kernel_packages = ("kernel-ib");
@@ -1331,6 +1333,18 @@ my %packages_info = (
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
+        'infinipath-psm' =>
+            { name => "infinipath-psm", parent=> "infinipath-psm",
+             selected => 0, installed => 0, rpm_exits => 0, rpm_exists32 => 0,
+             available => 1, mode => "user", dist_req_build => [],
+             dist_req_inst => [], ofa_req_build => [],
+             ofa_req_inst => [], install32 => 0, exception => 0 },
+        'infinipath-psm-devel' =>
+            { name => "infinipath-psm-devel", parent=> "infinipath-psm",
+             selected => 0, installed => 0, rpm_exits => 0, rpm_exists32 => 0,
+             available => 1, mode => "user", dist_req_build => [],
+             dist_req_inst => [], ofa_req_build => [],
+             ofa_req_inst => ["infinipath-psm"], install32 => 0, exception => 0 },
         );
 
 
@@ -1695,6 +1709,8 @@ sub set_availability
             $packages_info{'libipathverbs'}{'available'} = 1;
             $packages_info{'libipathverbs-devel'}{'available'} = 1;
             $packages_info{'libipathverbs-debuginfo'}{'available'} = 1;
+            $packages_info{'InfiniPath-PSM'}{'available'} = 1;
+            $packages_info{'InfiniPath-PSM-devel'}{'available'} = 1;
     }
 
     # Iser

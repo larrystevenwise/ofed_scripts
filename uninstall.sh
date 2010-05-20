@@ -92,6 +92,7 @@ IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibsim ibsim-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibutils ibutils-debuginfo ibutils-libs ibutils-devel infiniband-diags infiniband-diags-debuginfo qperf qperf-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES openib-mstflint openib-tvflash openib-srptools openib-perftest"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES ofed-docs ofed-scripts"
+IB_ALL_PACKAGES="$IB_ALL_PACKAGES infinipath-psm infinipath-psm-devel"
 
 ALL_PACKAGES="$IB_ALL_PACKAGES mvapich mvapich2 openmpi openmpi-libs openmpi-devel mpitests mft"
 
