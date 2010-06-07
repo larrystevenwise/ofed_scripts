@@ -1718,7 +1718,9 @@ sub set_availability
     # if ($kernel =~ m/2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
     if ($kernel =~ m/2.6.3[0-2]|2.6.18-164/) {
             $kernel_modules_info{'iser'}{'available'} = 1;
-            $packages_info{'open-iscsi-generic'}{'available'} = 1;
+            if ($kernel !~ /el6/) {
+                $packages_info{'open-iscsi-generic'}{'available'} = 1;
+            }
     }
 
     # tgt
