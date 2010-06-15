@@ -3481,7 +3481,7 @@ sub install_rpm_32
     }
 
     $cmd = "rpm -iv $rpminstall_flags";
-    if ($distro eq "SuSE" and $dist_rpm_rel gt 15.2) {
+    if ($distro eq "SuSE") {
         $cmd .= " --force";
     }
     $cmd .= " $package";
