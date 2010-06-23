@@ -318,7 +318,7 @@ my @prev_ofed_packages = (
                         "libibverbs", "libibverbs-devel", "libibverbs-utils",
                         "libipathverbs", "libipathverbs-devel", "libmthca",
                         "libmthca-devel", "libmlx4", "libmlx4-devel",
-                        "libsdp", "librdmacm", "librdmacm-devel", "librdmacm-utils",
+                        "libsdp", "librdmacm", "librdmacm-devel", "librdmacm-utils", "ibacm",
                         "openib-diags", "openib-mstflint", "openib-perftest", "openib-srptools", "openib-tvflash",
                         "openmpi", "openmpi-devel", "openmpi-libs",
                         "ibutils", "ibutils-devel", "ibutils-libs",
@@ -379,7 +379,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "libibcm", "libibcm-devel", "libibcm-debuginfo",
                      "libibumad", "libibumad-devel", "libibumad-static", "libibumad-debuginfo",
                      "libibmad", "libibmad-devel", "libibmad-static", "libibmad-debuginfo",
-                     "ibsim", "ibsim-debuginfo",
+                     "ibsim", "ibsim-debuginfo", "ibacm",
                      "librdmacm", "librdmacm-utils", "librdmacm-devel", "librdmacm-debuginfo",
                      "libsdp", "libsdp-devel", "libsdp-debuginfo",
                      "opensm", "opensm-libs", "opensm-devel", "opensm-debuginfo", "opensm-static",
@@ -790,7 +790,14 @@ my %packages_info = (
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
 
-        'librdmacm' =>
+        'ibacm' =>
+            { name => "ibacm", parent => "ibacm",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
+            ofa_req_inst => ["libibverbs"],
+            install32 => 0, exception => 0, configure_options => '' },
+       'librdmacm' =>
             { name => "librdmacm", parent => "librdmacm",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
@@ -3094,6 +3101,11 @@ sub build_rpm
             $cmd .= " --define '_usr $prefix'";
             $cmd .= " --define 'build_ibmgtsim 1'";
             $cmd .= " --define '__arch_install_post %{nil}'";
+        }
+        elsif ( $parent eq "librdmacm") {
+            if ( $packages_info{'ibacm'}{'selected'}) {
+                $packages_info{'librdmacm'}{'configure_options'} .= " --with-ib_acm";
+            }
         }
         elsif ( $parent eq "mvapich") {
             my $compiler = (split('_', $name))[1];
