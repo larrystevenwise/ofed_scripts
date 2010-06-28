@@ -3102,11 +3102,6 @@ sub build_rpm
             $cmd .= " --define 'build_ibmgtsim 1'";
             $cmd .= " --define '__arch_install_post %{nil}'";
         }
-        elsif ( $parent eq "librdmacm") {
-            if ( $packages_info{'ibacm'}{'selected'}) {
-                $packages_info{'librdmacm'}{'configure_options'} .= " --with-ib_acm";
-            }
-        }
         elsif ( $parent eq "mvapich") {
             my $compiler = (split('_', $name))[1];
             $cmd .= " --define '_name $name'";
@@ -3394,6 +3389,12 @@ sub build_rpm
             $cmd .= " --define '_exec_prefix $prefix'";
             $cmd .= " --define '_sysconfdir $sysconfdir'";
             $cmd .= " --define '_usr $prefix'";
+        }
+
+        if ($parent eq "librdmacm") {
+            if ( $packages_info{'ibacm'}{'selected'}) {
+                $packages_info{'librdmacm'}{'configure_options'} .= " --with-ib_acm";
+            }
         }
 
         if ($packages_info{$parent}{'configure_options'} or $user_configure_options) {
