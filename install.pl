@@ -452,7 +452,7 @@ my %kernel_modules_info = (
             included_in_rpm => 0, requires => ["core", "ipoib"], },
         'iser' =>
             { name => "iser", available => 0, selected => 0,
-            included_in_rpm => 0, requires => ["core", "ipoib"], ofa_req_inst => ["open-iscsi-generic"] },
+            included_in_rpm => 0, requires => ["core", "ipoib"], ofa_req_inst => [] },
         'qlgc_vnic' =>
             { name => "qlgc_vnic", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
@@ -1725,9 +1725,6 @@ sub set_availability
     # if ($kernel =~ m/2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
     if ($kernel =~ m/2.6.3[0-2]|2.6.18-164/) {
             $kernel_modules_info{'iser'}{'available'} = 1;
-            if ($kernel !~ /el6/) {
-                $packages_info{'open-iscsi-generic'}{'available'} = 1;
-            }
     }
 
     # tgt
@@ -2456,14 +2453,6 @@ sub select_packages
             }
         }
 
-        # Check open-iscsi package if iser module selected for installation
-        my $tmp = "@selected_modules_by_user";
-        $tmp =~ s/ /|/g;
-        chomp $tmp;
-        if ("iser" =~ m/$tmp/) {
-            check_open_iscsi();
-            push (@selected_by_user, "open-iscsi-generic");
-        }
         flock CONFIG, $UNLOCK;
     }
     close(CONFIG);
