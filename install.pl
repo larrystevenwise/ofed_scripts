@@ -386,7 +386,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "compat-dapl", "compat-dapl-devel",
                      "dapl", "dapl-devel", "dapl-devel-static", "dapl-utils", "dapl-debuginfo",
                      "perftest", "mstflint",
-                     "qlvnictools", "sdpnetstat", "srptools", "rds-tools", "rnfs-utils",
+                     "qlvnictools", "sdpnetstat", "srptools", "rds-tools", "rds-devel", "rnfs-utils",
                      "ibutils", "infiniband-diags", "qperf", "qperf-debuginfo",
                      "ofed-docs", "ofed-scripts", "tgt-generic", @mpi_packages,
                      "infinipath-psm", "infinipath-psm-devel"
@@ -959,6 +959,13 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
+            install32 => 0, exception => 0, configure_options => '' },
+        'rds-devel' =>
+            { name => "rds-devel", parent => "rds-tools",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => ["rds-tools"],
             install32 => 0, exception => 0, configure_options => '' },
         'rds-tools-debuginfo' =>
             { name => "rds-tools-debuginfo", parent => "rds-tools",
@@ -1764,6 +1771,7 @@ sub set_availability
     if ($kernel =~ m/2.6.9/) {
             $kernel_modules_info{'rds'}{'available'} = 0;
             $packages_info{'rds-tools'}{'available'} = 0;
+            $packages_info{'rds-devel'}{'available'} = 0;
             $packages_info{'rds-tools-debuginfo'}{'available'} = 0;
     }
 
