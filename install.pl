@@ -797,7 +797,7 @@ my %packages_info = (
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "libibumad-devel"],
             ofa_req_inst => ["libibverbs", "libibumad"],
             install32 => 0, exception => 0, configure_options => '' },
-       'librdmacm' =>
+        'librdmacm' =>
             { name => "librdmacm", parent => "librdmacm",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
@@ -1760,7 +1760,7 @@ sub set_availability
 
     # NFSRDMA
     if (($distro eq "redhat5" or $subdistro eq "SLES11") and
-	 $kernel =~ m/2.6.2[25]|2.6.27.*-*|2.6.30|el5/) {
+	    $kernel =~ m/2.6.2[25]|2.6.27.*-*|2.6.30|el5/) {
             $kernel_modules_info{'nfsrdma'}{'available'} = 1;
             $packages_info{'rnfs-utils'}{'available'} = 1;
             $packages_info{'rnfs-utils-debuginfo'}{'available'} = 1;
@@ -3624,7 +3624,7 @@ sub count_ports
         elsif (/15b3:5a44|15b3:6278/) {
             $cnt += 2;  # InfiniHost mode
         }
-        elsif (/15b3:6340|15b3:634a|15b3:6354|15b3:6732|15b3:673c/) {
+        elsif (/15b3:6340|15b3:634a|15b3:6354|15b3:6732|15b3:673c|15b3:6746|15b3:6750/) {
             $cnt += 2;  # ConnectX
         }
     }
