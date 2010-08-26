@@ -63,6 +63,7 @@ my $print_available = 0;
 
 my $clear_string = `clear`;
 my $upgrade_open_iscsi = 0;
+my $skip_open_iscsi = 0;
 my $bonding_force_all_os = 0;
 
 my $vendor_pre_install = "";
@@ -2182,7 +2183,7 @@ sub select_packages
                                     push (@selected_modules_by_user, $module);
                                     print CONFIG "$module=y\n";
                                     check_open_iscsi();
-                                    push (@selected_by_user, "open-iscsi-generic");
+                                    push (@selected_by_user, "open-iscsi-generic") if (not $skip_open_iscsi);
                                     if ($upgrade_open_iscsi) {
                                         print CONFIG "upgrade_open_iscsi=yes\n";
                                     }
@@ -2820,15 +2821,13 @@ sub check_open_iscsi
     if (is_installed($oiscsi_name)) {
         my $vendor = `rpm --queryformat "[%{VENDOR}]" -q $oiscsi_name`;
         print "open-iscsi name $oiscsi_name vendor: $vendor\n" if ($verbose3);
+        # Do not upgrade open-iscsi coming with Distribution
         if ($vendor !~ m/Voltaire/) {
-            if ($interactive) {
-                print BLUE "In order to install iSER $oiscsi_name package should be upgraded.\n";
-                print BLUE "Do you want to upgrade $oiscsi_name? [y/N]: ", RESET;
-                my $ans = getch();
-                if ( $ans eq 'Y' or $ans eq 'y' ) {
-                    $upgrade_open_iscsi = 1;
-                }
-            }
+            print "$oiscsi_name will not be reinstalled\n" if ($verbose3);
+            $upgrade_open_iscsi = 0;
+            $skip_open_iscsi = 1;
+        } else {
+            $upgrade_open_iscsi = 1;
         }
     }
 }
@@ -3518,16 +3517,21 @@ sub install_rpm
     my $package;
 
     if ($name eq $packages_info{'open-iscsi-generic'}{'name'}) {
-        if (is_installed($packages_info{'open-iscsi-generic'}{'name'}) ) {
-            $cmd = "rpm -e $packages_info{'open-iscsi-generic'}{'name'}";
-            print "Running $cmd\n" if ($verbose);
-            system("$cmd > $ofedlogs/$name.rpmuninstall.log 2>&1");
-            $res = $? >> 8;
-            $sig = $? & 127;
-            if ($sig or $res) {
-                print RED "Failed to uninstall $packages_info{'open-iscsi-generic'}{'name'} RPM", RESET "\n";
-                print RED "See $ofedlogs/$name.rpmuninstall.log", RESET "\n";
-                exit 1;
+        if (is_installed($packages_info{'open-iscsi-generic'}{'name'})) {
+            if ($upgrade_open_iscsi) {
+                $cmd = "rpm -e $packages_info{'open-iscsi-generic'}{'name'}";
+                print "Running $cmd\n" if ($verbose);
+                system("$cmd > $ofedlogs/$name.rpmuninstall.log 2>&1");
+                $res = $? >> 8;
+                $sig = $? & 127;
+                if ($sig or $res) {
+                    print RED "Failed to uninstall $packages_info{'open-iscsi-generic'}{'name'} RPM", RESET "\n";
+                    print RED "See $ofedlogs/$name.rpmuninstall.log", RESET "\n";
+                    exit 1;
+                }
+            }
+            else {
+                return;
             }
         }
     }
