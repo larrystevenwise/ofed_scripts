@@ -1536,6 +1536,9 @@ $kernel_rel =~ s/-/_/g;
 
 if ($distro eq "debian") {
     $check_linux_deps = 0;
+}
+
+if (not $check_linux_deps) {
     $rpmbuild_flags .= ' --nodeps';
     $rpminstall_flags .= ' --nodeps';
 }
