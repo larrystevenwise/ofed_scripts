@@ -389,8 +389,8 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "perftest", "mstflint",
                      "qlvnictools", "sdpnetstat", "srptools", "rds-tools", "rds-devel", "rnfs-utils",
                      "ibutils", "infiniband-diags", "qperf", "qperf-debuginfo",
-                     "ofed-docs", "ofed-scripts", "tgt-generic", @mpi_packages,
-                     "infinipath-psm", "infinipath-psm-devel"
+                     "ofed-docs", "ofed-scripts", "tgt-generic",
+                     "infinipath-psm", "infinipath-psm-devel", @mpi_packages
                      );
 
 my @basic_kernel_packages = ("kernel-ib");
