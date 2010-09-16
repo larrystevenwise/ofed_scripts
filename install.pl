@@ -285,7 +285,7 @@ my $sysfsutils_devel;
 
 if ($distro eq "SuSE" or $distro eq "redhat" or $distro eq "fedora" or $distro eq "Rocks") {
     $sysfsutils = "sysfsutils";
-    if ($subdistro eq "SLES11") {
+    if ($distro eq "SuSE") {
         $sysfsutils_devel = "sysfsutils";
     }
     else {
