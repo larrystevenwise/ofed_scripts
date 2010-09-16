@@ -2598,6 +2598,7 @@ sub check_linux_dependencies
 {
     my $err = 0;
     my $p1 = 0;
+    my $gcc_32bit_printed = 0;
     if (! $check_linux_deps) {
         return 0;
     }
@@ -2662,6 +2663,15 @@ sub check_linux_dependencies
                         print RED "glibc-devel 32bit is required to build 32-bit libraries.", RESET "\n";
                         $p1 = 1;
                         $err++;
+                    }
+                }
+                if ($subdistro eq "SLES11") {
+                    if (not is_installed("gcc-32bit")) {
+                        if (not $gcc_32bit_printed) {
+                            print RED "gcc 32bit is required to build 32-bit libraries.", RESET "\n";
+                            $gcc_32bit_printed++;
+                            $err++;
+                        }
                     }
                 }
                 if ($arch eq "ppc64") {
