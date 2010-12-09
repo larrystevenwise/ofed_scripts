@@ -168,6 +168,8 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
     $subdistro = "SLES11";
 } elsif ($dist_rpm =~ /sles-release-10/) {
     $subdistro = "SLES10";
+} elsif ($dist_rpm =~ /redhat-release-server-6Server/) {
+    $subdistro = "RHEL6.0";
 } elsif ($dist_rpm =~ /redhat-release-5Server-5.4|centos-release-5-4/) {
     $subdistro = "RHEL5.4";
 } elsif ($dist_rpm =~ /redhat-release-5Server-5.3|centos-release-5-3/) {
@@ -295,6 +297,11 @@ if ($distro eq "SuSE" or $distro eq "redhat" or $distro eq "fedora" or $distro e
 else {
     $sysfsutils = "libsysfs";
     $sysfsutils_devel = "libsysfs-devel";
+}
+
+if ($subdistro eq "RHEL6.0") {
+    $sysfsutils = "libsysfs";
+    $sysfsutils_devel = "libsysfs";
 }
 
 my $network_dir;
