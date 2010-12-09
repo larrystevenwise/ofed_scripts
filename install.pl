@@ -113,6 +113,9 @@ elsif ( -f "/etc/redhat-release" ) {
     if ($kernel =~ m/el5/) {
         $distro = "redhat5";
     }
+    elsif ($kernel =~ m/el6/) {
+        $distro = "redhat6";
+    }
     else {
         open(DISTRO, "/etc/redhat-release");
         if (<DISTRO> =~ m/release\s5/) {
@@ -151,6 +154,8 @@ if (-f "/etc/issue") {
     else {
         $dist_rpm = `rpm -qf /etc/issue | head -1`;
         chomp $dist_rpm;
+        $dist_rpm = `rpm -q --queryformat "[%{NAME}]-[%{VERSION}]-[%{RELEASE}]" $dist_rpm`;
+        chomp $dist_rpm;
         $dist_rpm_ver = get_rpm_ver_inst($dist_rpm);
         $dist_rpm_rel = get_rpm_rel_inst($dist_rpm);
     }
@@ -168,8 +173,10 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
     $subdistro = "SLES11";
 } elsif ($dist_rpm =~ /sles-release-10/) {
     $subdistro = "SLES10";
-} elsif ($dist_rpm =~ /redhat-release-server-6Server/) {
+} elsif ($dist_rpm =~ /redhat-release-server-6|centos-release-6/) {
     $subdistro = "RHEL6.0";
+} elsif ($dist_rpm =~ /redhat-release-5Server-5.5|centos-release-5-5/) {
+    $subdistro = "RHEL5.5";
 } elsif ($dist_rpm =~ /redhat-release-5Server-5.4|centos-release-5-4/) {
     $subdistro = "RHEL5.4";
 } elsif ($dist_rpm =~ /redhat-release-5Server-5.3|centos-release-5-3/) {
@@ -244,12 +251,15 @@ my $open_iscsi_ver_rh4 = '2.0-754.1';
 my $open_iscsi_ver_non_rh4 = '2.0-869.2';
 
 my $libstdc;
+my $libgfortran;
 if ($subdistro eq "openSUSE11.2") {
     $libstdc = 'libstdc++44';
+    $libgfortran = 'libgfortran44';
 } elsif ($subdistro eq "openSUSE") {
     $libstdc = 'libstdc++42';
 } elsif ($subdistro eq "SLES11") {
     $libstdc = 'libstdc++43';
+    $libgfortran = 'libgfortran43';
 } else {
     $libstdc = 'libstdc++';
 }
@@ -1101,7 +1111,7 @@ my %packages_info = (
         'mvapich_gcc' =>
             { name => "mvapich_gcc", parent => "mvapich",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
+            available => 0, mode => "user", dist_req_build => ["$libgfortran","$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
             ofa_req_inst => ["mpi-selector", "libibverbs", "libibumad"],
             install32 => 0, exception => 0 },
@@ -1137,7 +1147,7 @@ my %packages_info = (
         'mvapich2_gcc' =>
             { name => "mvapich2_gcc", parent => "mvapich2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [$sysfsutils_devel, "$libstdc_devel"],
+            available => 0, mode => "user", dist_req_build => ["$libgfortran","$sysfsutils_devel", "$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel", "librdmacm-devel"],
             ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
             install32 => 0, exception => 0 },
@@ -1173,7 +1183,7 @@ my %packages_info = (
         'openmpi_gcc' =>
             { name => "openmpi_gcc", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
+            available => 0, mode => "user", dist_req_build => ["$libgfortran","$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
             ofa_req_inst => ["libibverbs", "mpi-selector"],
             install32 => 0, exception => 0 },
@@ -2992,6 +3002,10 @@ sub build_rpm_32
         $cmd .= " --define '_sysconfdir $sysconfdir'";
         $cmd .= " --define '_defaultdocdir $def_doc_dir/$main_packages{$parent}{'name'}-$main_packages{$parent}{'version'}'";
         $cmd .= " --define '_usr $prefix'";
+    }
+
+    if ($distro eq "SuSE") {
+        $cmd .= " --define '_suse_os_install_post %{nil}'";
     }
 
     $cmd .= " $main_packages{$parent}{'srpmpath'}";
