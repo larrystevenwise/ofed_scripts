@@ -1725,6 +1725,24 @@ sub set_availability
 {
     set_compilers();
 
+    # XEN kernel
+    if ($kernel =~ m/2.6.18.8-xen*/) {
+            $kernel_modules_info{'qib'}{'available'} = 0;
+            $packages_info{'libipathverbs'}{'available'} = 0;
+            $packages_info{'libipathverbs-devel'}{'available'} = 0;
+            $packages_info{'libipathverbs-debuginfo'}{'available'} = 0;
+
+            $kernel_modules_info{'cxgb3'}{'available'} = 0;
+            $packages_info{'libcxgb3'}{'available'} = 0;
+            $packages_info{'libcxgb3-devel'}{'available'} = 0;
+            $packages_info{'libcxgb3-debuginfo'}{'available'} = 0;
+
+            $kernel_modules_info{'nes'}{'available'} = 0;
+            $packages_info{'libnes'}{'available'} = 0;
+            $packages_info{'libnes-devel-static'}{'available'} = 0;
+            $packages_info{'libnes-debuginfo'}{'available'} = 0;
+    }
+
     if ($arch =~ m/ia64/) {
             $kernel_modules_info{'mlx4_en'}{'available'} = 0;
     }
