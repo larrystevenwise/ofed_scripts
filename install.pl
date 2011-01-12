@@ -3397,6 +3397,7 @@ sub build_rpm
             $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
             $cmd .= " --define '_defaultdocdir $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
             $cmd .= " --define '_mandir %{_prefix}/share/man'";
+            $cmd .= " --define '_datadir %{_prefix}/share'";
             $cmd .= " --define 'mflags -j 4'";
             $cmd .= " --define 'configure_options $packages_info{'openmpi'}{'configure_options'} $openmpi_ldflags --with-openib=$prefix --with-openib-libdir=$prefix/$openmpi_lib $openmpi_comp_env --with-contrib-vt-flags=--disable-iotrace'";
             $cmd .= " --define 'use_default_rpm_opt_flags $use_default_rpm_opt_flags'";
