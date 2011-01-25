@@ -707,7 +707,7 @@ my %packages_info = (
         'libibumad' =>
             { name => "libibumad", parent => "libibumad",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => ["libtool"],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 1, exception => 0, configure_options => '' },
@@ -736,7 +736,7 @@ my %packages_info = (
         'libibmad' =>
             { name => "libibmad", parent => "libibmad",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => ["libtool"],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
             ofa_req_inst => ["libibumad"],
             install32 => 1, exception => 0, configure_options => '' },
