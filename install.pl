@@ -72,7 +72,7 @@ my $vendor_pre_uninstall = "";
 my $vendor_post_uninstall = "";
 
 my $distro;
-my $subdistro = "";
+my $DISTRO = "";
 my $rpmbuild_flags = "";
 my $rpminstall_flags = "";
 
@@ -90,49 +90,6 @@ my $PACKAGE     = 'OFED';
 my $dist_rpm;
 my $dist_rpm_ver = 0;
 my $dist_rpm_rel = 0;
-
-# Set Linux Distribution
-if ( -f "/etc/SuSE-release" ) {
-    $distro = "SuSE";
-}
-elsif ( -f "/etc/fedora-release" ) {
-    if ($kernel =~ m/fc6/) {
-            $distro = "fedora6";
-    }
-    elsif ($kernel =~ m/fc9/) {
-            $distro = "fedora9";
-    }
-    else {
-            $distro = "fedora";
-    }
-}
-elsif ( -f "/etc/rocks-release" ) {
-    $distro = "Rocks";
-}
-elsif ( -f "/etc/redhat-release" ) {
-    if ($kernel =~ m/el5/) {
-        $distro = "redhat5";
-    }
-    elsif ($kernel =~ m/el6/) {
-        $distro = "redhat6";
-    }
-    else {
-        open(DISTRO, "/etc/redhat-release");
-        if (<DISTRO> =~ m/release\s5/) {
-            $distro = "redhat5";
-        }
-        else {
-            $distro = "redhat";
-        }
-        close DISTRO;
-    }
-}
-elsif ( -f "/etc/debian_version" ) {
-    $distro = "debian";
-}
-else {
-    $distro = "unsupported";
-}
 
 if (-f "/etc/issue") {
     if (-f "/usr/bin/dpkg") {
@@ -166,28 +123,35 @@ else {
 chomp $dist_rpm;
 
 if ($dist_rpm =~ /openSUSE-release-11.2/) {
-    $subdistro = "openSUSE11.2";
+    $DISTRO = "openSUSE11.2";
 } elsif ($dist_rpm =~ /openSUSE/) {
-    $subdistro = "openSUSE";
+    $DISTRO = "openSUSE";
 } elsif ($dist_rpm =~ /sles-release-11/) {
-    $subdistro = "SLES11";
+    $DISTRO = "SLES11";
 } elsif ($dist_rpm =~ /sles-release-10/) {
-    $subdistro = "SLES10";
+    $DISTRO = "SLES10";
 } elsif ($dist_rpm =~ /redhat-release-server-6|centos-release-6/) {
-    $subdistro = "RHEL6.0";
-} elsif ($dist_rpm =~ /redhat-release-5Server-5.5|centos-release-5-5/) {
-    $subdistro = "RHEL5.5";
+    $DISTRO = "RHEL6.0";
+} elsif ($dist_rpm =~ /redhat-release-5Server-5.6|centos-release-5-6/) {
+    $DISTRO = "RHEL5.6";
+} elsif ($dist_rpm =~ /redhat-release-5Server-5.5|centos-release-5-5|enterprise-release-5/) {
+    $DISTRO = "RHEL5.5";
 } elsif ($dist_rpm =~ /redhat-release-5Server-5.4|centos-release-5-4/) {
-    $subdistro = "RHEL5.4";
+    $DISTRO = "RHEL5.4";
 } elsif ($dist_rpm =~ /redhat-release-5Server-5.3|centos-release-5-3/) {
-    $subdistro = "RHEL5.3";
+    $DISTRO = "RHEL5.3";
 } elsif ($dist_rpm =~ /redhat-release-4AS-9/) {
-    $subdistro = "RHEL4.8";
+    $DISTRO = "RHEL4.8";
 } elsif ($dist_rpm =~ /redhat-release-4AS-8/) {
-    $subdistro = "RHEL4.7";
+    $DISTRO = "RHEL4.7";
 } elsif ($dist_rpm =~ /fedora-release-12/) {
-    $subdistro = "FC12";
+    $DISTRO = "FC12";
+} elsif ( -f "/etc/debian_version" ) {
+    $DISTRO = "DEBIAN";
+} else {
+    $DISTRO = "unsupported";
 }
+
 
 my $WDIR    = dirname($0);
 chdir $WDIR;
@@ -250,14 +214,14 @@ my @selected_kernel_modules = ();
 my $open_iscsi_ver_rh4 = '2.0-754.1';
 my $open_iscsi_ver_non_rh4 = '2.0-869.2';
 
-my $libstdc;
-my $libgfortran;
-if ($subdistro eq "openSUSE11.2") {
+my $libstdc = '';
+my $libgfortran = '';
+if ($DISTRO eq "openSUSE11.2") {
     $libstdc = 'libstdc++44';
     $libgfortran = 'libgfortran44';
-} elsif ($subdistro eq "openSUSE") {
+} elsif ($DISTRO eq "openSUSE") {
     $libstdc = 'libstdc++42';
-} elsif ($subdistro eq "SLES11") {
+} elsif ($DISTRO eq "SLES11") {
     $libstdc = 'libstdc++43';
     $libgfortran = 'libgfortran43';
 } else {
@@ -266,9 +230,9 @@ if ($subdistro eq "openSUSE11.2") {
 my $libstdc_devel = "$libstdc-devel";
 
 # Suffix for 32 and 64 bit packages
-my $is_suse_suff64 = $arch eq "ppc64" && $subdistro ne "SLES11";
-my $suffix_32bit = ($distro eq "SuSE" && !$is_suse_suff64) ? "-32bit" : "";
-my $suffix_64bit = ($distro eq "SuSE" &&  $is_suse_suff64) ? "-64bit" : "";
+my $is_suse_suff64 = $arch eq "ppc64" && $DISTRO ne "SLES11";
+my $suffix_32bit = ($DISTRO =~ m/SLES|openSUSE/ && !$is_suse_suff64) ? "-32bit" : "";
+my $suffix_64bit = ($DISTRO =~ m/SLES|openSUSE/ &&  $is_suse_suff64) ? "-64bit" : "";
 
 sub usage
 {
@@ -295,27 +259,19 @@ sub usage
 my $sysfsutils;
 my $sysfsutils_devel;
 
-if ($distro eq "SuSE" or $distro eq "redhat" or $distro eq "fedora" or $distro eq "Rocks") {
+if ($DISTRO =~ m/SLES|openSUSE/) {
     $sysfsutils = "sysfsutils";
-    if ($distro eq "SuSE") {
-        $sysfsutils_devel = "sysfsutils";
-    }
-    else {
-        $sysfsutils_devel = "sysfsutils-devel";
-    }
-}
-else {
+    $sysfsutils_devel = "sysfsutils";
+} elsif ($DISTRO =~ m/RHEL5/) {
     $sysfsutils = "libsysfs";
     $sysfsutils_devel = "libsysfs-devel";
-}
-
-if ($subdistro eq "RHEL6.0") {
+} elsif ($DISTRO eq "RHEL6.0") {
     $sysfsutils = "libsysfs";
     $sysfsutils_devel = "libsysfs";
 }
 
 my $network_dir;
-if ($distro eq "SuSE") {
+if ($DISTRO =~ m/SLES/) {
     $network_dir = "/etc/sysconfig/network";
 }
 else {
@@ -1305,9 +1261,9 @@ my %packages_info = (
             install32 => 0, exception => 0 },
 
         'open-iscsi-generic' =>
-            { name => ($distro eq 'SuSE') ? 'open-iscsi': 'iscsi-initiator-utils', parent => "open-iscsi-generic",
+            { name => ($DISTRO =~ m/SLES/) ? 'open-iscsi': 'iscsi-initiator-utils', parent => "open-iscsi-generic",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [($subdistro eq 'FC12') ? "glibc-static" : ""],
+            available => 1, mode => "user", dist_req_build => [($DISTRO eq 'FC12') ? "glibc-static" : ""],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 1, configure_options => '' },
@@ -1334,7 +1290,7 @@ my %packages_info = (
             install32 => 0, exception => 0 },
 
         'tgt-generic' =>
-            { name => ($distro eq 'SuSE') ? 'tgt': 'scsi-target-utils', parent => "tgt-generic",
+            { name => ($DISTRO =~ m/SLES/) ? 'tgt': 'scsi-target-utils', parent => "tgt-generic",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => ["openssl-devel"],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
@@ -1556,7 +1512,7 @@ if ($kernel_given and not $kernel_source_given) {
 my $kernel_rel = $kernel;
 $kernel_rel =~ s/-/_/g;
 
-if ($distro eq "debian") {
+if ($DISTRO eq "DEBIAN") {
     $check_linux_deps = 0;
 }
 
@@ -1610,7 +1566,7 @@ sub get_rpm_rel
 sub get_rpm_ver_inst
 {
     my $ret;
-    if ($distro eq "debian") {
+    if ($DISTRO eq "DEBIAN") {
         $ret = `dpkg-query -W -f='\${Version}\n' @_ | cut -d ':' -f 2 | uniq`;
     }
     else {
@@ -1636,11 +1592,6 @@ sub get_rpm_info
 
 sub supported32bit
 {
-    # Disable 32bit libraries on SLES10 SP1 U1
-###    if ($distro eq "SuSE" and $dist_rpm_rel gt 15.2) {
-###        print RED "\n32-bit libraries are not supported on this platform", RESET "\n" if (not $quiet);
-###        return 0;
-###    }
     if ($arch =~ /i[0-9]86|ia64/) {
         return 0;
     }
@@ -1803,8 +1754,8 @@ sub set_availability
     }
 
     # NFSRDMA
-    if (($distro eq "redhat5" or $subdistro eq "SLES11") and
-	    $kernel =~ m/2.6.2[25]|2.6.27.*-*|2.6.30|el5/) {
+    if (($DISTRO =~ m/RHEL5/ or $DISTRO eq "SLES11") and
+            $kernel =~ m/2.6.2[25]|2.6.27.*-*|2.6.30|el5/) {
             $kernel_modules_info{'nfsrdma'}{'available'} = 1;
             $packages_info{'rnfs-utils'}{'available'} = 1;
             $packages_info{'rnfs-utils-debuginfo'}{'available'} = 1;
@@ -1820,7 +1771,7 @@ sub set_availability
     }
 
     # SRP Target
-    if ($subdistro =~ /SLES10|SLES11|RHEL5.[34]/ or $kernel =~ m/2.6.2[7-9]|2.6.3[0-2]/) {
+    if ($DISTRO =~ m/SLES10|SLES11|RHEL5.[34]/ or $kernel =~ m/2.6.2[7-9]|2.6.3[0-2]/) {
             $kernel_modules_info{'srpt'}{'available'} = 1;
     }
 
@@ -1867,7 +1818,7 @@ sub set_availability
     }
 
     # debuginfo RPM currently are not supported on SuSE
-    if ($distro eq 'SuSE' or $distro eq 'debian') {
+    if ($DISTRO =~ m/SLES/ or $DISTRO eq 'DEBIAN') {
         for my $package (@all_packages) {
             if ($package =~ m/-debuginfo/) {
                 $packages_info{$package}{'available'} = 0;
@@ -2658,14 +2609,14 @@ sub check_linux_dependencies
             }
         }
 
-        if ($distro eq "redhat" or $distro eq "fedora" or $distro eq 'redhat5') {
+        if ($DISTRO =~ m/RHEL|FC/) {
             if (not is_installed("rpm-build")) {
                 print RED "rpm-build is required to build OFED", RESET "\n";
                 $err++;
             }
         }
 
-        if ($package =~ /debuginfo/ and ($distro =~ /redhat|fedora/)) {
+        if ($package =~ /debuginfo/ and ($DISTRO =~ m/RHEL|FC/)) {
             if (not $packages_info{$package}{'rpm_exist'}) {
                 if (not is_installed("redhat-rpm-config")) {
                     print RED "redhat-rpm-config rpm is required to build $package", RESET "\n";
@@ -2700,7 +2651,7 @@ sub check_linux_dependencies
                         $err++;
                     }
                 }
-                if ($subdistro eq "SLES11") {
+                if ($DISTRO eq "SLES11") {
                     if (not is_installed("gcc-32bit")) {
                         if (not $gcc_32bit_printed) {
                             print RED "gcc 32bit is required to build 32-bit libraries.", RESET "\n";
@@ -2735,7 +2686,7 @@ sub check_linux_dependencies
                     print RED "krb5-devel is required to build rnfs-utils.", RESET "\n";
                     $err++;
                 }
-                if ($distro eq "redhat" or $distro eq "fedora" or $distro eq 'redhat5') {
+                if ($DISTRO =~ m/RHEL|FC/) {
                     if (not is_installed("krb5-libs")) {
                         print RED "krb5-libs is required to build rnfs-utils.", RESET "\n";
                         $err++;
@@ -2753,7 +2704,7 @@ sub check_linux_dependencies
                         $err++;
                     }
                 } else {
-                    if ($subdistro eq "SLES11") {
+                    if ($DISTRO eq "SLES11") {
                         if (not is_installed("libevent-devel")) {
                             print RED "libevent-devel is required to build rnfs-utils.", RESET "\n";
                             $err++;
@@ -2766,7 +2717,7 @@ sub check_linux_dependencies
                             print RED "libopenssl-devel is required to build rnfs-utils.", RESET "\n";
                             $err++;
                         }
-                    } elsif ($subdistro eq "SLES10") {
+                    } elsif ($DISTRO eq "SLES10") {
                         if (not is_installed("libevent")) {
                             print RED "libevent is required to build rnfs-utils.", RESET "\n";
                             $err++;
@@ -2791,7 +2742,7 @@ sub check_linux_dependencies
                 }
 
                 my $blkid_so = ($arch =~ m/x86_64/) ? "/usr/lib64/libblkid.so" : "/usr/lib/libblkid.so";
-                my $blkid_pkg = ($kernel =~ m/2.6.2[6-7]/ and $distro eq "SuSE") ? "libblkid-devel" :
+                my $blkid_pkg = ($kernel =~ m/2.6.2[6-7]/ and $DISTRO =~ m/SLES/) ? "libblkid-devel" :
                                 "e2fsprogs-devel";
                 $blkid_pkg .= ($arch =~ m/powerpc|ppc64/) ? "-32bit" : "";
 
@@ -2916,12 +2867,12 @@ sub build_kernel_rpm
             }
         }
 
-        if ($distro eq "debian") {
+        if ($DISTRO eq "DEBIAN") {
                 $kernel_configure_options .= " --without-modprobe";
         }
 
         # WA for Fedora C12
-        if ($distro =~ /fedora/) {
+        if ($DISTRO =~ /FC12/) {
             $cmd .= " --define '__spec_install_pre %{___build_pre}'";
         }
 
@@ -3022,7 +2973,7 @@ sub build_rpm_32
         $cmd .= " --define '_usr $prefix'";
     }
 
-    if ($distro eq "SuSE") {
+    if ($DISTRO =~ m/SLES/) {
         $cmd .= " --define '_suse_os_install_post %{nil}'";
     }
 
@@ -3084,7 +3035,7 @@ sub build_rpm
 
     if (not $packages_info{$name}{'rpm_exist'}) {
         if ($arch eq "ppc64") {
-            if ($distro eq "SuSE" and $dist_rpm_rel gt 15.2) {
+            if ($DISTRO =~ m/SLES/ and $dist_rpm_rel gt 15.2) {
                 # SLES 10 SP1
                 if ($parent eq "ibutils") {
                     $packages_info{'ibutils'}{'configure_options'} .= " LDFLAGS=-L/usr/lib/gcc/powerpc64-suse-linux/4.1.2/64";
@@ -3320,7 +3271,7 @@ sub build_rpm
                     $openmpi_comp_env .= " --disable-mpi-f77 --disable-mpi-f90";
                 }
                 # On fedora6 and redhat5 the pathscale compiler fails with default $RPM_OPT_FLAGS
-                if ($distro eq "fedora6" or $distro eq "redhat5") {
+                if ($DISTRO =~ m/RHEL|FC/) {
                     $use_default_rpm_opt_flags = 0;
                 }
             }
@@ -3427,17 +3378,17 @@ sub build_rpm
             $cmd .= " --define '_defaultdocdir $def_doc_dir/$main_packages{$parent}{'name'}-$main_packages{$parent}{'version'}'";
             $cmd .= " --define '_usr $prefix'";
         }
-	elsif ($parent eq "open-iscsi-generic") {
-	    # We use different open-iscsi version for RH4 and all other supported distros
-	    $srpmdir=`dirname $main_packages{$parent}{'srpmpath'}`;
-	    chomp($srpmdir);
-            if ($distro eq "redhat") {
+        elsif ($parent eq "open-iscsi-generic") {
+            # We use different open-iscsi version for RH4 and all other supported distros
+            $srpmdir=`dirname $main_packages{$parent}{'srpmpath'}`;
+            chomp($srpmdir);
+            if ($DISTRO =~ m/RHEL/) {
                 $srpmpath_for_distro="$srpmdir/$parent-$open_iscsi_ver_rh4.src.rpm";
-	    }
+            }
             else {
-	        $srpmpath_for_distro="$srpmdir/$parent-$open_iscsi_ver_non_rh4.src.rpm";
-	    }
-	}
+                $srpmpath_for_distro="$srpmdir/$parent-$open_iscsi_ver_non_rh4.src.rpm";
+            }
+        }
         else {
             $cmd .= " --define '_prefix $prefix'";
             $cmd .= " --define '_exec_prefix $prefix'";
@@ -3513,7 +3464,7 @@ sub install_kernel_rpm
     }
 
     $cmd = "rpm -iv $rpminstall_flags";
-    if ($distro eq "SuSE") {
+    if ($DISTRO =~ m/SLES/) {
         # W/A for ksym dependencies on SuSE
         $cmd .= " --nodeps";
     }
@@ -3548,7 +3499,7 @@ sub install_rpm_32
     }
 
     $cmd = "rpm -iv $rpminstall_flags";
-    if ($distro eq "SuSE") {
+    if ($DISTRO =~ m/SLES/) {
         $cmd .= " --force";
     }
     $cmd .= " $package";
@@ -3599,12 +3550,12 @@ sub install_rpm
 
     if ($name eq $packages_info{'open-iscsi-generic'}{'name'}) {
         # We use different open-iscsi version for RH4 and all other supported distros
-        if ($distro eq "redhat") {
+        if ($DISTRO =~ m/RHEL/) {
             $package = "$RPMS/$name-$open_iscsi_ver_rh4.$target_cpu.rpm";
-	}
-	else {
+        }
+        else {
             $package = "$RPMS/$name-$open_iscsi_ver_non_rh4.$target_cpu.rpm";
-	}
+        }
     }
     else {
         $package = "$RPMS/$name-$version-$release.$target_cpu.rpm";
@@ -3618,7 +3569,7 @@ sub install_rpm
     if ($name eq "mpi-selector") {
         $cmd = "rpm -Uv $rpminstall_flags --force";
     } else {
-        if ($name eq "opensm" and $distro eq "debian") {
+        if ($name eq "opensm" and $DISTRO eq "DEBIAN") {
             $rpminstall_flags .= " --nopost";
         }
         $cmd = "rpm -iv $rpminstall_flags";
@@ -3660,7 +3611,7 @@ sub is_installed
     my $res = 0;
     my $name = shift @_;
     
-    if ($distro eq "debian") {
+    if ($DISTRO eq "DEBIAN") {
         system("dpkg-query -W -f='\${Package} \${Version}\n' $name > /dev/null 2>&1");
     }
     else {
@@ -3955,7 +3906,7 @@ sub config_interface
     }
 
     open(IF, ">$target") or die "Can't open $target: $!";
-    if ($distro eq "SuSE") {
+    if ($DISTRO =~ m/SLES/) {
         print IF "BOOTPROTO='static'\n";
         print IF "IPADDR='$ip'\n";
         print IF "NETMASK='$nm'\n";
@@ -4062,7 +4013,7 @@ sub uninstall
             }
     }
 
-    if ($distro eq "SuSE") {
+    if ($DISTRO =~ m/SLES/) {
         my $distro_cnt = 0;
         my $distro_rpms;
         if (open (DISTRO_RPMS, 'rpm -qa ofed-kmp* |')) {
@@ -4431,19 +4382,19 @@ sub main
         print RED "$num_selected packages selected. Exiting...", RESET "\n";
         exit 1;
     }
-    print BLUE "Detected Linux Distribution: $distro", RESET "\n" if ($verbose3);
+    print BLUE "Detected Linux Distribution: $DISTRO", RESET "\n" if ($verbose3);
     
     # Uninstall the previous installations
     uninstall();
     my $vendor_ret;
     if (length($vendor_pre_install) > 0) {
-	    print BLUE "\nRunning vendor pre install script: $vendor_pre_install", RESET "\n" if (not $quiet);
-	    $vendor_ret = system ( "$vendor_pre_install", "CONFIG=$config",
-		"RPMS=$RPMS", "SRPMS=$SRPMS", "PREFIX=$prefix", "TOPDIR=$TOPDIR", "QUIET=$quiet" );
-	    if ($vendor_ret != 0) {
-		    print RED "\nExecution of vendor pre install script failed.", RESET "\n" if (not $quiet);
-		    exit 1;
-	    }
+            print BLUE "\nRunning vendor pre install script: $vendor_pre_install", RESET "\n" if (not $quiet);
+            $vendor_ret = system ( "$vendor_pre_install", "CONFIG=$config",
+                "RPMS=$RPMS", "SRPMS=$SRPMS", "PREFIX=$prefix", "TOPDIR=$TOPDIR", "QUIET=$quiet" );
+            if ($vendor_ret != 0) {
+                    print RED "\nExecution of vendor pre install script failed.", RESET "\n" if (not $quiet);
+                    exit 1;
+            }
     }
     install();
 
