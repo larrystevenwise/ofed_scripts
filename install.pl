@@ -221,9 +221,12 @@ if ($DISTRO eq "openSUSE11.2") {
     $libgfortran = 'libgfortran44';
 } elsif ($DISTRO eq "openSUSE") {
     $libstdc = 'libstdc++42';
-} elsif ($DISTRO eq "SLES11") {
+} elsif ($DISTRO =~ m/SLES11/) {
     $libstdc = 'libstdc++43';
     $libgfortran = 'libgfortran43';
+} elsif ($DISTRO =~ m/RHEL/) {
+    $libstdc = 'libstdc++';
+    $libgfortran = 'gcc-gfortran';
 } else {
     $libstdc = 'libstdc++';
 }
@@ -1067,7 +1070,7 @@ my %packages_info = (
         'mvapich_gcc' =>
             { name => "mvapich_gcc", parent => "mvapich",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["$libgfortran","$libstdc_devel"],
+            available => 1, mode => "user", dist_req_build => ["$libgfortran","$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
             ofa_req_inst => ["mpi-selector", "libibverbs", "libibumad"],
             install32 => 0, exception => 0 },
@@ -1103,7 +1106,7 @@ my %packages_info = (
         'mvapich2_gcc' =>
             { name => "mvapich2_gcc", parent => "mvapich2",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["$libgfortran","$sysfsutils_devel", "$libstdc_devel"],
+            available => 1, mode => "user", dist_req_build => ["$libgfortran","$sysfsutils_devel", "$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel", "librdmacm-devel"],
             ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
             install32 => 0, exception => 0 },
@@ -1139,7 +1142,7 @@ my %packages_info = (
         'openmpi_gcc' =>
             { name => "openmpi_gcc", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["$libgfortran","$libstdc_devel"],
+            available => 1, mode => "user", dist_req_build => ["$libgfortran","$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
             ofa_req_inst => ["libibverbs", "mpi-selector"],
             install32 => 0, exception => 0 },
@@ -1176,7 +1179,7 @@ my %packages_info = (
         'mpitests_mvapich_gcc' =>
             { name => "mpitests_mvapich_gcc", parent => "mpitests",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["mvapich_gcc", "libibumad-devel", "librdmacm-devel"],
             ofa_req_inst => ["mvapich_gcc"],
             install32 => 0, exception => 0 },
