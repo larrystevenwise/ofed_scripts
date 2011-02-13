@@ -1208,7 +1208,7 @@ my %packages_info = (
         'mpitests_mvapich2_gcc' =>
             { name => "mpitests_mvapich2_gcc", parent => "mpitests",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["mvapich2_gcc", "libibumad-devel", "librdmacm-devel"],
             ofa_req_inst => ["mvapich2_gcc"],
             install32 => 0, exception => 0 },
@@ -1237,7 +1237,7 @@ my %packages_info = (
         'mpitests_openmpi_gcc' =>
             { name => "mpitests_openmpi_gcc", parent => "mpitests",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["openmpi_gcc", "libibumad-devel", "librdmacm-devel"],
             ofa_req_inst => ["openmpi_gcc"],
             install32 => 0, exception => 0 },
