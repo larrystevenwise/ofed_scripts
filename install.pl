@@ -267,7 +267,7 @@ if ($DISTRO =~ m/SLES|openSUSE/) {
     $sysfsutils_devel = "sysfsutils";
 } elsif ($DISTRO =~ m/RHEL5/) {
     $sysfsutils = "libsysfs";
-    $sysfsutils_devel = "libsysfs-devel";
+    $sysfsutils_devel = "libsysfs";
 } elsif ($DISTRO eq "RHEL6.0") {
     $sysfsutils = "libsysfs";
     $sysfsutils_devel = "libsysfs";
