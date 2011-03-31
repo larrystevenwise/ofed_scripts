@@ -83,6 +83,7 @@ my $kernel = `uname -r`;
 chomp $kernel;
 my $kernel_sources = "/lib/modules/$kernel/build";
 chomp $kernel_sources;
+my $ib_udev_rules = "/etc/udev/rules.d/90-ib.rules";
 
 my $PACKAGE     = 'OFED';
 
@@ -255,6 +256,7 @@ sub usage
    print "\n           -q                   Set quiet - no messages will be printed";
    print "\n           --force              Force uninstall RPM coming with Distribution";
    print "\n           --builddir           Change build directory. Default: $builddir";
+   print "\n           --umad-dev-rw        Grant non root users read/write permission for umad devices instead of default";
    print "\n\n           --all|--hpc|--basic    Install all,hpc or basic packages correspondingly";
    print RESET "\n\n";
 }
@@ -1367,7 +1369,7 @@ my $mvapich2_comp_env;
 my $mvapich2_dat_lib;
 my $mvapich2_dat_include;
 my $mvapich2_conf_done = 0;
-
+my $umad_dev_rw = 0;
 my $config_given = 0;
 my $config_net_given = 0;
 my $kernel_given = 0;
@@ -1409,6 +1411,8 @@ while ( $#ARGV >= 0 ) {
     } elsif ( $cmd_flag eq "--basic" ) {
         $interactive = 0;
         $install_option = 'basic';
+    } elsif ( $cmd_flag eq "--umad-dev-rw" ) {
+        $umad_dev_rw = 1;
     } elsif ( $cmd_flag eq "--build32" ) {
         if (supported32bit()) {
             $build32 = 1;
@@ -4484,6 +4488,28 @@ sub main
 
     if ( not $quiet ) {
         check_pcie_link();
+    }
+
+    if ($umad_dev_rw) {
+        if (-f $ib_udev_rules) {
+            open(IB_UDEV_RULES, $ib_udev_rules) or die "Can't open $ib_udev_rules: $!";
+            my @ib_udev_rules_lines;
+            while (<IB_UDEV_RULES>) {
+                push @ib_udev_rules_lines, $_;
+            }
+            close(IPV6);
+
+            open(IB_UDEV_RULES, ">$ib_udev_rules") or die "Can't open $ib_udev_rules: $!";
+            foreach my $line (@ib_udev_rules_lines) {
+                chomp $line;
+                if ($line =~ /umad/) {
+                    print IB_UDEV_RULES "$line, MODE=\"0666\"\n";
+                } else {
+                    print IB_UDEV_RULES "$line\n";
+                }
+            }
+            close(IB_UDEV_RULES);
+        }
     }
 
     print GREEN "\nInstallation finished successfully.", RESET;
