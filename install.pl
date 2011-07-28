@@ -313,7 +313,7 @@ my @prev_ofed_packages = (
 
 my @distro_ofed_packages = (
                         "libamso", "libamso-devel", "dapl2", "dapl2-devel", "mvapich", "mvapich2", "mvapich2-devel",
-                        "mvapich-devel", "libboost_mpi1_36_0", "boost-devel", "boost-doc", "libmthca-rdmav2", "libcxgb3-rdmav2",
+                        "mvapich-devel", "libboost_mpi1_36_0", "boost-devel", "boost-doc", "libmthca-rdmav2", "libcxgb3-rdmav2", "libcxgb4-rdmav2",
                         "libmlx4-rdmav2", "libibmad1", "libibumad1", "libibcommon1", "ofed", "ofa",
                         "scsi-target-utils", "rdma-ofa-agent"
                         );
@@ -358,6 +358,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "libmlx4", "libmlx4-devel", "libmlx4-debuginfo",
                      "libehca", "libehca-devel-static", "libehca-debuginfo",
                      "libcxgb3", "libcxgb3-devel", "libcxgb3-debuginfo",
+                     "libcxgb4", "libcxgb4-devel", "libcxgb4-debuginfo",
                      "libnes", "libnes-devel-static", "libnes-debuginfo",
                      "libipathverbs", "libipathverbs-devel", "libipathverbs-debuginfo",
                      "libibcm", "libibcm-devel", "libibcm-debuginfo",
@@ -378,7 +379,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
 
 my @basic_kernel_packages = ("kernel-ib");
 my @basic_user_packages = ("libibverbs", "libibverbs-utils", "libmthca", "libmlx4",
-                            "libehca", "libcxgb3", "libnes", "libipathverbs", "librdmacm", "librdmacm-utils",
+                            "libehca", "libcxgb3", "libcxgb4", "libnes", "libipathverbs", "librdmacm", "librdmacm-utils",
                             "mstflint", @misc_packages);
 
 my @hpc_kernel_packages = ("kernel-ib", "ib-bonding");
@@ -593,6 +594,28 @@ my %packages_info = (
             install32 => 1, exception => 0 },
         'libcxgb3-debuginfo' =>
             { name => "libcxgb3-debuginfo", parent => "libcxgb3",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+
+        'libcxgb4' =>
+            { name => "libcxgb4", parent => "libcxgb4",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
+            ofa_req_inst => ["libibverbs"],
+            install32 => 1, exception => 0, configure_options => '' },
+        'libcxgb4-devel' =>
+            { name => "libcxgb4-devel", parent => "libcxgb4",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libcxgb4"],
+            install32 => 1, exception => 0 },
+        'libcxgb4-debuginfo' =>
+            { name => "libcxgb4-debuginfo", parent => "libcxgb4",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
@@ -1694,6 +1717,9 @@ sub set_availability
             $packages_info{'libcxgb3'}{'available'} = 0;
             $packages_info{'libcxgb3-devel'}{'available'} = 0;
             $packages_info{'libcxgb3-debuginfo'}{'available'} = 0;
+            $packages_info{'libcxgb4'}{'available'} = 0;
+            $packages_info{'libcxgb4-devel'}{'available'} = 0;
+            $packages_info{'libcxgb4-debuginfo'}{'available'} = 0;
 
             $kernel_modules_info{'nes'}{'available'} = 0;
             $packages_info{'libnes'}{'available'} = 0;
