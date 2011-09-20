@@ -3176,27 +3176,27 @@ sub build_rpm
             if ($compiler eq "gcc") {
                 if ($gcc{'gfortran'}) {
                     if ($arch eq "ppc64") {
-                        $mvapich2_comp_env = 'CC="gcc -m64" CXX="g++ -m64" F77="gfortran -m64" F90="gfortran -m64"';
+                        $mvapich2_comp_env = 'CC="gcc -m64" CXX="g++ -m64" F77="gfortran -m64" FC="gfortran -m64"';
                     }
 
                     else {
-                        $mvapich2_comp_env = "CC=gcc CXX=g++ F77=gfortran F90=gfortran";
+                        $mvapich2_comp_env = "CC=gcc CXX=g++ F77=gfortran FC=gfortran";
                     }
                 }
 
                 elsif ($gcc{'g77'}) {
                     if ($arch eq "ppc64") {
-                        $mvapich2_comp_env = 'CC="gcc -m64" CXX="g++ -m64" F77="g77 -m64" F90=/bin/false';
+                        $mvapich2_comp_env = 'CC="gcc -m64" CXX="g++ -m64" F77="g77 -m64" FC=/bin/false';
                     }
 
                     else {
-                        $mvapich2_comp_env = "CC=gcc CXX=g++ F77=g77 F90=/bin/false";
+                        $mvapich2_comp_env = "CC=gcc CXX=g++ F77=g77 FC=/bin/false";
                     }
                 }
             }
 
             elsif ($compiler eq "pathscale") {
-                $mvapich2_comp_env = "CC=pathcc CXX=pathCC F77=pathf90 F90=pathf90";
+                $mvapich2_comp_env = "CC=pathcc CXX=pathCC F77=pathf90 FC=pathf90";
                 # On i686 the PathScale compiler requires -g optimization
                 # for MVAPICH2 in the shared library configuration.
                 if ($arch eq "i686" and $mvapich2_conf_shared_libs) {
@@ -3205,18 +3205,18 @@ sub build_rpm
             }
 
             elsif ($compiler eq "pgi") {
-                $mvapich2_comp_env = "CC=pgcc CXX=pgCC F77=pgf77 F90=pgf90";
+                $mvapich2_comp_env = "CC=pgcc CXX=pgCC F77=pgf77 FC=pgf90";
             }
 
             elsif ($compiler eq "intel") {
                 if ($mvapich2_conf_shared_libs) {
                     # The -i-dynamic flag is required for MVAPICH2 in the shared
                     # library configuration.
-                    $mvapich2_comp_env = 'CC="icc -i-dynamic" CXX="icpc -i-dynamic" F77="ifort -i-dynamic" F90="ifort -i-dynamic"';
+                    $mvapich2_comp_env = 'CC="icc -i-dynamic" CXX="icpc -i-dynamic" F77="ifort -i-dynamic" FC="ifort -i-dynamic"';
                 }
 
                 else {
-                    $mvapich2_comp_env = "CC=icc CXX=icpc F77=ifort F90=ifort";
+                    $mvapich2_comp_env = "CC=icc CXX=icpc F77=ifort FC=ifort";
                 }
             }
 
