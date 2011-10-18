@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2006 Mellanox Technologies. All rights reserved.
+# Copyright (c) 2011 Mellanox Technologies. All rights reserved.
 #
 # This Software is licensed under one of the following licenses:
 #
@@ -62,8 +62,6 @@ my $verbose3 = 0;
 my $print_available = 0;
 
 my $clear_string = `clear`;
-my $upgrade_open_iscsi = 0;
-my $skip_open_iscsi = 0;
 my $bonding_force_all_os = 0;
 
 my $vendor_pre_install = "";
@@ -71,10 +69,30 @@ my $vendor_post_install = "";
 my $vendor_pre_uninstall = "";
 my $vendor_post_uninstall = "";
 
-my $distro;
 my $DISTRO = "";
 my $rpmbuild_flags = "";
 my $rpminstall_flags = "";
+
+my $WDIR    = dirname($0);
+chdir $WDIR;
+my $CWD     = getcwd;
+my $TMPDIR  = '/tmp';
+my $netdir;
+
+my $config = $CWD . '/ofed.conf';
+chomp $config;
+my $config_net;
+
+my $builddir = "/var/tmp/";
+chomp $builddir;
+
+my $PACKAGE     = 'OFED';
+my $ofedlogs = "/tmp/$PACKAGE.$$.logs";
+mkpath([$ofedlogs]);
+
+my $default_prefix = '/usr';
+chomp $default_prefix;
+my $prefix = $default_prefix;
 
 my $build32 = 0;
 my $arch = `uname -m`;
@@ -85,12 +103,80 @@ my $kernel_sources = "/lib/modules/$kernel/build";
 chomp $kernel_sources;
 my $ib_udev_rules = "/etc/udev/rules.d/90-ib.rules";
 
-my $PACKAGE     = 'OFED';
-
 # Define RPMs environment
 my $dist_rpm;
 my $dist_rpm_ver = 0;
 my $dist_rpm_rel = 0;
+
+my $umad_dev_rw = 0;
+my $config_given = 0;
+my $config_net_given = 0;
+my $kernel_given = 0;
+my $kernel_source_given = 0;
+my $install_option;
+my $check_linux_deps = 1;
+my $force = 0;
+my $kmp = 1;
+
+while ( $#ARGV >= 0 ) {
+
+   my $cmd_flag = shift(@ARGV);
+
+    if ( $cmd_flag eq "-c" or $cmd_flag eq "--config" ) {
+        $config = shift(@ARGV);
+        $interactive = 0;
+        $config_given = 1;
+    } elsif ( $cmd_flag eq "-n" or $cmd_flag eq "--net" ) {
+        $config_net = shift(@ARGV);
+        $config_net_given = 1;
+    } elsif ( $cmd_flag eq "-l" or $cmd_flag eq "--prefix" ) {
+        $prefix = shift(@ARGV);
+        $prefix =~ s/\/$//;
+    } elsif ( $cmd_flag eq "-k" or $cmd_flag eq "--kernel" ) {
+        $kernel = shift(@ARGV);
+        $kernel_given = 1;
+    } elsif ( $cmd_flag eq "-s" or $cmd_flag eq "--kernel-sources" ) {
+        $kernel_sources = shift(@ARGV);
+        $kernel_source_given = 1;
+    } elsif ( $cmd_flag eq "-p" or $cmd_flag eq "--print-available" ) {
+        $print_available = 1;
+    } elsif ( $cmd_flag eq "--force" ) {
+        $force = 1;
+    } elsif ( $cmd_flag eq "--all" ) {
+        $interactive = 0;
+        $install_option = 'all';
+    } elsif ( $cmd_flag eq "--hpc" ) {
+        $interactive = 0;
+        $install_option = 'hpc';
+    } elsif ( $cmd_flag eq "--basic" ) {
+        $interactive = 0;
+        $install_option = 'basic';
+    } elsif ( $cmd_flag eq "--umad-dev-rw" ) {
+        $umad_dev_rw = 1;
+    } elsif ( $cmd_flag eq "--build32" ) {
+        if (supported32bit()) {
+            $build32 = 1;
+        }
+    } elsif ( $cmd_flag eq "--without-depcheck" ) {
+        $check_linux_deps = 0;
+    } elsif ( $cmd_flag eq "--builddir" ) {
+        $builddir = shift(@ARGV);
+    } elsif ( $cmd_flag eq "-q" ) {
+        $quiet = 1;
+    } elsif ( $cmd_flag eq "-v" ) {
+        $verbose = 1;
+    } elsif ( $cmd_flag eq "-vv" ) {
+        $verbose = 1;
+        $verbose2 = 1;
+    } elsif ( $cmd_flag eq "-vvv" ) {
+        $verbose = 1;
+        $verbose2 = 1;
+        $verbose3 = 1;
+    } else {
+        &usage();
+        exit 1;
+    }
+}
 
 if (-f "/etc/issue") {
     if (-f "/usr/bin/dpkg") {
@@ -123,42 +209,74 @@ else {
 }
 chomp $dist_rpm;
 
+my $rpm_distro = '';
+
 if ($dist_rpm =~ /openSUSE-release-11.2/) {
     $DISTRO = "openSUSE11.2";
+    $rpm_distro = "opensuse11sp2";
 } elsif ($dist_rpm =~ /openSUSE/) {
     $DISTRO = "openSUSE";
+    $rpm_distro = "opensuse11sp0";
+} elsif ($dist_rpm =~ /sles-release-11.1/) {
+    $DISTRO = "SLES11";
+    $rpm_distro = "sles11sp1";
 } elsif ($dist_rpm =~ /sles-release-11/) {
     $DISTRO = "SLES11";
-} elsif ($dist_rpm =~ /sles-release-10/) {
+    $rpm_distro = "sles11sp0";
+} elsif ($dist_rpm =~ /sles-release-10-15.45.8/) {
     $DISTRO = "SLES10";
-} elsif ($dist_rpm =~ /redhat-release-server-6|centos-release-6/) {
+    $rpm_distro = "sles10sp3";
+} elsif ($dist_rpm =~ /sles-release-10-15.57.1/) {
+    $DISTRO = "SLES10";
+    $rpm_distro = "sles10sp4";
+} elsif ($dist_rpm =~ /redhat-release-.*-6.1|centos-release-6-1/) {
+    $DISTRO = "RHEL6.1";
+    $rpm_distro = "rhel6u1";
+} elsif ($dist_rpm =~ /redhat-release-.*-6.0|centos-release-6-0/) {
     $DISTRO = "RHEL6.0";
-} elsif ($dist_rpm =~ /redhat-release-5Server-5.6|centos-release-5-6/) {
+    $rpm_distro = "rhel6u0";
+} elsif ($dist_rpm =~ /redhat-release-.*-5.7|centos-release-5-7/) {
+    $DISTRO = "RHEL5.7";
+    $rpm_distro = "rhel5u7";
+} elsif ($dist_rpm =~ /redhat-release-.*-5.6|centos-release-5-6/) {
     $DISTRO = "RHEL5.6";
-} elsif ($dist_rpm =~ /redhat-release-5Server-5.5|centos-release-5-5|enterprise-release-5/) {
-    $DISTRO = "RHEL5.5";
-} elsif ($dist_rpm =~ /redhat-release-5Server-5.4|centos-release-5-4/) {
+    $rpm_distro = "rhel5u6";
+} elsif ($dist_rpm =~ /redhat-release-.*-5.5|centos-release-5-5|enterprise-release-5/) {
+    system("grep -wq XenServer /etc/issue > /dev/null 2>&1");
+    my $res = $? >> 8;
+    my $sig = $? & 127; 
+    if ($sig or $res) {
+        $DISTRO = "RHEL5.5";
+        $rpm_distro = "rhel5u5";
+    } else {
+        $DISTRO = "XenServer5.6";
+        $rpm_distro = "xenserver5u6";
+    }
+} elsif ($dist_rpm =~ /redhat-release-.*-5.4|centos-release-5-4/) {
     $DISTRO = "RHEL5.4";
-} elsif ($dist_rpm =~ /redhat-release-5Server-5.3|centos-release-5-3/) {
+    $rpm_distro = "rhel5u4";
+} elsif ($dist_rpm =~ /redhat-release-.*-5.3|centos-release-5-3/) {
     $DISTRO = "RHEL5.3";
+    $rpm_distro = "rhel5u3";
+} elsif ($dist_rpm =~ /redhat-release-.*-5.2|centos-release-5-2/) {
+    $DISTRO = "RHEL5.2";
+    $rpm_distro = "rhel5u2";
 } elsif ($dist_rpm =~ /redhat-release-4AS-9/) {
     $DISTRO = "RHEL4.8";
+    $rpm_distro = "rhel4u8";
 } elsif ($dist_rpm =~ /redhat-release-4AS-8/) {
     $DISTRO = "RHEL4.7";
+    $rpm_distro = "rhel4u7";
 } elsif ($dist_rpm =~ /fedora-release-12/) {
     $DISTRO = "FC12";
+    $rpm_distro = "fc12";
 } elsif ( -f "/etc/debian_version" ) {
     $DISTRO = "DEBIAN";
+    $rpm_distro = "debian";
 } else {
     $DISTRO = "unsupported";
+    $rpm_distro = "unsupported";
 }
-
-
-my $WDIR    = dirname($0);
-chdir $WDIR;
-my $CWD     = getcwd;
-my $TMPDIR  = '/tmp';
-my $netdir;
 
 my $SRPMS = $CWD . '/' . 'SRPMS/';
 chomp $SRPMS;
@@ -167,20 +285,6 @@ chomp $RPMS;
 if (not -d $RPMS) {
     mkpath([$RPMS]);
 }
-
-my $config = $CWD . '/ofed.conf';
-chomp $config;
-my $config_net;
-
-my $builddir = "/var/tmp/";
-chomp $builddir;
-
-my $ofedlogs = "/tmp/$PACKAGE.$$.logs";
-mkpath([$ofedlogs]);
-
-my $default_prefix = '/usr';
-chomp $default_prefix;
-my $prefix = $default_prefix;
 
 my $target_cpu  = `rpm --eval '%{_target_cpu}'`;
 chomp $target_cpu;
@@ -199,6 +303,27 @@ elsif ($arch eq "ppc64") {
 }
 chomp $target_cpu32;
 
+if ($kernel_given and not $kernel_source_given) {
+    if (-d "/lib/modules/$kernel/build") {
+        $kernel_sources = "/lib/modules/$kernel/build";
+    }
+    else {
+        print RED "Provide path to the kernel sources for $kernel kernel.", RESET "\n";
+        exit 1;
+    }
+}
+
+my $kernel_rel = $kernel;
+$kernel_rel =~ s/-/_/g;
+
+if ($DISTRO eq "DEBIAN") {
+    $check_linux_deps = 0;
+}
+
+if (not $check_linux_deps) {
+    $rpmbuild_flags .= ' --nodeps';
+    $rpminstall_flags .= ' --nodeps';
+}
 my $optflags  = `rpm --eval '%{optflags}'`;
 chomp $optflags;
 
@@ -212,8 +337,6 @@ my @selected_by_user = ();
 my @selected_modules_by_user = ();
 my @selected_kernel_modules = ();
 
-my $open_iscsi_ver_rh4 = '2.0-754.1';
-my $open_iscsi_ver_non_rh4 = '2.0-869.2';
 
 my $libstdc = '';
 my $libgfortran = '';
@@ -270,7 +393,7 @@ if ($DISTRO =~ m/SLES|openSUSE/) {
 } elsif ($DISTRO =~ m/RHEL5/) {
     $sysfsutils = "libsysfs";
     $sysfsutils_devel = "libsysfs";
-} elsif ($DISTRO eq "RHEL6.0") {
+} elsif ($DISTRO =~ m/RHEL6/) {
     $sysfsutils = "libsysfs";
     $sysfsutils_devel = "libsysfs";
 }
@@ -294,7 +417,7 @@ my @prev_ofed_packages = (
                         "ib-diags", "ibgdiag", "ibdiag", "ib-management",
                         "ib-verbs", "ib-ipoib", "ib-cm", "ib-sdp", "ib-dapl", "udapl",
                         "udapl-devel", "libdat", "libibat", "ib-kdapl", "ib-srp", "ib-srp_target",
-                        "oiscsi-iser-support", "libipathverbs", "libipathverbs-devel",
+                        "libipathverbs", "libipathverbs-devel",
                         "libehca", "libehca-devel", "dapl", "dapl-devel",
                         "libibcm", "libibcm-devel", "libibcommon", "libibcommon-devel",
                         "libibmad", "libibmad-devel", "libibumad", "libibumad-devel",
@@ -307,7 +430,8 @@ my @prev_ofed_packages = (
                         "openmpi", "openmpi-devel", "openmpi-libs",
                         "ibutils", "ibutils-devel", "ibutils-libs", "ibutils2", "ibutils2-devel",
                         "libnes", "libnes-devel",
-                        "infinipath-psm", "infinipath-psm-devel", "rnfs-utils"
+                        "infinipath-psm", "infinipath-psm-devel",
+                        "mvapich", "openmpi", "mvapich2"
                         );
 
 
@@ -315,7 +439,7 @@ my @distro_ofed_packages = (
                         "libamso", "libamso-devel", "dapl2", "dapl2-devel", "mvapich", "mvapich2", "mvapich2-devel",
                         "mvapich-devel", "libboost_mpi1_36_0", "boost-devel", "boost-doc", "libmthca-rdmav2", "libcxgb3-rdmav2", "libcxgb4-rdmav2",
                         "libmlx4-rdmav2", "libibmad1", "libibumad1", "libibcommon1", "ofed", "ofa",
-                        "scsi-target-utils", "rdma-ofa-agent"
+                        "scsi-target-utils", "rdma-ofa-agent", "libibumad3"
                         );
 
 my @mlnx_en_packages = (
@@ -334,8 +458,8 @@ my @tech_preview;
 
 my @kernel_modules = (@basic_kernel_modules, @ulp_modules);
 
-my $kernel_configure_options;
-my $user_configure_options;
+my $kernel_configure_options = '';
+my $user_configure_options = '';
 
 my @misc_packages = ("ofed-docs", "ofed-scripts");
 
@@ -373,7 +497,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "perftest", "mstflint",
                      "qlvnictools", "sdpnetstat", "srptools", "rds-tools", "rds-devel",
                      "ibutils", "infiniband-diags", "qperf", "qperf-debuginfo",
-                     "ofed-docs", "ofed-scripts", "tgt-generic",
+                     "ofed-docs", "ofed-scripts",
                      "infinipath-psm", "infinipath-psm-devel", @mpi_packages
                      );
 
@@ -418,7 +542,7 @@ my %kernel_modules_info = (
             { name => "cxgb3", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'cxgb4' =>
-            { name => "cxgb4", available => 0, selected => 0,
+            { name => "cxgb4", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'nes' =>
             { name => "nes", available => 1, selected => 0,
@@ -1372,7 +1496,7 @@ my %packages_info = (
         );
 
 
-my @hidden_packages = ("open-iscsi-generic", "ibvexdmtools", "qlgc_vnic_daemon");
+my @hidden_packages = ("ibvexdmtools", "qlgc_vnic_daemon");
 
 my %MPI_SUPPORTED_COMPILERS = (gcc => 0, pgi => 0, intel => 0, pathscale => 0);
 
@@ -1395,74 +1519,6 @@ my $mvapich2_comp_env;
 my $mvapich2_dat_lib;
 my $mvapich2_dat_include;
 my $mvapich2_conf_done = 0;
-my $umad_dev_rw = 0;
-my $config_given = 0;
-my $config_net_given = 0;
-my $kernel_given = 0;
-my $kernel_source_given = 0;
-my $install_option;
-my $check_linux_deps = 1;
-my $force = 0;
-
-while ( $#ARGV >= 0 ) {
-
-   my $cmd_flag = shift(@ARGV);
-
-    if ( $cmd_flag eq "-c" or $cmd_flag eq "--config" ) {
-        $config = shift(@ARGV);
-        $interactive = 0;
-        $config_given = 1;
-    } elsif ( $cmd_flag eq "-n" or $cmd_flag eq "--net" ) {
-        $config_net = shift(@ARGV);
-        $config_net_given = 1;
-    } elsif ( $cmd_flag eq "-l" or $cmd_flag eq "--prefix" ) {
-        $prefix = shift(@ARGV);
-        $prefix =~ s/\/$//;
-    } elsif ( $cmd_flag eq "-k" or $cmd_flag eq "--kernel" ) {
-        $kernel = shift(@ARGV);
-        $kernel_given = 1;
-    } elsif ( $cmd_flag eq "-s" or $cmd_flag eq "--kernel-sources" ) {
-        $kernel_sources = shift(@ARGV);
-        $kernel_source_given = 1;
-    } elsif ( $cmd_flag eq "-p" or $cmd_flag eq "--print-available" ) {
-        $print_available = 1;
-    } elsif ( $cmd_flag eq "--force" ) {
-        $force = 1;
-    } elsif ( $cmd_flag eq "--all" ) {
-        $interactive = 0;
-        $install_option = 'all';
-    } elsif ( $cmd_flag eq "--hpc" ) {
-        $interactive = 0;
-        $install_option = 'hpc';
-    } elsif ( $cmd_flag eq "--basic" ) {
-        $interactive = 0;
-        $install_option = 'basic';
-    } elsif ( $cmd_flag eq "--umad-dev-rw" ) {
-        $umad_dev_rw = 1;
-    } elsif ( $cmd_flag eq "--build32" ) {
-        if (supported32bit()) {
-            $build32 = 1;
-        }
-    } elsif ( $cmd_flag eq "--without-depcheck" ) {
-        $check_linux_deps = 0;
-    } elsif ( $cmd_flag eq "--builddir" ) {
-        $builddir = shift(@ARGV);
-    } elsif ( $cmd_flag eq "-q" ) {
-        $quiet = 1;
-    } elsif ( $cmd_flag eq "-v" ) {
-        $verbose = 1;
-    } elsif ( $cmd_flag eq "-vv" ) {
-        $verbose = 1;
-        $verbose2 = 1;
-    } elsif ( $cmd_flag eq "-vvv" ) {
-        $verbose = 1;
-        $verbose2 = 1;
-        $verbose3 = 1;
-    } else {
-        &usage();
-        exit 1;
-    }
-}
 
 my $TOPDIR = $builddir . '/' . $PACKAGE . "_topdir";
 chomp $TOPDIR;
@@ -1530,28 +1586,6 @@ if ($config_net_given) {
         }
     }
     close(NET);
-}
-
-if ($kernel_given and not $kernel_source_given) {
-    if (-d "/lib/modules/$kernel/build") {
-        $kernel_sources = "/lib/modules/$kernel/build";
-    }
-    else {
-        print RED "Provide path to the kernel sources for $kernel kernel.", RESET "\n";
-        exit 1;
-    }
-}
-
-my $kernel_rel = $kernel;
-$kernel_rel =~ s/-/_/g;
-
-if ($DISTRO eq "DEBIAN") {
-    $check_linux_deps = 0;
-}
-
-if (not $check_linux_deps) {
-    $rpmbuild_flags .= ' --nodeps';
-    $rpminstall_flags .= ' --nodeps';
 }
 
 sub sig_handler
@@ -1730,10 +1764,6 @@ sub set_availability
             $packages_info{'libnes-debuginfo'}{'available'} = 0;
     }
 
-    if ($kernel =~ m/2.6.39*/) {
-            $kernel_modules_info{'cxgb4'}{'available'} = 1;
-    }
-
     if ($arch =~ m/ia64/) {
             $kernel_modules_info{'mlx4_en'}{'available'} = 0;
     }
@@ -1879,7 +1909,8 @@ sub set_availability
 sub set_existing_rpms
 {
     # Check if the ofed-scripts RPM exist and its prefix is the same as required one
-    my $scr_rpm = <$RPMS/ofed-scripts-*.$target_cpu.rpm>;
+    my $scr_rpm = '';
+    $scr_rpm = <$RPMS/ofed-scripts-*.$target_cpu.rpm>;
     if ( -f $scr_rpm ) {
         my $current_prefix = `rpm -qlp $scr_rpm | grep ofed_info | sed -e "s@/bin/ofed_info@@"`;
         chomp $current_prefix;
@@ -1893,6 +1924,7 @@ sub set_existing_rpms
 
     for my $binrpm ( <$RPMS/*.rpm> ) {
         my ($rpm_name, $rpm_arch) = (split ' ', get_rpm_name_arch($binrpm));
+        $main_packages{$rpm_name}{'rpmpath'}   = $binrpm;
         if ($rpm_name =~ /kernel-ib|ib-bonding/) {
             if (($rpm_arch eq $target_cpu) and (get_rpm_rel($binrpm) eq $kernel_rel)) {
                 $packages_info{$rpm_name}{'rpm_exist'} = 1;
@@ -2167,6 +2199,8 @@ sub select_packages
         if ($inp == $BASIC) {
             for my $package (@basic_user_packages, @basic_kernel_packages) {
                 next if (not $packages_info{$package}{'available'});
+                my $parent = $packages_info{$package}{'parent'};
+                next if (not $main_packages{$parent}{'srpmpath'});
                 push (@selected_by_user, $package);
                 print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
                 $cnt ++;
@@ -2180,6 +2214,8 @@ sub select_packages
         elsif ($inp == $HPC) {
             for my $package ( @hpc_user_packages, @hpc_kernel_packages ) {
                 next if (not $packages_info{$package}{'available'});
+                my $parent = $packages_info{$package}{'parent'};
+                next if (not $main_packages{$parent}{'srpmpath'});
                 push (@selected_by_user, $package);
                 print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
                 $cnt ++;
@@ -2193,6 +2229,8 @@ sub select_packages
         elsif ($inp == $ALL) {
             for my $package ( @all_packages, @hidden_packages ) {
                 next if (not $packages_info{$package}{'available'});
+                my $parent = $packages_info{$package}{'parent'};
+                next if (not $main_packages{$parent}{'srpmpath'});
                 push (@selected_by_user, $package);
                 print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
                 $cnt ++;
@@ -2207,6 +2245,8 @@ sub select_packages
             my $ans;
             for my $package ( @all_packages ) {
                 next if (not $packages_info{$package}{'available'});
+                my $parent = $packages_info{$package}{'parent'};
+                next if (not $main_packages{$parent}{'srpmpath'});
                 print "Install $package? [y/N]:";
                 $ans = getch();
                 if ( $ans eq 'Y' or $ans eq 'y' ) {
@@ -2218,26 +2258,11 @@ sub select_packages
                         # Select kernel modules to be installed
                         for my $module ( @kernel_modules, @tech_preview ) {
                             next if (not $kernel_modules_info{$module}{'available'});
-                            if ($module eq "iser") {
-                                print "Install $module module? (open-iscsi will also be installed) [y/N]:";
-                                $ans = getch();
-                                if ( $ans eq 'Y' or $ans eq 'y' ) {
-                                    push (@selected_modules_by_user, $module);
-                                    print CONFIG "$module=y\n";
-                                    check_open_iscsi();
-                                    push (@selected_by_user, "open-iscsi-generic") if (not $skip_open_iscsi);
-                                    if ($upgrade_open_iscsi) {
-                                        print CONFIG "upgrade_open_iscsi=yes\n";
-                                    }
-                                }
-                            }
-                            else {
-                                print "Install $module module? [y/N]:";
-                                $ans = getch();
-                                if ( $ans eq 'Y' or $ans eq 'y' ) {
-                                    push (@selected_modules_by_user, $module);
-                                    print CONFIG "$module=y\n";
-                                }
+                            print "Install $module module? [y/N]:";
+                            $ans = getch();
+                            if ( $ans eq 'Y' or $ans eq 'y' ) {
+                                push (@selected_modules_by_user, $module);
+                                print CONFIG "$module=y\n";
                             }
                         }
                     }
@@ -2296,13 +2321,6 @@ sub select_packages
                 if ($package eq "prefix") {
                     $prefix = $selected;
                     $prefix =~ s/\/$//;
-                    next;
-                }
-
-                if ($package eq "upgrade_open_iscsi") {
-                    if ($selected =~ m/[Yy]|[Yy][Ee][Ss]/) {
-                        $upgrade_open_iscsi = 1;
-                    }
                     next;
                 }
 
@@ -2450,6 +2468,11 @@ sub select_packages
                 }
 
                 if ( $selected eq 'y' ) {
+                    my $parent = $packages_info{$package}{'parent'};
+                    if (not $main_packages{$parent}{'srpmpath'}) {
+                        print "Unsupported package: $package\n" if (not $quiet);
+                        next;
+                    }
                     push (@selected_by_user, $package);
                     print "select_package: selected $package\n" if ($verbose2);
                     $cnt ++;
@@ -2462,6 +2485,8 @@ sub select_packages
             if ($install_option eq 'all') {
                 for my $package ( @all_packages ) {
                     next if (not $packages_info{$package}{'available'});
+                    my $parent = $packages_info{$package}{'parent'};
+                    next if (not $main_packages{$parent}{'srpmpath'});
                     push (@selected_by_user, $package);
                     print CONFIG "$package=y\n"  if ($package ne "open-iscsi-generic");
                     $cnt ++;
@@ -2475,6 +2500,8 @@ sub select_packages
             elsif ($install_option eq 'hpc') {
                 for my $package ( @hpc_user_packages, @hpc_kernel_packages ) {
                     next if (not $packages_info{$package}{'available'});
+                    my $parent = $packages_info{$package}{'parent'};
+                    next if (not $main_packages{$parent}{'srpmpath'});
                     push (@selected_by_user, $package);
                     print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
                     $cnt ++;
@@ -2488,7 +2515,9 @@ sub select_packages
             elsif ($install_option eq 'basic') {
                 for my $package (@basic_user_packages, @basic_kernel_packages) {
                     next if (not $packages_info{$package}{'available'});
-                    push (@selected_by_user, $package) if ($package ne "open-iscsi-generic");
+                    my $parent = $packages_info{$package}{'parent'};
+                    next if (not $main_packages{$parent}{'srpmpath'});
+                    push (@selected_by_user, $package);
                     print CONFIG "$package=y\n";
                     $cnt ++;
                 }
@@ -2642,7 +2671,7 @@ sub check_linux_dependencies
         if ($package =~ /kernel-ib|ib-bonding/) {
             if (not $packages_info{$package}{'rpm_exist'}) {
                 # Check that required kernel is supported
-                if ($kernel !~ /2.6.9-67|2.6.9-78|2.6.9-89|2.6.16.60-[A-Za-z0-9.]*-[A-Za-z0-9.]*|2.6.1[8-9]|2.6.2[0-9]|2.6.3[0-9]/) {
+                if ($kernel !~ /2.6.16.60-[A-Za-z0-9.]*-[A-Za-z0-9.]*|2.6.1[8-9]|2.6.2[0-9]|2.6.3[0-9]|2.6.40|3.0/) {
                     print RED "Kernel $kernel is not supported.", RESET "\n";
                     print BLUE "For the list of Supported Platforms and Operating Systems see", RESET "\n";
                     print BLUE "$CWD/docs/OFED_release_notes.txt", RESET "\n";
@@ -2867,23 +2896,6 @@ sub print_selected
     print "\n";
 }
 
-sub check_open_iscsi
-{
-    my $oiscsi_name = $packages_info{'open-iscsi-generic'}{'name'};
-    if (is_installed($oiscsi_name)) {
-        my $vendor = `rpm --queryformat "[%{VENDOR}]" -q $oiscsi_name`;
-        print "open-iscsi name $oiscsi_name vendor: $vendor\n" if ($verbose3);
-        # Do not upgrade open-iscsi coming with Distribution
-        if ($vendor !~ m/Voltaire/) {
-            print "$oiscsi_name will not be reinstalled\n" if ($verbose3);
-            $upgrade_open_iscsi = 0;
-            $skip_open_iscsi = 1;
-        } else {
-            $upgrade_open_iscsi = 1;
-        }
-    }
-}
-
 sub build_kernel_rpm
 {
     my $name = shift @_;
@@ -2924,6 +2936,15 @@ sub build_kernel_rpm
             $cmd .= " --define '__spec_install_pre %{___build_pre}'";
         }
 
+        if ($DISTRO =~ /SLES11/) {
+            $cmd .= " --define '_suse_os_install_post %{nil}'";
+        }
+
+        if ($DISTRO =~ /RHEL5/ and $target_cpu eq "i386") {
+            $cmd .= " --define '_target_cpu i686'";
+        }
+        $cmd .= " --nodeps";
+        $cmd .= " --define '_dist .$rpm_distro'";
         $cmd .= " --define 'configure_options $kernel_configure_options'";
         $cmd .= " --define 'build_kernel_ib 1'";
         $cmd .= " --define 'build_kernel_ib_devel 1'";
@@ -2942,7 +2963,7 @@ sub build_kernel_rpm
     $cmd .= " $main_packages{$name}{'srpmpath'}";
 
     print "Running $cmd\n" if ($verbose);
-    system("$cmd > $ofedlogs/$name.rpmbuild.log 2>&1");
+    system("$cmd >> $ofedlogs/$name.rpmbuild.log 2>&1");
     $res = $? >> 8;
     $sig = $? & 127;
     if ($sig or $res) {
@@ -3072,7 +3093,7 @@ sub build_rpm
 
     print "Build $name RPM\n" if ($verbose);
 
-    my $pref_env;
+    my $pref_env = '';
     if ($prefix ne $default_prefix) {
         if ($parent ne "mvapich" and $parent ne "mvapich2" and $parent ne "openmpi") {
             $ldflags .= "$optflags -L$prefix/lib64 -L$prefix/lib";
@@ -3101,7 +3122,7 @@ sub build_rpm
                 }
             }
             else {
-                if ($parent eq "sdpnetstat" or $parent eq "rds-tools" or $parent eq "rnfs-utils") {
+                if ($parent =~ /sdpnetstat|rds-tools|rnfs-utils/) {
                     # Override compilation flags on RHEL 4.0 and 5.0 PPC64
                     $ldflags    = " -g -O2";
                     $cflags     = " -g -O2";
@@ -3110,7 +3131,7 @@ sub build_rpm
                     $fflags     = " -g -O2";
                     $ldlibs     = " -g -O2";
                 }
-                else {
+                elsif ($parent !~ /ibutils/) {
                     $ldflags    .= " $optflags -m64 -g -O2 -L/usr/lib64";
                     $cflags     .= " $optflags -m64 -g -O2";
                     $cppflags   .= " $optflags -m64 -g -O2";
@@ -3274,7 +3295,7 @@ sub build_rpm
         elsif ($parent eq "openmpi") {
             my $compiler = (split('_', $name))[1];
             my $use_default_rpm_opt_flags = 1;
-            my $openmpi_ldflags;
+            my $openmpi_ldflags = '';
             my $openmpi_wrapper_cxx_flags;
             my $openmpi_lib;
 
@@ -3426,17 +3447,6 @@ sub build_rpm
             $cmd .= " --define '_defaultdocdir $def_doc_dir/$main_packages{$parent}{'name'}-$main_packages{$parent}{'version'}'";
             $cmd .= " --define '_usr $prefix'";
         }
-        elsif ($parent eq "open-iscsi-generic") {
-            # We use different open-iscsi version for RH4 and all other supported distros
-            $srpmdir=`dirname $main_packages{$parent}{'srpmpath'}`;
-            chomp($srpmdir);
-            if ($DISTRO =~ m/RHEL/) {
-                $srpmpath_for_distro="$srpmdir/$parent-$open_iscsi_ver_rh4.src.rpm";
-            }
-            else {
-                $srpmpath_for_distro="$srpmdir/$parent-$open_iscsi_ver_non_rh4.src.rpm";
-            }
-        }
         else {
             $cmd .= " --define '_prefix $prefix'";
             $cmd .= " --define '_exec_prefix $prefix'";
@@ -3454,12 +3464,7 @@ sub build_rpm
             $cmd .= " --define 'configure_options $packages_info{$parent}{'configure_options'} $user_configure_options'";
         }
 
-	if ($parent ne "open-iscsi-generic") {
-            $cmd .= " $main_packages{$parent}{'srpmpath'}";
-	}
-	else {
-            $cmd .= " $srpmpath_for_distro";
-	}
+        $cmd .= " $main_packages{$parent}{'srpmpath'}";
 
         print "Running $cmd\n" if ($verbose);
         open(LOG, "+>$ofedlogs/$parent.rpmbuild.log");
@@ -3573,41 +3578,10 @@ sub install_rpm
     my $sig = 0;
     my $package;
 
-    if ($name eq $packages_info{'open-iscsi-generic'}{'name'}) {
-        if (is_installed($packages_info{'open-iscsi-generic'}{'name'})) {
-            if ($upgrade_open_iscsi) {
-                $cmd = "rpm -e $packages_info{'open-iscsi-generic'}{'name'}";
-                print "Running $cmd\n" if ($verbose);
-                system("$cmd > $ofedlogs/$name.rpmuninstall.log 2>&1");
-                $res = $? >> 8;
-                $sig = $? & 127;
-                if ($sig or $res) {
-                    print RED "Failed to uninstall $packages_info{'open-iscsi-generic'}{'name'} RPM", RESET "\n";
-                    print RED "See $ofedlogs/$name.rpmuninstall.log", RESET "\n";
-                    exit 1;
-                }
-            }
-            else {
-                return;
-            }
-        }
-    }
-
     my $version = $main_packages{$packages_info{$name}{'parent'}}{'version'};
     my $release = $main_packages{$packages_info{$name}{'parent'}}{'release'};
 
-    if ($name eq $packages_info{'open-iscsi-generic'}{'name'}) {
-        # We use different open-iscsi version for RH4 and all other supported distros
-        if ($DISTRO =~ m/RHEL/) {
-            $package = "$RPMS/$name-$open_iscsi_ver_rh4.$target_cpu.rpm";
-        }
-        else {
-            $package = "$RPMS/$name-$open_iscsi_ver_non_rh4.$target_cpu.rpm";
-        }
-    }
-    else {
-        $package = "$RPMS/$name-$version-$release.$target_cpu.rpm";
-    }
+    $package = "$RPMS/$name-$version-$release.$target_cpu.rpm";
 
     if (not -f $package) {
         print RED "$package does not exist", RESET "\n";
@@ -3621,6 +3595,10 @@ sub install_rpm
             $rpminstall_flags .= " --nopost";
         }
         $cmd = "rpm -iv $rpminstall_flags";
+    }
+
+    if ($name =~ /intel|pgi/) {
+        $cmd .= " --nodeps";
     }
 
     $cmd .= " $package";
@@ -3696,7 +3674,7 @@ sub count_ports
 
 sub is_valid_ipv4
 {
-    my $ipaddr = shift @_;    
+    my $ipaddr = shift @_;
 
     if( $ipaddr =~ m/^(\d\d?\d?)\.(\d\d?\d?)\.(\d\d?\d?)\.(\d\d?\d?)/ ) {
         if($1 <= 255 && $2 <= 255 && $3 <= 255 && $4 <= 255) {
@@ -4195,6 +4173,14 @@ sub install
 {
     # Build and install selected RPMs
     for my $package ( @selected_packages ) {
+        if ($packages_info{$package}{'internal'}) {
+            my $parent = $packages_info{$package}{'parent'};
+            if (not $main_packages{$parent}{'srpmpath'}) {
+                print RED "$parent source RPM is not available", RESET "\n";
+                next;
+            }
+        }
+
         if ($packages_info{$package}{'mode'} eq "user") {
             if (not $packages_info{$package}{'exception'}) {
                 if ( (not $packages_info{$package}{'rpm_exist'}) or 
@@ -4211,20 +4197,6 @@ sub install
                 }
                 print "Install $package RPM:\n" if ($verbose);
                 install_rpm($package);
-            }
-            else {
-                if (($package eq "open-iscsi-generic") || ($package eq "tgt-generic")) {
-                    my $real_name = $packages_info{$package}{'name'};
-                    if (not $packages_info{$real_name}{'rpm_exist'}) {
-                        build_rpm($real_name);
-                    }
-                    if (not $packages_info{$real_name}{'rpm_exist'}) {
-                        print RED "$real_name was not created", RESET "\n";
-                        exit 1;
-                    }
-                    print "Install $real_name RPM:\n" if ($verbose);
-                    install_rpm($real_name);
-                }
             }
         }
         else {
@@ -4266,13 +4238,13 @@ sub check_pcie_link
             my $link_speed = `$setpci -d $devid 72.B | cut -b2`;
             chomp $link_speed;
             if ( $link_speed eq "1" ) {
-                print "\tLink Speed: 2.5Gb/s\n";
+                print "\tPCI Link Speed: 2.5Gb/s\n";
             }
             elsif ( $link_speed eq "2" ) {
-                print "\tLink Speed: 5Gb/s\n";
+                print "\tPCI Link Speed: 5Gb/s\n";
             }
             else {
-                print "\tLink Speed: Unknown\n";
+                print "\tPCI Link Speed: Unknown\n";
             }
             print "", RESET "\n";
         }
