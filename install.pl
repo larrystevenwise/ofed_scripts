@@ -3214,6 +3214,10 @@ sub build_rpm
                         $mvapich2_comp_env = "CC=gcc CXX=g++ F77=g77 FC=/bin/false";
                     }
                 }
+
+                else {
+                    $mvapich2_comp_env .= " --disable-f77 --disable-fc";
+                }
             }
 
             elsif ($compiler eq "pathscale") {
