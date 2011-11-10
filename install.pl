@@ -218,7 +218,7 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
     $DISTRO = "openSUSE";
     $rpm_distro = "opensuse11sp0";
 } elsif ($dist_rpm =~ /sles-release-11.1/) {
-    $DISTRO = "SLES11";
+    $DISTRO = "SLES11.1";
     $rpm_distro = "sles11sp1";
 } elsif ($dist_rpm =~ /sles-release-11/) {
     $DISTRO = "SLES11";
@@ -357,7 +357,7 @@ if ($DISTRO eq "openSUSE11.2") {
 my $libstdc_devel = "$libstdc-devel";
 
 # Suffix for 32 and 64 bit packages
-my $is_suse_suff64 = $arch eq "ppc64" && $DISTRO ne "SLES11";
+my $is_suse_suff64 = $arch eq "ppc64" && $DISTRO !~ /SLES11/;
 my $suffix_32bit = ($DISTRO =~ m/SLES|openSUSE/ && !$is_suse_suff64) ? "-32bit" : "";
 my $suffix_64bit = ($DISTRO =~ m/SLES|openSUSE/ &&  $is_suse_suff64) ? "-64bit" : "";
 
@@ -1832,8 +1832,8 @@ sub set_availability
     }
 
     # NFSRDMA
-    if (($DISTRO =~ m/RHEL5/ or $DISTRO eq "SLES11") and
-            $kernel =~ m/2.6.2[25]|2.6.27.*-*|2.6.30|el5/) {
+    if (($DISTRO =~ m/RHEL6.1|SLES11.1/) and
+            $kernel =~ m/2.6.3[0-9]|2.6.40|3.0/) {
             $kernel_modules_info{'nfsrdma'}{'available'} = 1;
             $packages_info{'rnfs-utils'}{'available'} = 1;
             $packages_info{'rnfs-utils-debuginfo'}{'available'} = 1;
@@ -2728,7 +2728,7 @@ sub check_linux_dependencies
                         $err++;
                     }
                 }
-                if ($DISTRO eq "SLES11") {
+		if ($DISTRO =~ m/SLES11/) {
                     if (not is_installed("gcc-32bit")) {
                         if (not $gcc_32bit_printed) {
                             print RED "gcc 32bit is required to build 32-bit libraries.", RESET "\n";
@@ -2781,7 +2781,7 @@ sub check_linux_dependencies
                         $err++;
                     }
                 } else {
-                    if ($DISTRO eq "SLES11") {
+                    if ($DISTRO =~ m/SLES11/) {
                         if (not is_installed("libevent-devel")) {
                             print RED "libevent-devel is required to build rnfs-utils.", RESET "\n";
                             $err++;
