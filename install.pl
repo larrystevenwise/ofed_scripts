@@ -449,7 +449,7 @@ my @mlnx_en_packages = (
 # List of all available packages sorted following dependencies
 my @kernel_packages = ("kernel-ib", "kernel-ib-devel", "ib-bonding", "ib-bonding-debuginfo");
 my @basic_kernel_modules = ("core", "mthca", "mlx4", "mlx4_en", "cxgb3", "cxgb4", "nes", "ehca", "qib", "ipoib");
-my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser");
+my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser", "nfsrdma");
 
 # kernel modules in "technology preview" status can be installed by
 # adding "module=y" to the ofed.conf file in unattended installation mode
@@ -495,7 +495,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "compat-dapl", "compat-dapl-devel",
                      "dapl", "dapl-devel", "dapl-devel-static", "dapl-utils", "dapl-debuginfo",
                      "perftest", "mstflint",
-                     "qlvnictools", "sdpnetstat", "srptools", "rds-tools", "rds-devel",
+                     "qlvnictools", "sdpnetstat", "srptools", "rds-tools", "rds-devel", "rnfs-utils",
                      "ibutils", "infiniband-diags", "qperf", "qperf-debuginfo",
                      "ofed-docs", "ofed-scripts",
                      "infinipath-psm", "infinipath-psm-devel", @mpi_packages
