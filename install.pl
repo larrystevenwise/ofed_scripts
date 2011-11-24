@@ -301,6 +301,10 @@ if ($arch eq "x86_64") {
 elsif ($arch eq "ppc64") {
     $target_cpu32 = 'ppc';
 }
+elsif ($arch eq "sparc64") {
+    $target_cpu32 = 'sparc';
+}
+
 chomp $target_cpu32;
 
 if ($kernel_given and not $kernel_source_given) {
