@@ -372,6 +372,9 @@ if ($DISTRO eq "openSUSE11.2") {
     $libstdc = 'libstdc++43';
     $libgfortran = 'libgfortran43';
     $curl_devel = 'libcurl-devel';
+    if ($rpm_distro eq "sles11sp2") {
+    	$libstdc = 'libstdc++46';
+    }
 } elsif ($DISTRO =~ m/RHEL|OEL|FC/) {
     $libstdc = 'libstdc++';
     $libgfortran = 'gcc-gfortran';
