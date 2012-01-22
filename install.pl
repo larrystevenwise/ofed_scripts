@@ -614,7 +614,7 @@ my %packages_info = (
             { name => "kernel-ib", parent => "ofa_kernel",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "kernel", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [], ofa_req_inst => [], },
+            dist_req_inst => ["pciutils"], ofa_req_build => [], ofa_req_inst => [], },
         'kernel-ib-devel' =>
             { name => "kernel-ib-devel", parent => "ofa_kernel",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
