@@ -217,6 +217,9 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
 } elsif ($dist_rpm =~ /openSUSE/) {
     $DISTRO = "openSUSE";
     $rpm_distro = "opensuse11sp0";
+} elsif ($dist_rpm =~ /sles-release-11.2/) {
+    $DISTRO = "SLES11.2";
+    $rpm_distro = "sles11sp2";
 } elsif ($dist_rpm =~ /sles-release-11.1/) {
     $DISTRO = "SLES11.1";
     $rpm_distro = "sles11sp1";
@@ -229,12 +232,21 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
 } elsif ($dist_rpm =~ /sles-release-10-15.57.1/) {
     $DISTRO = "SLES10";
     $rpm_distro = "sles10sp4";
-} elsif ($dist_rpm =~ /redhat-release-.*-6.1|centos-release-6-1/) {
+} elsif ($dist_rpm =~ /redhat-release-.*-6.1|sl-release-6.1|centos-release-6-1/) {
     $DISTRO = "RHEL6.1";
     $rpm_distro = "rhel6u1";
+} elsif ($dist_rpm =~ /redhat-release-.*-6.2|sl-release-6.2|centos-release-6-2/) {
+    $DISTRO = "RHEL6.2";
+    $rpm_distro = "rhel6u2";
+} elsif ($dist_rpm =~ /oraclelinux-release-6.*-1.0.2/) {
+    $DISTRO = "OEL6.1";
+    $rpm_distro = "oel6u1";
 } elsif ($dist_rpm =~ /redhat-release-.*-6.0|centos-release-6-0/) {
     $DISTRO = "RHEL6.0";
     $rpm_distro = "rhel6u0";
+} elsif ($dist_rpm =~ /redhat-release-.*-5.8|centos-release-5-8/) {
+    $DISTRO = "RHEL5.8";
+    $rpm_distro = "rhel5u8";
 } elsif ($dist_rpm =~ /redhat-release-.*-5.7|centos-release-5-7/) {
     $DISTRO = "RHEL5.7";
     $rpm_distro = "rhel5u7";
@@ -270,6 +282,12 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
 } elsif ($dist_rpm =~ /fedora-release-12/) {
     $DISTRO = "FC12";
     $rpm_distro = "fc12";
+} elsif ($dist_rpm =~ /fedora-release-13/) {
+    $DISTRO = "FC13";
+    $rpm_distro = "fc13";
+} elsif ($dist_rpm =~ /fedora-release-14/) {
+    $DISTRO = "FC14";
+    $rpm_distro = "fc14";
 } elsif ( -f "/etc/debian_version" ) {
     $DISTRO = "DEBIAN";
     $rpm_distro = "debian";
@@ -344,6 +362,7 @@ my @selected_kernel_modules = ();
 
 my $libstdc = '';
 my $libgfortran = '';
+my $curl_devel = 'curl-devel';
 if ($DISTRO eq "openSUSE11.2") {
     $libstdc = 'libstdc++44';
     $libgfortran = 'libgfortran44';
@@ -352,9 +371,13 @@ if ($DISTRO eq "openSUSE11.2") {
 } elsif ($DISTRO =~ m/SLES11/) {
     $libstdc = 'libstdc++43';
     $libgfortran = 'libgfortran43';
-} elsif ($DISTRO =~ m/RHEL/) {
+    $curl_devel = 'libcurl-devel';
+} elsif ($DISTRO =~ m/RHEL|OEL|FC/) {
     $libstdc = 'libstdc++';
     $libgfortran = 'gcc-gfortran';
+    if ($DISTRO =~ m/RHEL6|OEL6.1|FC14/) {
+        $curl_devel = 'libcurl-devel';
+    }
 } else {
     $libstdc = 'libstdc++';
 }
@@ -397,7 +420,7 @@ if ($DISTRO =~ m/SLES|openSUSE/) {
 } elsif ($DISTRO =~ m/RHEL5/) {
     $sysfsutils = "libsysfs";
     $sysfsutils_devel = "libsysfs";
-} elsif ($DISTRO =~ m/RHEL6/) {
+} elsif ($DISTRO =~ m/RHEL6|OEL6/) {
     $sysfsutils = "libsysfs";
     $sysfsutils_devel = "libsysfs";
 }
@@ -443,7 +466,7 @@ my @distro_ofed_packages = (
                         "libamso", "libamso-devel", "dapl2", "dapl2-devel", "mvapich", "mvapich2", "mvapich2-devel",
                         "mvapich-devel", "libboost_mpi1_36_0", "boost-devel", "boost-doc", "libmthca-rdmav2", "libcxgb3-rdmav2", "libcxgb4-rdmav2",
                         "libmlx4-rdmav2", "libibmad1", "libibumad1", "libibcommon1", "ofed", "ofa",
-                        "scsi-target-utils", "rdma-ofa-agent", "libibumad3"
+                        "scsi-target-utils", "rdma-ofa-agent", "libibumad3", "libibmad5"
                         );
 
 my @mlnx_en_packages = (
@@ -1299,29 +1322,29 @@ my %packages_info = (
             { name => "openmpi_gcc", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => ["$libgfortran","$libstdc_devel"],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "mpi-selector"],
+            dist_req_inst => ["$libstdc"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
+            ofa_req_inst => ["libibverbs", "librdmacm-devel", "mpi-selector"],
             install32 => 0, exception => 0 },
         'openmpi_pgi' =>
             { name => "openmpi_pgi", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "mpi-selector"],
+            dist_req_inst => ["$libstdc"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
+            ofa_req_inst => ["libibverbs", "librdmacm-devel", "mpi-selector"],
             install32 => 0, exception => 0 },
         'openmpi_intel' =>
             { name => "openmpi_intel", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "mpi-selector"],
+            dist_req_inst => ["$libstdc"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
+            ofa_req_inst => ["libibverbs", "librdmacm-devel", "mpi-selector"],
             install32 => 0, exception => 0 },
         'openmpi_pathscale' =>
             { name => "openmpi_pathscale", parent => "openmpi",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "mpi-selector"],
+            dist_req_inst => ["$libstdc"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
+            ofa_req_inst => ["libibverbs", "librdmacm-devel", "mpi-selector"],
             install32 => 0, exception => 0 },
 
         'mpitests' =>
@@ -2735,7 +2758,7 @@ sub check_linux_dependencies
 		if ($DISTRO =~ m/SLES11/) {
                     if (not is_installed("gcc-32bit")) {
                         if (not $gcc_32bit_printed) {
-                            print RED "gcc 32bit is required to build 32-bit libraries.", RESET "\n";
+                            print RED "gcc-32bit is required to build 32-bit libraries.", RESET "\n";
                             $gcc_32bit_printed++;
                             $err++;
                         }
@@ -2967,6 +2990,7 @@ sub build_kernel_rpm
     $cmd .= " $main_packages{$name}{'srpmpath'}";
 
     print "Running $cmd\n" if ($verbose);
+    system("echo $cmd > $ofedlogs/$name.rpmbuild.log 2>&1");
     system("$cmd >> $ofedlogs/$name.rpmbuild.log 2>&1");
     $res = $? >> 8;
     $sig = $? & 127;
@@ -2983,6 +3007,7 @@ sub build_kernel_rpm
 
     for my $myrpm ( <$TMPRPMS/*.rpm> ) {
         print "Created $myrpm\n" if ($verbose2);
+        system("/bin/rpm -qlp $myrpm | grep lib.modules | awk -F '/' '{print\$4}' | sort -u >> $RPMS/.supported_kernels");
         my ($myrpm_name, $myrpm_arch) = (split ' ', get_rpm_name_arch($myrpm));
         move($myrpm, $RPMS);
         $packages_info{$myrpm_name}{'rpm_exist'} = 1;
@@ -3107,6 +3132,11 @@ sub build_rpm
     }
 
     if (not $packages_info{$name}{'rpm_exist'}) {
+
+        if ($parent eq "ibacm" and $DISTRO eq "FC14") {
+            $ldflags    = " -g -O2 -lpthread";
+        }
+
         if ($arch eq "ppc64") {
             if ($DISTRO =~ m/SLES/ and $dist_rpm_rel gt 15.2) {
                 # SLES 10 SP1
