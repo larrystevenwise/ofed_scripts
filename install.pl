@@ -2849,8 +2849,7 @@ sub check_linux_dependencies
                 }
 
                 my $blkid_so = ($arch =~ m/x86_64/) ? "/usr/lib64/libblkid.so" : "/usr/lib/libblkid.so";
-                my $blkid_pkg = ($kernel =~ m/2.6.2[6-7]/ and $DISTRO =~ m/SLES/) ? "libblkid-devel" :
-                                "e2fsprogs-devel";
+                my $blkid_pkg = ($DISTRO =~ m/SLES10|RHEL5/) ? "e2fsprogs-devel" : "libblkid-devel";
                 $blkid_pkg .= ($arch =~ m/powerpc|ppc64/) ? "-32bit" : "";
 
                 if (not -e $blkid_so) {
