@@ -525,7 +525,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "compat-dapl", "compat-dapl-devel",
                      "dapl", "dapl-devel", "dapl-devel-static", "dapl-utils", "dapl-debuginfo",
                      "perftest", "mstflint",
-                     "qlvnictools", "sdpnetstat", "srptools", "rds-tools", "rds-devel", "rnfs-utils",
+                     "qlvnictools", "sdpnetstat", "srptools", "rds-tools", "rds-devel",
                      "ibutils", "infiniband-diags", "qperf", "qperf-debuginfo",
                      "ofed-docs", "ofed-scripts",
                      "infinipath-psm", "infinipath-psm-devel", @mpi_packages
@@ -1865,8 +1865,6 @@ sub set_availability
     if (($DISTRO =~ m/RHEL6.1|SLES11.1/) and
             $kernel =~ m/2.6.3[0-9]|2.6.40|3.0/) {
             $kernel_modules_info{'nfsrdma'}{'available'} = 1;
-            $packages_info{'rnfs-utils'}{'available'} = 1;
-            $packages_info{'rnfs-utils-debuginfo'}{'available'} = 1;
     }
 
     # RDS - cause kernel panic on RHEL4.
