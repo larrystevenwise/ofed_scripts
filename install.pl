@@ -1445,57 +1445,6 @@ my %packages_info = (
             ofa_req_inst => ["openmpi_intel"],
             install32 => 0, exception => 0 },
 
-        'open-iscsi-generic' =>
-            { name => ($DISTRO =~ m/SLES/) ? 'open-iscsi': 'iscsi-initiator-utils', parent => "open-iscsi-generic",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [($DISTRO eq 'FC12') ? "glibc-static" : ""],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 0, exception => 1, configure_options => '' },
-        'open-iscsi' =>
-            { name => "open-iscsi", parent => "open-iscsi-generic",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 0, exception => 1 },
-        'iscsi-initiator-utils' =>
-            { name => "iscsi-initiator-utils", parent => "open-iscsi-generic",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 0, exception => 1 },
-        'open-iscsi-generic-debuginfo' =>
-            { name => "open-iscsi-generic", parent => "open-iscsi-generic",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
-        'tgt-generic' =>
-            { name => ($DISTRO =~ m/SLES/) ? 'tgt': 'scsi-target-utils', parent => "tgt-generic",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["openssl-devel"],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["librdmacm", "libibverbs-devel"],
-            install32 => 0, exception => 1, configure_options => '' },
-        'tgt' =>
-            { name => "tgt", parent => "tgt-generic",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["openssl-devel"],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["librdmacm", "libibverbs-devel"],
-            install32 => 0, exception => 1 },
-        'scsi-target-utils' =>
-            { name => "scsi-target-utils", parent => "tgt-generic",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["openssl-devel"],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["librdmacm", "libibverbs-devel"],
-            install32 => 0, exception => 1 },
-
         'ofed-docs' =>
             { name => "ofed-docs", parent => "ofed-docs",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -1830,19 +1779,7 @@ sub set_availability
     }
 
     if ($DISTRO =~ m/RHEL6/) {
-            $packages_info{'open-iscsi-generic'}{'available'} = 0;
-            $packages_info{'open-iscsi'}{'available'} = 0;
-            $packages_info{'iscsi-initiator-utils'}{'available'} = 0;
-            $packages_info{'open-iscsi-generic-debuginfo'}{'available'} = 0;
             $kernel_modules_info{'iser'}{'available'} = 0;
-    }
-
-    # tgt
-    if ($arch !~ m/ppc64|powerpc|ia64/ and
-            $kernel =~ m/2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
-            $packages_info{'tgt-generic'}{'available'} = 1;
-            $packages_info{'tgt'}{'available'} = 1;
-            $packages_info{'scsi-target-utils'}{'available'} = 1;
     }
 
 #    # QLogic vnic
@@ -2230,7 +2167,7 @@ sub select_packages
                 my $parent = $packages_info{$package}{'parent'};
                 next if (not $main_packages{$parent}{'srpmpath'});
                 push (@selected_by_user, $package);
-                print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
+                print CONFIG "$package=y\n";
                 $cnt ++;
             }
             for my $module ( @basic_kernel_modules ) {
@@ -2245,7 +2182,7 @@ sub select_packages
                 my $parent = $packages_info{$package}{'parent'};
                 next if (not $main_packages{$parent}{'srpmpath'});
                 push (@selected_by_user, $package);
-                print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
+                print CONFIG "$package=y\n";
                 $cnt ++;
             }
             for my $module ( @hpc_kernel_modules ) {
@@ -2260,7 +2197,7 @@ sub select_packages
                 my $parent = $packages_info{$package}{'parent'};
                 next if (not $main_packages{$parent}{'srpmpath'});
                 push (@selected_by_user, $package);
-                print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
+                print CONFIG "$package=y\n";
                 $cnt ++;
             }
             for my $module ( @kernel_modules ) {
@@ -2278,7 +2215,7 @@ sub select_packages
                 print "Install $package? [y/N]:";
                 $ans = getch();
                 if ( $ans eq 'Y' or $ans eq 'y' ) {
-                    print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
+                    print CONFIG "$package=y\n";
                     push (@selected_by_user, $package);
                     $cnt ++;
 
@@ -2516,7 +2453,7 @@ sub select_packages
                     my $parent = $packages_info{$package}{'parent'};
                     next if (not $main_packages{$parent}{'srpmpath'});
                     push (@selected_by_user, $package);
-                    print CONFIG "$package=y\n"  if ($package ne "open-iscsi-generic");
+                    print CONFIG "$package=y\n";
                     $cnt ++;
                 }
                 for my $module ( @kernel_modules ) {
@@ -2531,7 +2468,7 @@ sub select_packages
                     my $parent = $packages_info{$package}{'parent'};
                     next if (not $main_packages{$parent}{'srpmpath'});
                     push (@selected_by_user, $package);
-                    print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
+                    print CONFIG "$package=y\n";
                     $cnt ++;
                 }
                 for my $module ( @hpc_kernel_modules ) {
@@ -4156,7 +4093,7 @@ sub uninstall
         $sig = $? & 127;
         if ($sig or $res) {
             # Last try to uninstall
-            my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep ofed`;
+            my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep -E "ofed|ofa_kernel"`;
             my $cmd = "rpm -e --allmatches";
             for my $package (@all_packages, @hidden_packages, @prev_ofed_packages, @other_ofed_rpms) {
                 chomp $package;
@@ -4329,7 +4266,7 @@ sub main
                 print "\nRPMs: ";
             }
             print $package . ' ';
-            print CONFIG "$package=y\n" if ($package ne "open-iscsi-generic");
+            print CONFIG "$package=y\n";
         }
         flock CONFIG, $UNLOCK;
         close(CONFIG);
@@ -4424,7 +4361,7 @@ sub main
         for my $srcrpm ( <$SRPMS*> ) {
             set_cfg ($srcrpm);
         }
-        
+
         # Set RPMs info for available source RPMs
         set_availability();
         $num_selected = select_packages();
