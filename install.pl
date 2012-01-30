@@ -1743,6 +1743,18 @@ sub set_availability
             $packages_info{'libnes-debuginfo'}{'available'} = 0;
     }
 
+    if ($kernel =~ m/^3\.1/) {
+            $kernel_modules_info{'nes'}{'available'} = 0;
+            $packages_info{'libnes'}{'available'} = 0;
+            $packages_info{'libnes-devel-static'}{'available'} = 0;
+            $packages_info{'libnes-debuginfo'}{'available'} = 0;
+
+            $kernel_modules_info{'rds'}{'available'} = 0;
+            $packages_info{'rds-tools'}{'available'} = 0;
+            $packages_info{'rds-devel'}{'available'} = 0;
+            $packages_info{'rds-tools-debuginfo'}{'available'} = 0;
+    }
+
     if ($arch =~ m/ia64/) {
             $kernel_modules_info{'mlx4_en'}{'available'} = 0;
     }
