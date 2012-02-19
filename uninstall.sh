@@ -64,6 +64,7 @@ do
     shift
 done
 
+IB_ALL_PACKAGES="$IB_ALL_PACKAGES compat-rdma compat-rdma-devel "
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES kernel-ib kernel-ib-devel ipoibtools "
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libopensm libopensm-devel libosmcomp libosmcomp-devel libosmvendor libosmvendor-devel"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES openib-diags ib-bonding ib-bonding-debuginfo"

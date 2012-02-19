@@ -241,6 +241,9 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
 } elsif ($dist_rpm =~ /oraclelinux-release-6.*-1.0.2/) {
     $DISTRO = "OEL6.1";
     $rpm_distro = "oel6u1";
+} elsif ($dist_rpm =~ /oraclelinux-release-6.*-2.0.2/) {
+    $DISTRO = "OEL6.2";
+    $rpm_distro = "oel6u2";
 } elsif ($dist_rpm =~ /redhat-release-.*-6.0|centos-release-6-0/) {
     $DISTRO = "RHEL6.0";
     $rpm_distro = "rhel6u0";
@@ -361,24 +364,30 @@ my @selected_kernel_modules = ();
 
 
 my $libstdc = '';
+my $libgcc = 'libgcc';
 my $libgfortran = '';
 my $curl_devel = 'curl-devel';
 if ($DISTRO eq "openSUSE11.2") {
     $libstdc = 'libstdc++44';
+    $libgcc = 'libgcc44';
     $libgfortran = 'libgfortran44';
 } elsif ($DISTRO eq "openSUSE") {
     $libstdc = 'libstdc++42';
+    $libgcc = 'libgcc42';
 } elsif ($DISTRO =~ m/SLES11/) {
     $libstdc = 'libstdc++43';
+    $libgcc = 'libgcc43';
     $libgfortran = 'libgfortran43';
     $curl_devel = 'libcurl-devel';
     if ($rpm_distro eq "sles11sp2") {
     	$libstdc = 'libstdc++46';
+        $libgcc = 'libgcc46';
     }
 } elsif ($DISTRO =~ m/RHEL|OEL|FC/) {
     $libstdc = 'libstdc++';
+    $libgcc = 'libgcc';
     $libgfortran = 'gcc-gfortran';
-    if ($DISTRO =~ m/RHEL6|OEL6.1|FC14/) {
+    if ($DISTRO =~ m/RHEL6|OEL6|FC14/) {
         $curl_devel = 'libcurl-devel';
     }
 } else {
@@ -388,7 +397,7 @@ my $libstdc_devel = "$libstdc-devel";
 
 # Suffix for 32 and 64 bit packages
 my $is_suse_suff64 = $arch eq "ppc64" && $DISTRO !~ /SLES11/;
-my $suffix_32bit = ($DISTRO =~ m/SLES|openSUSE/ && !$is_suse_suff64) ? "-32bit" : "";
+my $suffix_32bit = ($DISTRO =~ m/SLES|openSUSE/ && !$is_suse_suff64) ? "-32bit" : ".$target_cpu32";
 my $suffix_64bit = ($DISTRO =~ m/SLES|openSUSE/ &&  $is_suse_suff64) ? "-64bit" : "";
 
 sub usage
@@ -426,6 +435,15 @@ if ($DISTRO =~ m/SLES|openSUSE/) {
 } elsif ($DISTRO =~ m/RHEL6|OEL6/) {
     $sysfsutils = "libsysfs";
     $sysfsutils_devel = "libsysfs";
+}
+
+my $kernel_req = "";
+if ($DISTRO =~ /RHEL|OEL/) {
+    $kernel_req = "redhat-rpm-config";
+} elsif ($DISTRO =~ /SLES10/) {
+    $kernel_req = "kernel-syms";
+} elsif ($DISTRO =~ /SLES11/) {
+    $kernel_req = "kernel-source";
 }
 
 my $network_dir;
@@ -477,7 +495,7 @@ my @mlnx_en_packages = (
                         );
 
 # List of all available packages sorted following dependencies
-my @kernel_packages = ("kernel-ib", "kernel-ib-devel", "ib-bonding", "ib-bonding-debuginfo");
+my @kernel_packages = ("compat-rdma", "compat-rdma-devel", "ib-bonding", "ib-bonding-debuginfo");
 my @basic_kernel_modules = ("core", "mthca", "mlx4", "mlx4_en", "cxgb3", "cxgb4", "nes", "ehca", "qib", "ipoib");
 my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser", "nfsrdma");
 
@@ -531,12 +549,12 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "infinipath-psm", "infinipath-psm-devel", @mpi_packages
                      );
 
-my @basic_kernel_packages = ("kernel-ib");
+my @basic_kernel_packages = ("compat-rdma");
 my @basic_user_packages = ("libibverbs", "libibverbs-utils", "libmthca", "libmlx4",
                             "libehca", "libcxgb3", "libcxgb4", "libnes", "libipathverbs", "librdmacm", "librdmacm-utils",
                             "mstflint", @misc_packages);
 
-my @hpc_kernel_packages = ("kernel-ib", "ib-bonding");
+my @hpc_kernel_packages = ("compat-rdma", "ib-bonding");
 my @hpc_kernel_modules = (@basic_kernel_modules);
 my @hpc_user_packages = (@basic_user_packages, "librdmacm",
                         "librdmacm-utils", "compat-dapl", "compat-dapl-devel", "dapl", "dapl-devel", "dapl-devel-static", "dapl-utils",
@@ -605,22 +623,22 @@ my %kernel_modules_info = (
 
 my %packages_info = (
         # Kernel packages
-        'ofa_kernel' =>
-            { name => "ofa_kernel", parent => "ofa_kernel",
+        'compat-rdma' =>
+            { name => "compat-rdma", parent => "compat-rdma",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "kernel", dist_req_build => [],
+            available => 1, mode => "kernel", dist_req_build => ["make", "gcc"],
             dist_req_inst => [], ofa_req_build => [], ofa_req_inst => ["ofed-scripts"], configure_options => '' },
-        'kernel-ib' =>
-            { name => "kernel-ib", parent => "ofa_kernel",
+        'compat-rdma' =>
+            { name => "compat-rdma", parent => "compat-rdma",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "kernel", dist_req_build => [],
-            dist_req_inst => ["pciutils"], ofa_req_build => [], ofa_req_inst => [], },
-        'kernel-ib-devel' =>
-            { name => "kernel-ib-devel", parent => "ofa_kernel",
+            available => 1, mode => "kernel", dist_req_build => ["make", "gcc"],
+            dist_req_inst => ["pciutils"], ofa_req_build => [], ofa_req_inst => ["ofed-scripts"], },
+        'compat-rdma-devel' =>
+            { name => "compat-rdma-devel", parent => "compat-rdma",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "kernel", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => ["kernel-ib"], },
+            ofa_req_inst => ["compat-rdma"], },
         'ib-bonding' =>
             { name => "ib-bonding", parent => "ib-bonding",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -636,8 +654,8 @@ my %packages_info = (
             { name => "libibverbs", parent => "libibverbs",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => 
-            ( $build32 == 1 )?["gcc_3.3.3", "glibc-devel$suffix_64bit","glibc-devel$suffix_32bit","$libstdc"]:
-            ["gcc_3.3.3", "glibc-devel$suffix_64bit","$libstdc"],
+            ( $build32 == 1 )?["gcc_3.3.3", "glibc-devel$suffix_64bit","glibc-devel$suffix_32bit","$libstdc","$libstdc" . "$suffix_32bit","$libgcc","$libgcc" . "$suffix_32bit"]:
+            ["gcc_3.3.3", "glibc-devel$suffix_64bit","$libstdc","$libgcc"],
             dist_req_inst => [], ofa_req_build => [], ofa_req_inst => ["ofed-scripts"], 
             install32 => 1, exception => 0, configure_options => '' },
         'libibverbs-devel' =>
@@ -1902,7 +1920,7 @@ sub set_existing_rpms
     for my $binrpm ( <$RPMS/*.rpm> ) {
         my ($rpm_name, $rpm_arch) = (split ' ', get_rpm_name_arch($binrpm));
         $main_packages{$rpm_name}{'rpmpath'}   = $binrpm;
-        if ($rpm_name =~ /kernel-ib|ib-bonding/) {
+        if ($rpm_name =~ /compat-rdma|ib-bonding/) {
             if (($rpm_arch eq $target_cpu) and (get_rpm_rel($binrpm) eq $kernel_rel)) {
                 $packages_info{$rpm_name}{'rpm_exist'} = 1;
                 print "$rpm_name RPM exist\n" if ($verbose2);
@@ -2231,7 +2249,7 @@ sub select_packages
                     push (@selected_by_user, $package);
                     $cnt ++;
 
-                    if ($package eq "kernel-ib") {
+                    if ($package eq "compat-rdma") {
                         # Select kernel modules to be installed
                         for my $module ( @kernel_modules, @tech_preview ) {
                             next if (not $kernel_modules_info{$module}{'available'});
@@ -2523,7 +2541,7 @@ sub module_in_rpm
     my $module = shift @_;
     my $ret = 1;
 
-    my $name = 'kernel-ib';
+    my $name = 'compat-rdma';
     my $version = $main_packages{$packages_info{$name}{'parent'}}{'version'};
     my $release = $kernel_rel;
 
@@ -2624,10 +2642,10 @@ sub resolve_dependencies
         select_dependent_module($module);
     }
 
-    if ($packages_info{'kernel-ib'}{'rpm_exist'}) {
+    if ($packages_info{'compat-rdma'}{'rpm_exist'}) {
         for my $module (@selected_kernel_modules) {
             if (module_in_rpm($module)) {
-                $packages_info{'kernel-ib'}{'rpm_exist'} = 0;
+                $packages_info{'compat-rdma'}{'rpm_exist'} = 0;
                 last;
             }
         }
@@ -2645,7 +2663,7 @@ sub check_linux_dependencies
 
     for my $package ( @selected_packages ) {
         # Check rpmbuild requirements
-        if ($package =~ /kernel-ib|ib-bonding/) {
+        if ($package =~ /compat-rdma|ib-bonding/) {
             if (not $packages_info{$package}{'rpm_exist'}) {
                 # Check that required kernel is supported
                 if ($kernel !~ /2.6.16.60-[A-Za-z0-9.]*-[A-Za-z0-9.]*|2.6.1[8-9]|2.6.2[0-9]|2.6.3[0-9]|2.6.40|3.[0-1]/) {
@@ -2882,8 +2900,8 @@ sub build_kernel_rpm
 
     $cmd = "rpmbuild --rebuild $rpmbuild_flags --define '_topdir $TOPDIR'";
 
-    if ($name eq 'ofa_kernel') {
-        $kernel_configure_options .= " $packages_info{'ofa_kernel'}{'configure_options'}";
+    if ($name eq 'compat-rdma') {
+        $kernel_configure_options .= " $packages_info{'compat-rdma'}{'configure_options'}";
 
         for my $module ( @selected_kernel_modules ) {
             if ($module eq "core") {
@@ -4105,7 +4123,7 @@ sub uninstall
         $sig = $? & 127;
         if ($sig or $res) {
             # Last try to uninstall
-            my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep -E "ofed|ofa_kernel"`;
+            my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep -E "ofed|ofa_kernel|compat-rdma"`;
             my $cmd = "rpm -e --allmatches";
             for my $package (@all_packages, @hidden_packages, @prev_ofed_packages, @other_ofed_rpms) {
                 chomp $package;
@@ -4268,7 +4286,7 @@ sub main
         print "\nOFED packages: ";
         for my $package ( @list ) {
             next if (not $packages_info{$package}{'available'});
-            if ($package eq "kernel-ib") {
+            if ($package eq "compat-rdma") {
                 print "\nKernel modules: ";
                 for my $module ( @kernel_modules ) {
                     next if (not $kernel_modules_info{$module}{'available'});
