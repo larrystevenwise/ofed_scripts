@@ -2944,6 +2944,7 @@ sub build_kernel_rpm
         $cmd .= " --define 'build_kernel_ib_devel 1'";
         $cmd .= " --define 'KVERSION $kernel'";
         $cmd .= " --define 'K_SRC $kernel_sources'";
+        $cmd .= " --define '_release $kernel_rel'";
         $cmd .= " --define 'network_dir $network_dir'";
     }
     elsif ($name eq 'ib-bonding') {
