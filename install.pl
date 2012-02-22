@@ -599,7 +599,7 @@ my %kernel_modules_info = (
             { name => "ipoib", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'sdp' =>
-            { name => "sdp", available => 1, selected => 0,
+            { name => "sdp", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
         'srp' =>
             { name => "srp", available => 1, selected => 0,
