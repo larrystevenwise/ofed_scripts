@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2011 Mellanox Technologies. All rights reserved.
+# Copyright (c) 2012 Mellanox Technologies. All rights reserved.
 #
 # This Software is licensed under one of the following licenses:
 #
@@ -180,28 +180,31 @@ while ( $#ARGV >= 0 ) {
 
 if (-f "/etc/issue") {
     if (-f "/usr/bin/dpkg") {
+        if ( `which rpm` eq ""){
+            print RED "rpm package is not installed. Exiting...", RESET "\n";
+            print RED "Please run 'sudo apt-get install rpm'", RESET "\n";
+            exit 1;
+        }
         if (-f "/etc/lsb-release") {
-            open (LSB, "/etc/lsb-release") || die "";
-            while (<LSB>) {
-                if (/DISTRIB_DESCRIPTION/) {
-                    $dist_rpm = (split '=', $_)[1];
-                    $dist_rpm =~ s/"//g;
-                    $dist_rpm =~ s/ /_/g;
-                }
-            }
-            close LSB;
+            $dist_rpm  = `lsb_release -s -i`;
+            $dist_rpm_ver = `lsb_release -s -r`;
         }
         else {
-            $dist_rpm = "debian";
+            print "lsb_release is required to continue\n";
+            $dist_rpm = "unsupported";
         }
     }
     else {
-        $dist_rpm = `rpm -qf /etc/issue | head -1`;
+        $dist_rpm = `rpm -qf /etc/issue 2> /dev/null | grep -v "is not owned by any package" | head -1`;
         chomp $dist_rpm;
-        $dist_rpm = `rpm -q --queryformat "[%{NAME}]-[%{VERSION}]-[%{RELEASE}]" $dist_rpm`;
-        chomp $dist_rpm;
-        $dist_rpm_ver = get_rpm_ver_inst($dist_rpm);
-        $dist_rpm_rel = get_rpm_rel_inst($dist_rpm);
+        if ($dist_rpm) {
+            $dist_rpm = `rpm -q --queryformat "[%{NAME}]-[%{VERSION}]-[%{RELEASE}]" $dist_rpm`;
+            chomp $dist_rpm;
+            $dist_rpm_ver = get_rpm_ver_inst($dist_rpm);
+            $dist_rpm_rel = get_rpm_rel_inst($dist_rpm);
+        } else {
+            $dist_rpm = "unsupported";
+        }
     }
 }
 else {
@@ -238,6 +241,9 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
 } elsif ($dist_rpm =~ /redhat-release-.*-6.2|sl-release-6.2|centos-release-6-2/) {
     $DISTRO = "RHEL6.2";
     $rpm_distro = "rhel6u2";
+} elsif ($dist_rpm =~ /redhat-release-.*-6.3|sl-release-6.3|centos-release-6-3/) {
+    $DISTRO = "RHEL6.3";
+    $rpm_distro = "rhel6u3";
 } elsif ($dist_rpm =~ /oraclelinux-release-6.*-1.0.2/) {
     $DISTRO = "OEL6.1";
     $rpm_distro = "oel6u1";
@@ -247,16 +253,16 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
 } elsif ($dist_rpm =~ /redhat-release-.*-6.0|centos-release-6-0/) {
     $DISTRO = "RHEL6.0";
     $rpm_distro = "rhel6u0";
-} elsif ($dist_rpm =~ /redhat-release-.*-5.8|centos-release-5-8/) {
+} elsif ($dist_rpm =~ /redhat-release-.*-5.8|centos-release-5-8|enterprise-release-5-8/) {
     $DISTRO = "RHEL5.8";
     $rpm_distro = "rhel5u8";
-} elsif ($dist_rpm =~ /redhat-release-.*-5.7|centos-release-5-7/) {
+} elsif ($dist_rpm =~ /redhat-release-.*-5.7|centos-release-5-7|enterprise-release-5-7/) {
     $DISTRO = "RHEL5.7";
     $rpm_distro = "rhel5u7";
-} elsif ($dist_rpm =~ /redhat-release-.*-5.6|centos-release-5-6/) {
+} elsif ($dist_rpm =~ /redhat-release-.*-5.6|centos-release-5-6|enterprise-release-5-6/) {
     $DISTRO = "RHEL5.6";
     $rpm_distro = "rhel5u6";
-} elsif ($dist_rpm =~ /redhat-release-.*-5.5|centos-release-5-5|enterprise-release-5/) {
+} elsif ($dist_rpm =~ /redhat-release-.*-5.5|centos-release-5-5|enterprise-release-5-5/) {
     system("grep -wq XenServer /etc/issue > /dev/null 2>&1");
     my $res = $? >> 8;
     my $sig = $? & 127; 
@@ -291,6 +297,10 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
 } elsif ($dist_rpm =~ /fedora-release-14/) {
     $DISTRO = "FC14";
     $rpm_distro = "fc14";
+} elsif ($dist_rpm =~ /Ubuntu/) {
+    $DISTRO = "UBUNTU$dist_rpm_ver";
+    $rpm_distro =~ tr/[A-Z]/[a-z]/;
+    $rpm_distro =~ s/\./u/g;
 } elsif ( -f "/etc/debian_version" ) {
     $DISTRO = "DEBIAN";
     $rpm_distro = "debian";
@@ -344,6 +354,10 @@ $kernel_rel =~ s/-/_/g;
 if ($DISTRO eq "DEBIAN") {
     $check_linux_deps = 0;
 }
+if ($DISTRO =~ /UBUNTU.*/) {
+    $rpminstall_flags .= ' --force-debian --nodeps ';
+    $rpmbuild_flags .= ' --nodeps ';
+}
 
 if (not $check_linux_deps) {
     $rpmbuild_flags .= ' --nodeps';
@@ -360,6 +374,9 @@ my %main_packages = ();
 my @selected_packages = ();
 my @selected_by_user = ();
 my @selected_modules_by_user = ();
+my @packages_to_uninstall = ();
+my @dependant_packages_to_uninstall = ();
+my %selected_for_uninstall = ();
 my @selected_kernel_modules = ();
 
 
@@ -374,14 +391,18 @@ if ($DISTRO eq "openSUSE11.2") {
 } elsif ($DISTRO eq "openSUSE") {
     $libstdc = 'libstdc++42';
     $libgcc = 'libgcc42';
+} elsif ($DISTRO =~ /UBUNTU/) {
+    $libstdc = 'libstdc++6';
+    $libgfortran = 'libgfortran3';
 } elsif ($DISTRO =~ m/SLES11/) {
     $libstdc = 'libstdc++43';
     $libgcc = 'libgcc43';
     $libgfortran = 'libgfortran43';
     $curl_devel = 'libcurl-devel';
     if ($rpm_distro eq "sles11sp2") {
-    	$libstdc = 'libstdc++46';
+        $libstdc = 'libstdc++46';
         $libgcc = 'libgcc46';
+        $libgfortran = 'libgfortran46';
     }
 } elsif ($DISTRO =~ m/RHEL|OEL|FC/) {
     $libstdc = 'libstdc++';
@@ -654,10 +675,11 @@ my %packages_info = (
             { name => "libibverbs", parent => "libibverbs",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => 
-            ( $build32 == 1 )?["gcc_3.3.3", "glibc-devel$suffix_64bit","glibc-devel$suffix_32bit","$libstdc","$libstdc" . "$suffix_32bit","$libgcc","$libgcc" . "$suffix_32bit"]:
-            ["gcc_3.3.3", "glibc-devel$suffix_64bit","$libstdc","$libgcc"],
+            ( $build32 == 1 )?["gcc_3.3.3", "glibc-devel$suffix_64bit","glibc-devel$suffix_32bit","$libstdc","$libstdc" . "$suffix_32bit","$libgcc","$libgcc" . "lib32gcc1"]:["gcc_3.3.3", "glibc-devel$suffix_64bit","$libstdc","$libgcc"],
             dist_req_inst => [], ofa_req_build => [], ofa_req_inst => ["ofed-scripts"], 
-            install32 => 1, exception => 0, configure_options => '' },
+            ubuntu_dist_req_build =>( $build32 == 1 )?["gcc", "libc6-dev","libc6-dev-i386","$libstdc",
+            "lib32stdc++6","libgcc1","lib32gcc1"]:["gcc", "libc6-dev","$libstdc","libgcc1"], 
+            ubuntu_dist_req_inst => [],install32 => 1, exception => 0, configure_options => '' },
         'libibverbs-devel' =>
             { name => "libibverbs-devel", parent => "libibverbs",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
@@ -867,7 +889,7 @@ my %packages_info = (
             { name => "libibumad", parent => "libibumad",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => ["libtool"],
-            dist_req_inst => [], ofa_req_build => [],
+            dist_req_inst => [],ubuntu_dist_req_build => ["libtool"],ubuntu_dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 1, exception => 0, configure_options => '' },
         'libibumad-devel' =>
@@ -896,7 +918,7 @@ my %packages_info = (
             { name => "libibmad", parent => "libibmad",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => ["libtool"],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
+            dist_req_inst => [],ubuntu_dist_req_build => ["libtool"],ubuntu_dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
             ofa_req_inst => ["libibumad"],
             install32 => 1, exception => 0, configure_options => '' },
         'libibmad-devel' =>
@@ -925,7 +947,7 @@ my %packages_info = (
             { name => "opensm", parent => "opensm",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => ["bison", "flex"],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
+            dist_req_inst => [],ubuntu_dist_req_build => ["bison", "flex"],ubuntu_dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
             ofa_req_inst => ["opensm-libs"],
             install32 => 0, exception => 0, configure_options => '' },
         'opensm-devel' =>
@@ -939,7 +961,7 @@ my %packages_info = (
             { name => "opensm-libs", parent => "opensm",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => ["bison", "flex"],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
+            dist_req_inst => [],ubuntu_dist_req_build => ["bison", "flex"],ubuntu_dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
             ofa_req_inst => ["libibumad"],
             install32 => 1, exception => 0 },
         'opensm-static' =>
@@ -1051,6 +1073,7 @@ my %packages_info = (
             available => 1, mode => "user", 
             dist_req_build => ["zlib-devel$suffix_64bit", "$libstdc_devel$suffix_64bit", "gcc-c++"],
             dist_req_inst => [], ofa_req_build => [],
+            ubuntu_dist_req_build => ["zlib1g-dev", "$libstdc_devel", "gcc","g++","byacc"],ubuntu_dist_req_inst => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
         'mstflint-debuginfo' =>
@@ -1258,6 +1281,7 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => ["tcsh"],
             dist_req_inst => ["tcsh"], ofa_req_build => [],
             ofa_req_inst => [],
+            ubuntu_dist_req_build => ["tcsh"],ubuntu_dist_req_inst => ["tcsh"],
             install32 => 0, exception => 0, configure_options => '' },
 
         'mvapich' =>
@@ -1266,19 +1290,24 @@ my %packages_info = (
             available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
             dist_req_inst => ["$libstdc"], ofa_req_build => ["libibumad-devel"],
             ofa_req_inst => ["libibumad"],
+            ubuntu_dist_req_build => ["$libstdc_devel"],
+            ubuntu_dist_req_inst => ["$libstdc"],
             install32 => 0, exception => 0, configure_options => '' },
         'mvapich_gcc' =>
             { name => "mvapich_gcc", parent => "mvapich",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["$libgfortran","$libstdc_devel"],
+            available => 0, mode => "user", dist_req_build => ["$libgfortran","$libstdc_devel"],
             dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
             ofa_req_inst => ["mpi-selector", "libibverbs", "libibumad"],
+            ubuntu_dist_req_build => ["$libstdc_devel"],
+            ubuntu_dist_req_inst => [""],
             install32 => 0, exception => 0 },
         'mvapich_pgi' =>
             { name => "mvapich_pgi", parent => "mvapich",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
+            dist_req_inst => [],
+            ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
             ofa_req_inst => ["mpi-selector", "libibverbs", "libibumad"],
             install32 => 0, exception => 0 },
         'mvapich_intel' =>
@@ -1338,6 +1367,8 @@ my %packages_info = (
             available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
             dist_req_inst => ["$libstdc"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
             ofa_req_inst => ["libibverbs", "mpi-selector", "librdmacm"],
+            ubuntu_dist_req_build => ["$libstdc_devel"],
+            ubuntu_dist_req_inst => ["$libstdc"],
             install32 => 0, exception => 0, configure_options => '' },
         'openmpi_gcc' =>
             { name => "openmpi_gcc", parent => "openmpi",
@@ -1345,6 +1376,8 @@ my %packages_info = (
             available => 1, mode => "user", dist_req_build => ["$libgfortran","$libstdc_devel"],
             dist_req_inst => ["$libstdc"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
             ofa_req_inst => ["libibverbs", "librdmacm-devel", "mpi-selector"],
+            ubuntu_dist_req_build => ["$libgfortran","$libstdc_devel"],
+            ubuntu_dist_req_inst => ["$libstdc"],
             install32 => 0, exception => 0 },
         'openmpi_pgi' =>
             { name => "openmpi_pgi", parent => "openmpi",
@@ -1379,7 +1412,7 @@ my %packages_info = (
         'mpitests_mvapich_gcc' =>
             { name => "mpitests_mvapich_gcc", parent => "mpitests",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["mvapich_gcc", "libibumad-devel", "librdmacm-devel"],
             ofa_req_inst => ["mvapich_gcc"],
             install32 => 0, exception => 0 },
@@ -1607,7 +1640,7 @@ sub getch
 
 sub get_rpm_name_arch
 {
-    my $ret = `rpm --queryformat "[%{NAME}] [%{ARCH}]" -qp @_`;
+    my $ret = `rpm --queryformat "[%{NAME}] [%{ARCH}]" -qp @_ | grep -v Freeing`;
     chomp $ret;
     return $ret;
 }
@@ -1630,7 +1663,7 @@ sub get_rpm_rel
 sub get_rpm_ver_inst
 {
     my $ret;
-    if ($DISTRO eq "DEBIAN") {
+    if ($DISTRO =~ /DEBIAN|UBUNTU/) {
         $ret = `dpkg-query -W -f='\${Version}\n' @_ | cut -d ':' -f 2 | uniq`;
     }
     else {
@@ -1740,61 +1773,26 @@ sub set_availability
 {
     set_compilers();
 
-    # XEN kernel
-    if ($kernel =~ m/2.6.18.8-xen*/) {
-            $kernel_modules_info{'qib'}{'available'} = 0;
-            $packages_info{'libipathverbs'}{'available'} = 0;
-            $packages_info{'libipathverbs-devel'}{'available'} = 0;
-            $packages_info{'libipathverbs-debuginfo'}{'available'} = 0;
-
-            $kernel_modules_info{'cxgb3'}{'available'} = 0;
-            $packages_info{'libcxgb3'}{'available'} = 0;
-            $packages_info{'libcxgb3-devel'}{'available'} = 0;
-            $packages_info{'libcxgb3-debuginfo'}{'available'} = 0;
-            $packages_info{'libcxgb4'}{'available'} = 0;
-            $packages_info{'libcxgb4-devel'}{'available'} = 0;
-            $packages_info{'libcxgb4-debuginfo'}{'available'} = 0;
-
-            $kernel_modules_info{'nes'}{'available'} = 0;
-            $packages_info{'libnes'}{'available'} = 0;
-            $packages_info{'libnes-devel-static'}{'available'} = 0;
-            $packages_info{'libnes-debuginfo'}{'available'} = 0;
-    }
-
-    if ($kernel =~ m/^3\.1/) {
-            $kernel_modules_info{'nes'}{'available'} = 0;
-            $packages_info{'libnes'}{'available'} = 0;
-            $packages_info{'libnes-devel-static'}{'available'} = 0;
-            $packages_info{'libnes-debuginfo'}{'available'} = 0;
-
-            $kernel_modules_info{'rds'}{'available'} = 0;
-            $packages_info{'rds-tools'}{'available'} = 0;
-            $packages_info{'rds-devel'}{'available'} = 0;
-            $packages_info{'rds-tools-debuginfo'}{'available'} = 0;
-    }
-
-    if ($arch =~ m/ia64/) {
-            $kernel_modules_info{'mlx4_en'}{'available'} = 0;
-    }
-
-    # Ehca
-    if ($arch =~ m/ppc64|powerpc/ and
-            $kernel =~ m/2.6.1[6-9]|2.6.2[0-9]|2.6.3[0-2]/) {
-            $kernel_modules_info{'ehca'}{'available'} = 1;
-            $packages_info{'libehca'}{'available'} = 1;
-            $packages_info{'libehca-devel-static'}{'available'} = 1;
-            $packages_info{'libehca-debuginfo'}{'available'} = 1;
+    if ($kernel =~ m/^3\.5/) {
+            $kernel_modules_info{'rds'}{'available'} = 1;
+            $packages_info{'rds-tools'}{'available'} = 1;
+            $packages_info{'rds-devel'}{'available'} = 1;
+            $packages_info{'rds-tools-debuginfo'}{'available'} = 1;
+            $kernel_modules_info{'iser'}{'available'} = 1;
+            $kernel_modules_info{'srpt'}{'available'} = 1;
+            if ($arch =~ m/ppc64|powerpc/) {
+                $kernel_modules_info{'ehca'}{'available'} = 1;
+                $packages_info{'libehca'}{'available'} = 1;
+                $packages_info{'libehca-devel-static'}{'available'} = 1;
+                $packages_info{'libehca-debuginfo'}{'available'} = 1;
+            }
     }
 
     # Ipath
-    # if ( ($arch =~ m/ppc64/ and
-    #         $kernel =~ m/2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) or
-    #    ($arch =~ m/x86_64/ and
-    #         $kernel =~ m/2.6.9-42|2.6.9-55|2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.1[7-9]|2.6.2[0-9]/) ) {
     if ($arch =~ m/x86_64/) {
 	    $packages_info{'infinipath-psm'}{'available'} = 1;
 	    $packages_info{'infinipath-psm-devel'}{'available'} = 1;
-	    if ($kernel =~ m/2\.6\.9-(67|78|89)|2\.6\.18-[0-9]*\..*el5|2\.6\.16\.[6-9][0-9]-.*-.*|2\.6\.(27|32|37|38|39)\..*-.*|2\.6\.32-.*\.el6/) {
+	    if ($kernel =~ m/2\.6\.(27|32|37|38|39)\..*-.*|2\.6\.32-.*\.el6/) {
 		    $kernel_modules_info{'qib'}{'available'} = 1;
 		    $packages_info{'libipathverbs'}{'available'} = 1;
 		    $packages_info{'libipathverbs-devel'}{'available'} = 1;
@@ -1802,19 +1800,9 @@ sub set_availability
 	    }
     }
 
-    # Iser
-    # if ($kernel =~ m/2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|el5/) {
-    if ($kernel =~ m/2.6.3[0-2]|2.6.18-164/) {
-            $kernel_modules_info{'iser'}{'available'} = 1;
-    }
 
-    if ($DISTRO =~ m/RHEL6/) {
-            $kernel_modules_info{'iser'}{'available'} = 0;
-    }
-
-#    # QLogic vnic
-#    if ($kernel =~ m/2.6.9-67|2.6.9-78|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.18-*/) {
-    if ($kernel =~ m/2.6.30/) {
+    # QLogic vnic
+    if ($kernel =~ m/^3\.5/) {
             $kernel_modules_info{'qlgc_vnic'}{'available'} = 1;
             $packages_info{'ibvexdmtools'}{'available'} = 1;
             $packages_info{'qlgc_vnic_daemon'}{'available'} = 1;
@@ -1822,30 +1810,9 @@ sub set_availability
             $packages_info{'qlvnictools-debuginfo'}{'available'} = 1;
     }
 
-    # ib-bonding
-    if ($kernel =~ m/2.6.9-67|2.6.9-78|2.6.9-89|2.6.16.[0-9.]*-[0-9.]*-[A-Za-z0-9.]*|2.6.18-128|2.6.18-164|fc6/) {
-            $packages_info{'ib-bonding'}{'available'} = 1;
-            $packages_info{'ib-bonding-debuginfo'}{'available'} = 1;
-    }
-
     # NFSRDMA
-    if (($DISTRO =~ m/RHEL6.1|SLES11.1/) and
-            $kernel =~ m/2.6.3[0-9]|2.6.40|3.0/) {
+    if ($kernel =~ m/^3\.5/) {
             $kernel_modules_info{'nfsrdma'}{'available'} = 1;
-    }
-
-    # RDS - cause kernel panic on RHEL4.
-    # BUG: https://bugs.openfabrics.org/show_bug.cgi?id=1766 
-    if ($kernel =~ m/2.6.9/) {
-            $kernel_modules_info{'rds'}{'available'} = 0;
-            $packages_info{'rds-tools'}{'available'} = 0;
-            $packages_info{'rds-devel'}{'available'} = 0;
-            $packages_info{'rds-tools-debuginfo'}{'available'} = 0;
-    }
-
-    # SRP Target
-    if ($DISTRO =~ m/SLES10|SLES11|RHEL5.[34]/ or $kernel =~ m/2.6.2[7-9]|2.6.3[0-2]/) {
-            $kernel_modules_info{'srpt'}{'available'} = 0;
     }
 
     # mvapich, mvapich2 and openmpi
@@ -1912,7 +1879,7 @@ sub set_existing_rpms
         print "Found $scr_rpm. Its installation prefix: $current_prefix\n" if ($verbose2);
         if (not $current_prefix eq $prefix) {
             print "Required prefix is: $prefix\n" if ($verbose2);
-            print "Going to rebuils RPMs from scratch\n" if ($verbose2);
+            print "Going to rebuild RPMs from scratch\n" if ($verbose2);
             return;
         }
     }
@@ -2573,6 +2540,29 @@ sub module_in_rpm
     return $ret;
 }
 
+sub mark_for_uninstall
+{
+    my $package = shift @_;
+    if (not $selected_for_uninstall{$package}) {
+        push (@dependant_packages_to_uninstall, "$package");
+        $selected_for_uninstall{$package} = 1;
+    }
+}
+
+sub get_requires
+{
+    my $package = shift @_;
+    my @what_requires = `/bin/rpm -q --whatrequires $package 2>&1 | grep -v "no package requires" 2> /dev/null`;
+
+    for my $pack_req (@what_requires) {
+        chomp $pack_req;
+        print "get_requires: $package is required by $pack_req\n" if ($verbose2);
+        next if ("$pack_req" =~ /no package requires/);
+        get_requires($pack_req);
+        mark_for_uninstall($pack_req);
+    }
+}
+
 sub select_dependent
 {
     my $package = shift @_;
@@ -2660,7 +2650,7 @@ sub check_linux_dependencies
     if (! $check_linux_deps) {
         return 0;
     }
-
+    my $dist_req_build = ($DISTRO =~ m/UBUNTU/)?'ubuntu_dist_req_build':'dist_req_build';
     for my $package ( @selected_packages ) {
         # Check rpmbuild requirements
         if ($package =~ /compat-rdma|ib-bonding/) {
@@ -2678,6 +2668,12 @@ sub check_linux_dependencies
                     print RED "Please install the corresponding kernel-source or kernel-devel RPM.", RESET "\n";
                     $err++;
                 }
+            }
+        }
+		
+        if($DISTRO =~/UBUNTU/){
+            if(not is_installed_deb("rpm")){
+                print RED "rpm is required to build OFED", RESET "\n";
             }
         }
 
@@ -2698,11 +2694,12 @@ sub check_linux_dependencies
         }
 
         if (not $packages_info{$package}{'rpm_exist'}) {
-            for my $req ( @{ $packages_info{$package}{'dist_req_build'} } ) {
+            for my $req ( @{ $packages_info{$package}{$dist_req_build} } ) {
                 my ($req_name, $req_version) = (split ('_',$req));
                 next if not $req_name;
-                print BLUE "check_linux_dependencies: $req_name rpm is required to build $package", RESET "\n" if ($verbose3);
-                if (not is_installed($req_name)) {
+                print BLUE "check_linux_dependencies: $req_name  is required to build $package", RESET "\n" if ($verbose3);
+                my $is_installed_flag = ($DISTRO =~ m/UBUNTU/)?(is_installed_deb($req_name)):(is_installed($req_name));
+                if (not $is_installed_flag) {
                     print RED "$req_name rpm is required to build $package", RESET "\n";
                     $err++;
                 }
@@ -2823,12 +2820,13 @@ sub check_linux_dependencies
                 }
             }
         }
-
+        my $dist_req_inst = ($DISTRO =~ m/UBUNTU/)?'ubuntu_dist_req_inst':'dist_req_inst';
         # Check installation requirements
-        for my $req ( @{ $packages_info{$package}{'dist_req_inst'} } ) {
+        for my $req ( @{ $packages_info{$package}{$dist_req_inst} } ) {
             my ($req_name, $req_version) = (split ('_',$req));
             next if not $req_name;
-            if (not is_installed($req_name)) {
+            my $is_installed_flag = ($DISTRO =~ m/UBUNTU/)?(is_installed_deb($req_name)):(is_installed($req_name));
+            if (not $is_installed_flag) {
                 print RED "$req_name rpm is required to install $package", RESET "\n";
                 $err++;
             }
@@ -2936,6 +2934,10 @@ sub build_kernel_rpm
 
         if ($DISTRO =~ /RHEL5/ and $target_cpu eq "i386") {
             $cmd .= " --define '_target_cpu i686'";
+        }
+
+        if ($DISTRO eq "RHEL6.3") {
+            $cmd .= " --define '__find_provides %{nil}'";
         }
         $cmd .= " --nodeps";
         $cmd .= " --define '_dist .$rpm_distro'";
@@ -3638,6 +3640,17 @@ sub print_package_info
     }
 }
 
+sub is_installed_deb
+{
+    my $res = 0;
+    my $name = shift @_;
+    my $result = `dpkg-query -W -f='\${version}' $name`;
+    if (($result eq "") && ($? == 0) ){
+        $res = 1; 
+    } 
+    return not $res;
+}
+
 sub is_installed
 {
     my $res = 0;
@@ -3705,6 +3718,10 @@ sub get_net_config
         $ifcfg{$interface}{'BROADCAST'} =~ s/Bcast://g;
         $ifcfg{$interface}{'NETMASK'} = (split (' ', $line))[3];
         $ifcfg{$interface}{'NETMASK'} =~ s/Mask://g;
+        if ($DISTRO eq "RHEL6.3") {
+            $ifcfg{$interface}{'NM_CONTROLLED'} = "yes";
+            $ifcfg{$interface}{'TYPE'} = "InfiniBand";
+        }
     }
     close(IFCONFIG);
 }
@@ -3809,6 +3826,10 @@ sub config_interface
         print "NETMASK=$nm\n";
         print "NETWORK=$nw\n";
         print "BROADCAST=$bc\n";
+        if ($DISTRO eq "RHEL6.3") {
+            print "NM_CONTROLLED=yes\n";
+            print "TYPE=InfiniBand\n";
+        }
         if ($onboot) {
             print "ONBOOT=yes\n";
         }
@@ -3960,6 +3981,10 @@ sub config_interface
         print IF "NETMASK=$nm\n";
         print IF "NETWORK=$nw\n";
         print IF "BROADCAST=$bc\n";
+        if ($DISTRO eq "RHEL6.3") {
+            print IF "NM_CONTROLLED=yes\n";
+            print IF "TYPE=InfiniBand\n";
+        }
         if ($onboot) {
             print IF "ONBOOT=yes\n";
         }
@@ -4002,177 +4027,89 @@ sub ipoib_config
 
 }
 
-sub uninstall
+sub force_uninstall
 {
     my $res = 0;
     my $sig = 0;
     my $cnt = 0;
+    my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep -wE "rdma|ofed|openib|ofa_kernel"`;
+    my $cmd = "rpm -e --allmatches";
 
-    if ( -f "/sbin/mlnx_en_uninstall.sh" ) {
-        print BLUE "Uninstalling MLNX_EN driver", RESET "\n" if (not $quiet);
-        system("yes | /sbin/mlnx_en_uninstall.sh > $ofedlogs/mlnx_en_uninstall.log 2>&1");
+    for my $package (@all_packages, @hidden_packages, @prev_ofed_packages, @other_ofed_rpms, @distro_ofed_packages) {
+        chomp $package;
+        next if ($package eq "mpi-selector");
+        if (is_installed($package)) {
+            push (@packages_to_uninstall, $package);
+            $selected_for_uninstall{$package} = 1;
+        }
+        if (is_installed("$package-static")) {
+            push (@packages_to_uninstall, "$package-static");
+            $selected_for_uninstall{$package} = 1;
+        }
+        if ($suffix_32bit and is_installed("$package$suffix_32bit")) {
+            push (@packages_to_uninstall,"$package$suffix_32bit");
+            $selected_for_uninstall{$package} = 1;
+        }
+        if ($suffix_64bit and is_installed("$package$suffix_64bit")) {
+            push (@packages_to_uninstall,"$package$suffix_64bit");
+            $selected_for_uninstall{$package} = 1;
+        }
+    }
+
+    for my $package (@packages_to_uninstall) {
+        get_requires($package);
+    }
+
+    for my $package (@packages_to_uninstall, @dependant_packages_to_uninstall) {
+        if (is_installed("$package")) {
+            $cmd .= " $package";
+            $cnt ++;
+        }
+    }
+
+    if ($cnt) {
+        print "\n$cmd\n" if (not $quiet);
+        open (LOG, "+>$ofedlogs/ofed_uninstall.log");
+        print LOG "$cmd\n";
+        close LOG;
+        system("$cmd >> $ofedlogs/ofed_uninstall.log 2>&1");
         $res = $? >> 8;
         $sig = $? & 127;
         if ($sig or $res) {
-            print RED "Failed to uninstall MLNX_EN driver", RESET "\n";
-            print RED "See $ofedlogs/mlnx_en_uninstall.log", RESET "\n";
+            print RED "Failed to uninstall the previous installation", RESET "\n";
+            print RED "See $ofedlogs/ofed_uninstall.log", RESET "\n";
             exit 1;
         }
     }
+}
 
-    my $mlnx_en_cnt = 0;
-    my $mlnx_en_rpms;
-    my @other_mlnx_en_rpms = `rpm -qa *mlnx-en* 2> /dev/null`;
-    for my $package (@mlnx_en_packages, @other_mlnx_en_rpms) {
-        chomp $package;
-        if (is_installed($package)) {
-            $mlnx_en_rpms .= " $package";
-            $mlnx_en_cnt ++;
-        }
-    }
+sub uninstall
+{
+    my $res = 0;
+    my $sig = 0;
+    my $distro_rpms = '';
 
-    if ($mlnx_en_cnt) {
-            my $cmd = "rpm -e --allmatches";
-            $cmd .= " $mlnx_en_rpms";
-            print BLUE "Uninstalling MLNX_EN driver", RESET "\n" if (not $quiet);
-            system("$cmd >> $ofedlogs/mlnx_en_uninstall.log 2>&1");
-            $res = $? >> 8;
-            $sig = $? & 127;
-            if ($sig or $res) {
-                print RED "Failed to uninstall MLNX_EN driver", RESET "\n";
-                print RED "See $ofedlogs/mlnx_en_uninstall.log", RESET "\n";
-                exit 1;
-            }
-    }
-
-    if ($DISTRO =~ m/SLES/) {
-        my $distro_cnt = 0;
-        my $distro_rpms;
-        if (open (DISTRO_RPMS, 'rpm -qa ofed-kmp* |')) {
-            while(<DISTRO_RPMS>) {
-                chomp $_;
-                $distro_rpms .= " $_";
-                $distro_cnt ++;
-            }
-            close DISTRO_RPMS;
-        }
-        for my $package (@distro_ofed_packages) {
-            if (is_installed("$package")) {
-                $distro_rpms .= " $package";
-                $distro_cnt ++;
-            }
-            if ($suffix_32bit and is_installed("$package$suffix_32bit")) {
-                $distro_rpms .= " $package$suffix_32bit";
-                $distro_cnt ++;
-            }
-            if ($suffix_64bit and is_installed("$package$suffix_64bit")) {
-                $distro_rpms .= " $package$suffix_64bit";
-                $distro_cnt ++;
-            }
-        }
-        if ($distro_cnt) {
-            # Get the list of other RPMs coming with distribution
-            my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep ofed | grep -v kmp`;
-            for my $package (@all_packages, @hidden_packages, @prev_ofed_packages, @other_ofed_rpms) {
-                chomp $package;
-                next if ($package eq "mpi-selector");
-                if (is_installed($package)) {
-                    $distro_rpms .= " $package";
-                }
-                if (is_installed("$package-static")) {
-                    $distro_rpms .= " $package-static";
-                }
-                if ($suffix_32bit and is_installed("$package$suffix_32bit")) {
-                    $distro_rpms .= " $package$suffix_32bit";
-                }
-                if ($suffix_64bit and is_installed("$package$suffix_64bit")) {
-                    $distro_rpms .= " $package$suffix_64bit";
-                }
-            }
-            if ($force) {
-                print BLUE "Uninstalling OFED RPMs coming from the Distribution", RESET "\n" if (not $quiet);
-                system("rpm -e --allmatches $distro_rpms >> $ofedlogs/dist_rpms_uninstall.log 2>&1");
-                $res = $? >> 8;
-                $sig = $? & 127;
-                if ($sig or $res) {
-                    print RED "Failed to uninstall RPMs coming from the Distribution", RESET "\n";
-                    system("echo rpm -e --allmatches $distro_rpms >> $ofedlogs/dist_rpms_uninstall.log 2>&1");
-                    print RED "See $ofedlogs/dist_rpms_uninstall.log", RESET "\n";
-                    print RED "Edit /etc/sysconfig/services, set DISABLE_STOP_ON_REMOVAL=\"yes\"", RESET "\n";
-                    print RED "Some RPMs may depend on the RPMs above. Please uninstall them manually.", RESET "\n";
-                    exit 1;
-                }
-            } else {
-                print RED "Please remove OFED RPMs coming from the Distribution.", RESET "\n";
-                print RED "Run:", RESET "\n";
-                print RED "rpm -e $distro_rpms", RESET "\n";
-                print RED "\nIf this command fails to uninstall ofed or opensm RPMs, then", RESET "\n";
-                print RED "edit /etc/sysconfig/services, set DISABLE_STOP_ON_REMOVAL=\"yes\"", RESET "\n";
-                print RED "Some RPMs may depend on the RPMs above. Please uninstall them manually.", RESET "\n";
-                exit 1;
-            }
-        }
-    }
-
-    print BLUE "Uninstalling the previous version of $PACKAGE", RESET "\n" if (not $quiet);
-    system("yes | ofed_uninstall.sh > $ofedlogs/ofed_uninstall.log 2>&1");
-    $res = $? >> 8;
-    $sig = $? & 127;
-    if ($sig or $res) {
-        system("yes | $CWD/uninstall.sh > $ofedlogs/ofed_uninstall.log 2>&1");
+    my $ofed_uninstall = `which ofed_uninstall.sh 2> /dev/null`;
+    chomp $ofed_uninstall;
+    if (-f "$ofed_uninstall") {
+        print BLUE "Uninstalling the previous version of $PACKAGE", RESET "\n" if (not $quiet);
+        system("yes | ofed_uninstall.sh >> $ofedlogs/ofed_uninstall.log 2>&1");
         $res = $? >> 8;
         $sig = $? & 127;
         if ($sig or $res) {
-            # Last try to uninstall
-            my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep -E "ofed|ofa_kernel|compat-rdma"`;
-            my $cmd = "rpm -e --allmatches";
-            for my $package (@all_packages, @hidden_packages, @prev_ofed_packages, @other_ofed_rpms) {
-                chomp $package;
-                next if ($package eq "mpi-selector");
-                if (is_installed($package)) {
-                    $cmd .= " $package";
-                    $cnt ++;
-                }
-                if (is_installed("$package-static")) {
-                    $cmd .= " $package-static";
-                    $cnt ++;
-                }
-                if ($suffix_32bit and is_installed("$package$suffix_32bit")) {
-                    $cmd .= " $package$suffix_32bit";
-                    $cnt ++;
-                }
-                if ($suffix_64bit and is_installed("$package$suffix_64bit")) {
-                    $cmd .= " $package$suffix_64bit";
-                    $cnt ++;
-                }
+            system("yes | $CWD/uninstall.sh >> $ofedlogs/ofed_uninstall.log 2>&1");
+            $res = $? >> 8;
+            $sig = $? & 127;
+            if ($sig or $res) {
+                # Last try to uninstall
+                force_uninstall();
             }
-            if ($cnt) {
-                print "Running $cmd\n" if (not $quiet);
-                open (LOG, "+>$ofedlogs/ofed_uninstall.log");
-                print LOG "Running $cmd\n";
-                close LOG;
-                system("$cmd >> $ofedlogs/ofed_uninstall.log 2>&1");
-                $res = $? >> 8;
-                $sig = $? & 127;
-                if ($sig or $res) {
-                    print RED "Failed to uninstall the previous installation", RESET "\n";
-                    print RED "See $ofedlogs/ofed_uninstall.log", RESET "\n";
-                    exit 1;
-                }
-            }
+        } else {
+            return 0;
         }
+    } else {
+        force_uninstall();
     }
-
-    if (is_installed("mpi-selector")) {
-        system("rpm -e --allmatches mpi-selector >> $ofedlogs/ofed_uninstall.log 2>&1");
-    }
-
-    if ( -d "/lib/modules/$kernel/kernel/drivers/net/mtnic" ) {
-        print "Uninstalling mtnic driver...\n" if (not $quiet);
-        system("/sbin/rmmod mtnic > /dev/null 2>&1");
-        system("/bin/rm -rf /lib/modules/$kernel/kernel/drivers/net/mtnic");
-    }
-
 }
 
 sub install
