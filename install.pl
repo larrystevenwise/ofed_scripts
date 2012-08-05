@@ -608,7 +608,7 @@ my %kernel_modules_info = (
             { name => "srpt", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'rds' =>
-            { name => "rds", available => 1, selected => 0,
+            { name => "rds", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
         'iser' =>
             { name => "iser", available => 0, selected => 0,
@@ -1845,7 +1845,7 @@ sub set_availability
 
     # SRP Target
     if ($DISTRO =~ m/SLES10|SLES11|RHEL5.[34]/ or $kernel =~ m/2.6.2[7-9]|2.6.3[0-2]/) {
-            $kernel_modules_info{'srpt'}{'available'} = 1;
+            $kernel_modules_info{'srpt'}{'available'} = 0;
     }
 
     # mvapich, mvapich2 and openmpi
