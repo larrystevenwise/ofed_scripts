@@ -1811,7 +1811,7 @@ sub set_availability
     }
 
     # NFSRDMA
-    if ($kernel =~ m/^3\.5/) {
+    if ($kernel =~ m/^3\.5/ or $DISTRO eq "SLES11.2") {
             $kernel_modules_info{'nfsrdma'}{'available'} = 1;
     }
 
