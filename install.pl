@@ -1792,7 +1792,7 @@ sub set_availability
     if ($arch =~ m/x86_64/) {
 	    $packages_info{'infinipath-psm'}{'available'} = 1;
 	    $packages_info{'infinipath-psm-devel'}{'available'} = 1;
-	    if ($kernel =~ m/2\.6\.(27|32|37|38|39)\..*-.*|2\.6\.32-.*\.el6/) {
+	    if ($kernel =~ m/2\.6\.(27|32|37|38|39)\..*-.*|2\.6\.32-.*\.el6|3\.0\.[1-9][0-9]-*/) {
 		    $kernel_modules_info{'qib'}{'available'} = 1;
 		    $packages_info{'libipathverbs'}{'available'} = 1;
 		    $packages_info{'libipathverbs-devel'}{'available'} = 1;
