@@ -244,6 +244,9 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
 } elsif ($dist_rpm =~ /redhat-release-.*-6.3|sl-release-6.3|centos-release-6-3/) {
     $DISTRO = "RHEL6.3";
     $rpm_distro = "rhel6u3";
+} elsif ($dist_rpm =~ /redhat-release-.*-6.4|sl-release-6.4|centos-release-6-4/) {
+    $DISTRO = "RHEL6.4";
+    $rpm_distro = "rhel6u4";
 } elsif ($dist_rpm =~ /oraclelinux-release-6.*-1.0.2/) {
     $DISTRO = "OEL6.1";
     $rpm_distro = "oel6u1";
@@ -2936,7 +2939,7 @@ sub build_kernel_rpm
             $cmd .= " --define '_target_cpu i686'";
         }
 
-        if ($DISTRO eq "RHEL6.3") {
+        if ($DISTRO =~ /RHEL6.[34]/) {
             $cmd .= " --define '__find_provides %{nil}'";
         }
         $cmd .= " --nodeps";
@@ -3718,7 +3721,7 @@ sub get_net_config
         $ifcfg{$interface}{'BROADCAST'} =~ s/Bcast://g;
         $ifcfg{$interface}{'NETMASK'} = (split (' ', $line))[3];
         $ifcfg{$interface}{'NETMASK'} =~ s/Mask://g;
-        if ($DISTRO eq "RHEL6.3") {
+        if ($DISTRO =~ /RHEL6.[34]/) {
             $ifcfg{$interface}{'NM_CONTROLLED'} = "yes";
             $ifcfg{$interface}{'TYPE'} = "InfiniBand";
         }
@@ -3826,7 +3829,7 @@ sub config_interface
         print "NETMASK=$nm\n";
         print "NETWORK=$nw\n";
         print "BROADCAST=$bc\n";
-        if ($DISTRO eq "RHEL6.3") {
+        if ($DISTRO =~ /RHEL6.[34]/) {
             print "NM_CONTROLLED=yes\n";
             print "TYPE=InfiniBand\n";
         }
@@ -3981,7 +3984,7 @@ sub config_interface
         print IF "NETMASK=$nm\n";
         print IF "NETWORK=$nw\n";
         print IF "BROADCAST=$bc\n";
-        if ($DISTRO eq "RHEL6.3") {
+        if ($DISTRO =~ /RHEL6.[34]/) {
             print IF "NM_CONTROLLED=yes\n";
             print IF "TYPE=InfiniBand\n";
         }
