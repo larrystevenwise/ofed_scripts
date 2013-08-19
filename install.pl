@@ -1019,7 +1019,7 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["librdmacm"],
+            ofa_req_inst => ["librdmacm", "libibverbs-devel"],
             install32 => 1, exception => 0 },
         'librdmacm-utils' =>
             { name => "librdmacm-utils", parent => "librdmacm",
@@ -2558,12 +2558,16 @@ sub mark_for_uninstall
 sub get_requires
 {
     my $package = shift @_;
-    my @what_requires = `/bin/rpm -q --whatrequires $package 2>&1 | grep -v "no package requires" 2> /dev/null`;
+
+    # Strip RPM version
+    my $pname = `rpm -q --queryformat "[%{NAME}]" $package`;
+    chomp $pname;
+
+    my @what_requires = `/bin/rpm -q --whatrequires $pname 2> /dev/null | grep -v "no package requires" 2> /dev/null`;
 
     for my $pack_req (@what_requires) {
         chomp $pack_req;
-        print "get_requires: $package is required by $pack_req\n" if ($verbose2);
-        next if ("$pack_req" =~ /no package requires/);
+        print "get_requires: $pname is required by $pack_req\n" if ($verbose2);
         get_requires($pack_req);
         mark_for_uninstall($pack_req);
     }
@@ -2577,8 +2581,8 @@ sub select_dependent
          ($build32 and not $packages_info{$package}{'rpm_exist32'}) ) {
         for my $req ( @{ $packages_info{$package}{'ofa_req_build'} } ) {
             next if not $req;
-            print "resolve_dependencies: $package requires $req for rpmbuild\n" if ($verbose2);
-            if (not $packages_info{$req}{'selected'}) {
+            if ($packages_info{$req}{'available'} and not $packages_info{$req}{'selected'}) {
+                print "resolve_dependencies: $package requires $req for rpmbuild\n" if ($verbose2);
                 select_dependent($req);
             }
         }
@@ -2586,13 +2590,17 @@ sub select_dependent
 
     for my $req ( @{ $packages_info{$package}{'ofa_req_inst'} } ) {
         next if not $req;
-        print "resolve_dependencies: $package requires $req for rpm install\n" if ($verbose2);
-        if (not $packages_info{$req}{'selected'}) {
+        if ($packages_info{$req}{'available'} and not $packages_info{$req}{'selected'}) {
+            print "resolve_dependencies: $package requires $req for rpm install\n" if ($verbose2);
             select_dependent($req);
         }
     }
 
     if (not $packages_info{$package}{'selected'}) {
+        return if (not $packages_info{$package}{'available'});
+        # Assume that the requirement is not strict. E.g. openmpi dependency on fca
+        my $parent = $packages_info{$package}{'parent'};
+        return if (not $main_packages{$parent}{'srpmpath'});
         $packages_info{$package}{'selected'} = 1;
         push (@selected_packages, $package);
         print "select_dependent: Selected package $package\n" if ($verbose2);
@@ -2623,18 +2631,12 @@ sub resolve_dependencies
             # Get the list of dependencies
             select_dependent($package);
 
-            if ($package =~ /mvapich2_*/) {
+            if ($package =~ /mvapich2_*/ and not $print_available) {
                     mvapich2_config();
             }
         }
 
     for my $module ( @selected_modules_by_user ) {
-        # if ($module eq "ehca" and $kernel =~ m/2.6.9-55/ and not -d "$kernel_sources/include/asm-ppc") {
-        #     print RED "\nTo install ib_ehca module please ensure that $kernel_sources/include/ contains directory asm-ppc.", RESET;
-        #     print RED "\nPlease install the kernel.src.rpm from redhat and copy the directory and the files into $kernel_sources/include/", RESET;
-        #     print "\nThen rerun this Script\n";
-        #     exit 1;
-        # }
         select_dependent_module($module);
     }
 
@@ -2738,18 +2740,18 @@ sub check_linux_dependencies
                 if ($arch eq "ppc64") {
                     my @libstdc32 = </usr/lib/libstdc++.so.*>;
                     if ($package eq "mstflint") {
-                        if (not $#libstdc32) {
+                        if (not scalar(@libstdc32)) {
                             print RED "$libstdc 32bit is required to build mstflint.", RESET "\n";
                             $err++;
                         }
                     }
                     elsif ($package eq "openmpi") {
                         my @libsysfs = </usr/lib/libsysfs.so>;
-                        if (not $#libstdc32) {
+                        if (not scalar(@libstdc32)) {
                             print RED "$libstdc_devel 32bit is required to build openmpi.", RESET "\n";
                             $err++;
                         }
-                        if (not $#libsysfs) {
+                        if (not scalar(@libsysfs)) {
                             print RED "$sysfsutils_devel 32bit is required to build openmpi.", RESET "\n";
                             $err++;
                         }
@@ -2856,18 +2858,18 @@ sub check_linux_dependencies
             if ($arch eq "ppc64") {
                 my @libstdc32 = </usr/lib/libstdc++.so.*>;
                 if ($package eq "mstflint") {
-                    if (not $#libstdc32) {
+                    if (not scalar(@libstdc32)) {
                         print RED "$libstdc 32bit is required to install mstflint.", RESET "\n";
                         $err++;
                     }
                 }
                 elsif ($package eq "openmpi") {
                     my @libsysfs = </usr/lib/libsysfs.so.*>;
-                    if (not $#libstdc32) {
+                    if (not scalar(@libstdc32)) {
                         print RED "$libstdc 32bit is required to install openmpi.", RESET "\n";
                         $err++;
                     }
-                    if (not $#libsysfs) {
+                    if (not scalar(@libsysfs)) {
                         print RED "$sysfsutils 32bit is required to install openmpi.", RESET "\n";
                         $err++;
                     }
@@ -3520,7 +3522,6 @@ sub install_kernel_rpm
     my $sig = 0;
 
     my $version = $main_packages{$packages_info{$name}{'parent'}}{'version'};
-    # my $release = $main_packages{$packages_info{$name}{'parent'}}{'release'};
     my $release = $kernel_rel;
 
     my $package = "$RPMS/$name-$version-$release.$target_cpu.rpm";
@@ -3688,8 +3689,8 @@ sub count_ports
         elsif (/15b3:5a44|15b3:6278/) {
             $cnt += 2;  # InfiniHost mode
         }
-        elsif (/15b3:6340|15b3:634a|15b3:6354|15b3:6732|15b3:673c|15b3:6746|15b3:6750/) {
-            $cnt += 2;  # ConnectX
+        elsif (/15b3:6340|15b3:634a|15b3:6354|15b3:6732|15b3:673c|15b3:6746|15b3:6750|15b3:1003/) {
+            $cnt += 2;  # connectx
         }
     }
     close (LSPCI);
@@ -4208,6 +4209,10 @@ sub main
         my @list = ();
         set_availability();
 
+        for my $srcrpm ( <$SRPMS*> ) {
+            set_cfg ($srcrpm);
+        }
+
         if (!$install_option) {
             $install_option = 'all';
         }
@@ -4225,14 +4230,20 @@ sub main
             @list = (@basic_user_packages, @basic_kernel_packages);
             @kernel_modules = (@basic_kernel_modules);
         }
+
+        @selected_by_user = (@list);
+        @selected_modules_by_user = (@kernel_modules);
+        resolve_dependencies();
         open(CONFIG, ">$config") || die "Can't open $config: $!";;
         flock CONFIG, $LOCK_EXCLUSIVE;
         print "\nOFED packages: ";
-        for my $package ( @list ) {
-            next if (not $packages_info{$package}{'available'});
-            if ($package eq "compat-rdma") {
+        for my $package ( @selected_packages ) {
+            my $parent = $packages_info{$package}{'parent'};
+            next if (not $packages_info{$package}{'available'} or not $main_packages{$parent}{'srpmpath'});
+            print("$package available: $packages_info{$package}{'available'}\n") if ($verbose2);
+            if ($package =~ /compat-rdma/ and $package !~ /devel/) {
                 print "\nKernel modules: ";
-                for my $module ( @kernel_modules ) {
+                for my $module ( @selected_kernel_modules ) {
                     next if (not $kernel_modules_info{$module}{'available'});
                     print $module . ' ';
                     print CONFIG "$module=y\n";
