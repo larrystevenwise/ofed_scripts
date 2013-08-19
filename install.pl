@@ -1219,7 +1219,7 @@ my %packages_info = (
         'infiniband-diags' =>
             { name => "infiniband-diags", parent => "infiniband-diags",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => ["glib2-devel"],
             dist_req_inst => [], ofa_req_build => ["opensm-devel", "libibmad-devel", "libibumad-devel"],
             ofa_req_inst => ["libibumad", "libibmad", "opensm-libs"],
             install32 => 0, exception => 0, configure_options => '' },
