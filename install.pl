@@ -1894,7 +1894,7 @@ sub set_existing_rpms
         my ($rpm_name, $rpm_arch) = (split ' ', get_rpm_name_arch($binrpm));
         $main_packages{$rpm_name}{'rpmpath'}   = $binrpm;
         if ($rpm_name =~ /compat-rdma|ib-bonding/) {
-            if (($rpm_arch eq $target_cpu) and (get_rpm_rel($binrpm) eq $kernel_rel)) {
+            if (($rpm_arch eq $target_cpu) and (get_rpm_rel($binrpm) =~ /$kernel_rel/)) {
                 $packages_info{$rpm_name}{'rpm_exist'} = 1;
                 print "$rpm_name RPM exist\n" if ($verbose2);
             }
@@ -2516,7 +2516,7 @@ sub module_in_rpm
 
     my $name = 'compat-rdma';
     my $version = $main_packages{$packages_info{$name}{'parent'}}{'version'};
-    my $release = $kernel_rel;
+    my $release = $main_packages{$name}{'release'} . '.' . $kernel_rel;
 
     my $package = "$RPMS/$name-$version-$release.$target_cpu.rpm";
 
@@ -2954,7 +2954,7 @@ sub build_kernel_rpm
         $cmd .= " --define 'build_kernel_ib_devel 1'";
         $cmd .= " --define 'KVERSION $kernel'";
         $cmd .= " --define 'K_SRC $kernel_sources'";
-        $cmd .= " --define '_release $kernel_rel'";
+        $cmd .= " --define '_release $main_packages{'compat-rdma'}{'release'}.$kernel_rel'";
         $cmd .= " --define 'network_dir $network_dir'";
     }
     elsif ($name eq 'ib-bonding') {
@@ -3522,7 +3522,7 @@ sub install_kernel_rpm
     my $sig = 0;
 
     my $version = $main_packages{$packages_info{$name}{'parent'}}{'version'};
-    my $release = $kernel_rel;
+    my $release = $main_packages{$packages_info{$name}{'parent'}}{'release'} . '.' . $kernel_rel;
 
     my $package = "$RPMS/$name-$version-$release.$target_cpu.rpm";
 
