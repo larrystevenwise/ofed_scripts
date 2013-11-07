@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2012 Mellanox Technologies. All rights reserved.
+# Copyright (c) 2013 Mellanox Technologies. All rights reserved.
 #
 # This Software is licensed under one of the following licenses:
 #
@@ -303,6 +303,21 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
 } elsif ($dist_rpm =~ /fedora-release-14/) {
     $DISTRO = "FC14";
     $rpm_distro = "fc14";
+} elsif ($dist_rpm =~ /fedora-release-15/) {
+    $DISTRO = "FC15";
+    $rpm_distro = "fc15";
+} elsif ($dist_rpm =~ /fedora-release-16/) {
+    $DISTRO = "FC16";
+    $rpm_distro = "fc16";
+} elsif ($dist_rpm =~ /fedora-release-17/) {
+    $DISTRO = "FC17";
+    $rpm_distro = "fc17";
+} elsif ($dist_rpm =~ /fedora-release-18/) {
+    $DISTRO = "FC18";
+    $rpm_distro = "fc18";
+} elsif ($dist_rpm =~ /fedora-release-19/) {
+    $DISTRO = "FC19";
+    $rpm_distro = "fc19";
 } elsif ($dist_rpm =~ /Ubuntu/) {
     $DISTRO = "UBUNTU$dist_rpm_ver";
     $rpm_distro =~ tr/[A-Z]/[a-z]/;
@@ -414,7 +429,7 @@ if ($DISTRO eq "openSUSE11.2") {
     $libstdc = 'libstdc++';
     $libgcc = 'libgcc';
     $libgfortran = 'gcc-gfortran';
-    if ($DISTRO =~ m/RHEL6|OEL6|FC14/) {
+    if ($DISTRO =~ m/RHEL6|OEL6|FC/) {
         $curl_devel = 'libcurl-devel';
     }
 } else {
@@ -603,7 +618,7 @@ my %kernel_modules_info = (
             included_in_rpm => 0, requires => ["core"], },
         'mlx4_en' =>
             { name => "mlx4_en", available => 1, selected => 0,
-            included_in_rpm => 0, requires => ["core"], },
+            included_in_rpm => 0, requires => ["core","mlx4"], },
         'ehca' =>
             { name => "ehca", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
@@ -618,6 +633,12 @@ my %kernel_modules_info = (
             included_in_rpm => 0, requires => ["core"], },
         'cxgb4' =>
             { name => "cxgb4", available => 1, selected => 0,
+            included_in_rpm => 0, requires => ["core"], },
+        'cxgb3i' =>
+            { name => "cxgb3i", available => 1, selected => 0,
+            included_in_rpm => 0, requires => ["core"], },
+        'cxgb4i' =>
+            { name => "cxgb4i", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'nes' =>
             { name => "nes", available => 1, selected => 0,
@@ -644,7 +665,7 @@ my %kernel_modules_info = (
             { name => "qlgc_vnic", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'nfsrdma' =>
-            { name => "nfsrdma", available => 0, selected => 0,
+            { name => "nfsrdma", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
         );
 
@@ -1076,7 +1097,7 @@ my %packages_info = (
         'mstflint' =>
             { name => "mstflint", parent => "mstflint",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", 
+            available => 1, mode => "user",
             dist_req_build => ["zlib-devel$suffix_64bit", "$libstdc_devel$suffix_64bit", "gcc-c++"],
             dist_req_inst => [], ofa_req_build => [],
             ubuntu_dist_req_build => ["zlib1g-dev", "$libstdc_devel", "gcc","g++","byacc"],ubuntu_dist_req_inst => [],
@@ -1816,10 +1837,6 @@ sub set_availability
             $packages_info{'qlvnictools-debuginfo'}{'available'} = 1;
     }
 
-    # NFSRDMA
-    if ($kernel =~ m/^3\.5/ or $DISTRO =~ /SLES11.2|RHEL6.[23]/) {
-            $kernel_modules_info{'nfsrdma'}{'available'} = 1;
-    }
 
     # mvapich, mvapich2 and openmpi
     if ($gcc{'gcc'}) {
@@ -2393,7 +2410,7 @@ sub select_packages
                     $mvapich2_conf_vcluster = $selected;
                     next;
                 }
-		
+
                 elsif ($package eq "mvapich2_conf_io_bus") {
                     $mvapich2_conf_io_bus = $selected;
                     next;
@@ -2505,7 +2522,7 @@ sub select_packages
     }
     close(CONFIG);
 
-    
+
     return $cnt;
 }
 
@@ -2661,10 +2678,10 @@ sub check_linux_dependencies
     my $dist_req_build = ($DISTRO =~ m/UBUNTU/)?'ubuntu_dist_req_build':'dist_req_build';
     for my $package ( @selected_packages ) {
         # Check rpmbuild requirements
-        if ($package =~ /compat-rdma|ib-bonding/) {
+        if ($package =~ /compat-rdma/) {
             if (not $packages_info{$package}{'rpm_exist'}) {
                 # Check that required kernel is supported
-                if ($kernel !~ /2.6.16.60-[A-Za-z0-9.]*-[A-Za-z0-9.]*|2.6.1[8-9]|2.6.2[0-9]|2.6.3[0-9]|2.6.40|3.[0-9]|3.1[0-2]/) {
+                if ($kernel !~ /2.6.3[0-9]|2.6.40|3.[0-9]|3.1[0-2]/) {
                     print RED "Kernel $kernel is not supported.", RESET "\n";
                     print BLUE "For the list of Supported Platforms and Operating Systems see", RESET "\n";
                     print BLUE "$CWD/docs/OFED_release_notes.txt", RESET "\n";
@@ -3725,7 +3742,7 @@ sub get_net_config
         $ifcfg{$interface}{'BROADCAST'} =~ s/Bcast://g;
         $ifcfg{$interface}{'NETMASK'} = (split (' ', $line))[3];
         $ifcfg{$interface}{'NETMASK'} =~ s/Mask://g;
-        if ($DISTRO =~ /RHEL6.[34]/) {
+        if ($DISTRO =~ /RHEL6/) {
             $ifcfg{$interface}{'NM_CONTROLLED'} = "yes";
             $ifcfg{$interface}{'TYPE'} = "InfiniBand";
         }
@@ -3833,7 +3850,7 @@ sub config_interface
         print "NETMASK=$nm\n";
         print "NETWORK=$nw\n";
         print "BROADCAST=$bc\n";
-        if ($DISTRO =~ /RHEL6.[34]/) {
+        if ($DISTRO =~ /RHEL6/) {
             print "NM_CONTROLLED=yes\n";
             print "TYPE=InfiniBand\n";
         }
@@ -3847,7 +3864,7 @@ sub config_interface
         $ans = getch();
         if ($ans =~ m/[nN]/) {
             return;
-        } 
+        }
     }
     else {
         if (not $config_net_given) {
@@ -3961,7 +3978,7 @@ sub config_interface
         }
         else {
             print "ONBOOT=no\n";
-        } 
+        }
         print RESET "\n";
     }
 
@@ -4040,7 +4057,7 @@ sub force_uninstall
     my $sig = 0;
     my $cnt = 0;
     my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep -wE "rdma|ofed|openib|ofa_kernel"`;
-    my $cmd = "rpm -e --allmatches";
+    my $cmd = "rpm -e --allmatches --nodeps";
 
     for my $package (@all_packages, @hidden_packages, @prev_ofed_packages, @other_ofed_rpms, @distro_ofed_packages) {
         chomp $package;
