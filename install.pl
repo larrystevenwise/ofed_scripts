@@ -538,7 +538,7 @@ my @mlnx_en_packages = (
 
 # List of all available packages sorted following dependencies
 my @kernel_packages = ("compat-rdma", "compat-rdma-devel", "ib-bonding", "ib-bonding-debuginfo");
-my @basic_kernel_modules = ("core", "mthca", "mlx4", "mlx4_en", "cxgb3", "cxgb4", "nes", "ehca", "qib", "ipoib");
+my @basic_kernel_modules = ("core", "mthca", "mlx4", "mlx4_en", "mlx5", "cxgb3", "cxgb4", "nes", "ehca", "qib", "ipoib");
 my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser", "nfsrdma");
 
 # kernel modules in "technology preview" status can be installed by
@@ -570,6 +570,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "libibverbs-utils", "libibverbs-debuginfo",
                      "libmthca", "libmthca-devel-static", "libmthca-debuginfo", 
                      "libmlx4", "libmlx4-devel", "libmlx4-debuginfo",
+                     "libmlx5", "libmlx5-devel", "libmlx5-debuginfo",
                      "libehca", "libehca-devel-static", "libehca-debuginfo",
                      "libcxgb3", "libcxgb3-devel", "libcxgb3-debuginfo",
                      "libcxgb4", "libcxgb4-devel", "libcxgb4-debuginfo",
@@ -592,7 +593,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      );
 
 my @basic_kernel_packages = ("compat-rdma");
-my @basic_user_packages = ("libibverbs", "libibverbs-utils", "libmthca", "libmlx4",
+my @basic_user_packages = ("libibverbs", "libibverbs-utils", "libmthca", "libmlx4", "libmlx5",
                             "libehca", "libcxgb3", "libcxgb4", "libnes", "libipathverbs", "librdmacm", "librdmacm-utils",
                             "mstflint", @misc_packages);
 
@@ -615,6 +616,9 @@ my %kernel_modules_info = (
             included_in_rpm => 0, requires => ["core"], },
         'mlx4' =>
             { name => "mlx4", available => 1, selected => 0,
+            included_in_rpm => 0, requires => ["core"], },
+        'mlx5' =>
+            { name => "mlx5", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'mlx4_en' =>
             { name => "mlx4_en", available => 1, selected => 0,
@@ -774,6 +778,28 @@ my %packages_info = (
             install32 => 1, exception => 0 },
         'libmlx4-debuginfo' =>
             { name => "libmlx4-debuginfo", parent => "libmlx4",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+
+        'libmlx5' =>
+            { name => "libmlx5", parent => "libmlx5",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
+            ofa_req_inst => ["libibverbs"],
+            install32 => 1, exception => 0, configure_options => '' },
+        'libmlx5-devel' =>
+            { name => "libmlx5-devel", parent => "libmlx5",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs","libmlx5"],
+            install32 => 1, exception => 0 },
+        'libmlx5-debuginfo' =>
+            { name => "libmlx5-debuginfo", parent => "libmlx5",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
