@@ -538,7 +538,7 @@ my @mlnx_en_packages = (
 
 # List of all available packages sorted following dependencies
 my @kernel_packages = ("compat-rdma", "compat-rdma-devel", "ib-bonding", "ib-bonding-debuginfo");
-my @basic_kernel_modules = ("core", "mthca", "mlx4", "mlx4_en", "mlx5", "cxgb3", "cxgb4", "nes", "ehca", "qib", "ipoib");
+my @basic_kernel_modules = ("core", "mthca", "mlx4", "mlx4_en", "mlx5", "cxgb3", "cxgb4", "nes", "ehca", "qib", "ocrdma", "ipoib");
 my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser", "nfsrdma");
 
 # kernel modules in "technology preview" status can be installed by
@@ -647,6 +647,9 @@ my %kernel_modules_info = (
             included_in_rpm => 0, requires => ["core"], },
         'nes' =>
             { name => "nes", available => 1, selected => 0,
+            included_in_rpm => 0, requires => ["core"], },
+        'ocrdma' =>
+            { name => "ocrdma", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'ipoib' =>
             { name => "ipoib", available => 1, selected => 0,
