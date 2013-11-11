@@ -575,6 +575,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "libcxgb3", "libcxgb3-devel", "libcxgb3-debuginfo",
                      "libcxgb4", "libcxgb4-devel", "libcxgb4-debuginfo",
                      "libnes", "libnes-devel-static", "libnes-debuginfo",
+                     "libocrdma", "libocrdma-devel", "libocrdma-debuginfo",
                      "libipathverbs", "libipathverbs-devel", "libipathverbs-debuginfo",
                      "libibcm", "libibcm-devel", "libibcm-debuginfo",
                      "libibumad", "libibumad-devel", "libibumad-static", "libibumad-debuginfo",
@@ -595,7 +596,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
 my @basic_kernel_packages = ("compat-rdma");
 my @basic_user_packages = ("libibverbs", "libibverbs-utils", "libmthca", "libmlx4", "libmlx5",
                             "libehca", "libcxgb3", "libcxgb4", "libnes", "libipathverbs", "librdmacm", "librdmacm-utils",
-                            "mstflint", @misc_packages);
+                            "mstflint", "libocrdma", @misc_packages);
 
 my @hpc_kernel_packages = ("compat-rdma", "ib-bonding");
 my @hpc_kernel_modules = (@basic_kernel_modules);
@@ -800,6 +801,28 @@ my %packages_info = (
             install32 => 1, exception => 0 },
         'libmlx5-debuginfo' =>
             { name => "libmlx5-debuginfo", parent => "libmlx5",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+
+        'libocrdma' =>
+            { name => "libocrdma", parent => "libocrdma",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
+            ofa_req_inst => ["libibverbs"],
+            install32 => 1, exception => 0, configure_options => '' },
+        'libocrdma-devel' =>
+            { name => "libocrdma-devel", parent => "libocrdma",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs","libocrdma"],
+            install32 => 1, exception => 0 },
+        'libocrdma-debuginfo' =>
+            { name => "libocrdma-debuginfo", parent => "libocrdma",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],

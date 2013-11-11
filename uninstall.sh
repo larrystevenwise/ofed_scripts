@@ -84,6 +84,7 @@ IB_ALL_PACKAGES="$IB_ALL_PACKAGES libibumad libibumad-devel libibumad-static lib
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libibmad libibmad-devel libibmad-static libibmad-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES librdmacm librdmacm-utils librdmacm-devel librdmacm-debuginfo librdmacm-static ibacm"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES libsdp libsdp-devel libsdp-debuginfo"
+IB_ALL_PACKAGES="$IB_ALL_PACKAGES libocrdma libocrdma-devel libocrdma-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES opensm opensm-libs opensm-devel opensm-debuginfo opensm-static"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES perftest perftest-debuginfo mstflint mstflint-debuginfo"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES compat-dapl compat-dapl-devel compat-dapl-devel-static compat-dapl-utils compat-dapl-debuginfo compat-dapl-static"
