@@ -117,6 +117,7 @@ my $install_option;
 my $check_linux_deps = 1;
 my $force = 0;
 my $kmp = 1;
+my %disabled_packages;
 
 while ( $#ARGV >= 0 ) {
 
@@ -172,6 +173,10 @@ while ( $#ARGV >= 0 ) {
         $verbose = 1;
         $verbose2 = 1;
         $verbose3 = 1;
+    } elsif ( $cmd_flag =~ /--without|--disable/ ) {
+        my $pckg = $cmd_flag;
+        $pckg =~ s/--without-|--disable-//;
+        $disabled_packages{$pckg} = 1;
     } else {
         &usage();
         exit 1;
@@ -461,6 +466,7 @@ sub usage
    print "\n           --force              Force uninstall RPM coming with Distribution";
    print "\n           --builddir           Change build directory. Default: $builddir";
    print "\n           --umad-dev-rw        Grant non root users read/write permission for umad devices instead of default";
+   print "\n           --without-<package>  Do not install package";
    print "\n\n           --all|--hpc|--basic    Install all,hpc or basic packages correspondingly";
    print RESET "\n\n";
 }
@@ -1938,6 +1944,14 @@ sub set_availability
             if ($package =~ m/-debuginfo/) {
                 $packages_info{$package}{'available'} = 0;
             }
+        }
+    }
+
+    for my $key ( keys %disabled_packages ) {
+        if (exists $packages_info{$key}) {
+            $packages_info{$key}{'available'} = 0;
+        } elsif (exists $kernel_modules_info{$key}) {
+            $kernel_modules_info{$key}{'available'} = 0;
         }
     }
 }
