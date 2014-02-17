@@ -3556,6 +3556,10 @@ sub build_rpm
             $cmd .= " --define '_usr $prefix'";
         }
 
+        if ($parent eq "libmlx4") {
+            $cmd .= " --nodeps";
+        }
+
         if ($parent eq "librdmacm") {
             if ( $packages_info{'ibacm'}{'selected'}) {
                 $packages_info{'librdmacm'}{'configure_options'} .= " --with-ib_acm";
@@ -3656,6 +3660,11 @@ sub install_rpm_32
     if ($DISTRO =~ m/SLES/) {
         $cmd .= " --force";
     }
+
+    if ($name eq "libmlx4") {
+        $cmd .= " --nodeps";
+    }
+
     $cmd .= " $package";
 
     print "Running $cmd\n" if ($verbose);
@@ -3701,6 +3710,11 @@ sub install_rpm
     if ($name =~ /intel|pgi/) {
         $cmd .= " --nodeps";
     }
+
+    if ($name eq "libmlx4") {
+        $cmd .= " --nodeps";
+    }
+
 
     $cmd .= " $package";
 
