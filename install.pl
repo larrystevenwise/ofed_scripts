@@ -1160,9 +1160,9 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user",
             dist_req_build => ["zlib-devel$suffix_64bit", "$libstdc_devel$suffix_64bit", "gcc-c++"],
-            dist_req_inst => [], ofa_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibmad-devel"],
             ubuntu_dist_req_build => ["zlib1g-dev", "$libstdc_devel", "gcc","g++","byacc"],ubuntu_dist_req_inst => [],
-            ofa_req_inst => [],
+            ofa_req_inst => ["libibmad"],
             install32 => 0, exception => 0, configure_options => '' },
         'mstflint-debuginfo' =>
             { name => "mstflint-debuginfo", parent => "mstflint",
