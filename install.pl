@@ -258,6 +258,9 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
 } elsif ($dist_rpm =~ /redhat-release-.*-6.5|sl-release-6.5|centos-release-6-5/) {
     $DISTRO = "RHEL6.5";
     $rpm_distro = "rhel6u5";
+} elsif ($dist_rpm =~ /redhat-release-.*-7.0|sl-release-7.0|centos-release-7-0/) {
+    $DISTRO = "RHEL7.0";
+    $rpm_distro = "rhel7u0";
 } elsif ($dist_rpm =~ /oraclelinux-release-6.*-1.0.2/) {
     $DISTRO = "OEL6.1";
     $rpm_distro = "oel6u1";
@@ -437,7 +440,7 @@ if ($DISTRO eq "openSUSE11.2") {
     $libstdc = 'libstdc++';
     $libgcc = 'libgcc';
     $libgfortran = 'gcc-gfortran';
-    if ($DISTRO =~ m/RHEL6|OEL6|FC/) {
+    if ($DISTRO =~ m/RHEL6|RHEL7|OEL6|FC/) {
         $curl_devel = 'libcurl-devel';
     }
 } else {
@@ -483,7 +486,7 @@ if ($DISTRO =~ m/SLES|openSUSE/) {
 } elsif ($DISTRO =~ m/RHEL5/) {
     $sysfsutils = "libsysfs";
     $sysfsutils_devel = "libsysfs";
-} elsif ($DISTRO =~ m/RHEL6|OEL6/) {
+} elsif ($DISTRO =~ m/RHEL6|RHEL7|OEL6/) {
     $sysfsutils = "libsysfs";
     $sysfsutils_devel = "libsysfs";
 }
@@ -3825,7 +3828,7 @@ sub get_net_config
         $ifcfg{$interface}{'BROADCAST'} =~ s/Bcast://g;
         $ifcfg{$interface}{'NETMASK'} = (split (' ', $line))[3];
         $ifcfg{$interface}{'NETMASK'} =~ s/Mask://g;
-        if ($DISTRO =~ /RHEL6/) {
+        if ($DISTRO =~ /RHEL6|RHEL7/) {
             $ifcfg{$interface}{'NM_CONTROLLED'} = "yes";
             $ifcfg{$interface}{'TYPE'} = "InfiniBand";
         }
@@ -3933,7 +3936,7 @@ sub config_interface
         print "NETMASK=$nm\n";
         print "NETWORK=$nw\n";
         print "BROADCAST=$bc\n";
-        if ($DISTRO =~ /RHEL6/) {
+        if ($DISTRO =~ /RHEL6|RHEL7/) {
             print "NM_CONTROLLED=yes\n";
             print "TYPE=InfiniBand\n";
         }
@@ -4088,7 +4091,7 @@ sub config_interface
         print IF "NETMASK=$nm\n";
         print IF "NETWORK=$nw\n";
         print IF "BROADCAST=$bc\n";
-        if ($DISTRO =~ /RHEL6.[34]/) {
+        if ($DISTRO =~ /RHEL6|RHEL7/) {
             print IF "NM_CONTROLLED=yes\n";
             print IF "TYPE=InfiniBand\n";
         }
