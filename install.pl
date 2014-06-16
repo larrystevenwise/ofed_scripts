@@ -679,7 +679,7 @@ my %kernel_modules_info = (
             { name => "rds", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
         'iser' =>
-            { name => "iser", available => 0, selected => 0,
+            { name => "iser", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], ofa_req_inst => [] },
         'qlgc_vnic' =>
             { name => "qlgc_vnic", available => 0, selected => 0,
@@ -1869,7 +1869,6 @@ sub set_availability
             $packages_info{'rds-tools'}{'available'} = 1;
             $packages_info{'rds-devel'}{'available'} = 1;
             $packages_info{'rds-tools-debuginfo'}{'available'} = 1;
-            $kernel_modules_info{'iser'}{'available'} = 1;
             $kernel_modules_info{'srpt'}{'available'} = 1;
             if ($arch =~ m/ppc64|powerpc/) {
                 $kernel_modules_info{'ehca'}{'available'} = 1;
