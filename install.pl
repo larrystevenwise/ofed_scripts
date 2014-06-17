@@ -35,6 +35,8 @@ use Cwd;
 use Term::ANSIColor qw(:constants);
 use sigtrap 'handler', \&sig_handler, 'normal-signals';
 
+$ENV{"LANG"} = "en_US.UTF-8";
+
 if ($<) {
     print RED "Only root can run $0", RESET "\n";
     exit 1;
