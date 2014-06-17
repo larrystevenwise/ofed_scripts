@@ -227,13 +227,16 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
 } elsif ($dist_rpm =~ /openSUSE/) {
     $DISTRO = "openSUSE";
     $rpm_distro = "opensuse11sp0";
-} elsif ($dist_rpm =~ /sles-release-11.3/) {
+} elsif ($dist_rpm =~ /sles-release-12|SLES.*release-12/) {
+    $DISTRO = "SLES12";
+    $rpm_distro = "sles12sp0";
+} elsif ($dist_rpm =~ /sles-release-11.3|SLES.*release-11.3/) {
     $DISTRO = "SLES11";
     $rpm_distro = "sles11sp3";
-} elsif ($dist_rpm =~ /sles-release-11.2/) {
+} elsif ($dist_rpm =~ /sles-release-11.2|SLES.*release-11.2/) {
     $DISTRO = "SLES11";
     $rpm_distro = "sles11sp2";
-} elsif ($dist_rpm =~ /sles-release-11.1/) {
+} elsif ($dist_rpm =~ /sles-release-11.1|SLES.*release-11.1/) {
     $DISTRO = "SLES11";
     $rpm_distro = "sles11sp1";
 } elsif ($dist_rpm =~ /sles-release-11/) {
@@ -438,6 +441,11 @@ if ($DISTRO eq "openSUSE11.2") {
         $libgcc = 'libgcc46';
         $libgfortran = 'libgfortran46';
     }
+} elsif ($DISTRO =~ m/SLES12/) {
+    $libstdc = 'libstdc++6';
+    $libgcc = 'libgcc_s1';
+    $libgfortran = 'libgfortran3';
+    $curl_devel = 'libcurl-devel';
 } elsif ($DISTRO =~ m/RHEL|OEL|FC/) {
     $libstdc = 'libstdc++';
     $libgcc = 'libgcc';
@@ -449,9 +457,12 @@ if ($DISTRO eq "openSUSE11.2") {
     $libstdc = 'libstdc++';
 }
 my $libstdc_devel = "$libstdc-devel";
+if ($DISTRO =~ m/SLES12/) {
+    $libstdc_devel = 'libstdc++-devel';
+}
 
 # Suffix for 32 and 64 bit packages
-my $is_suse_suff64 = $arch eq "ppc64" && $DISTRO !~ /SLES11/;
+my $is_suse_suff64 = $arch eq "ppc64" && $DISTRO !~ /SLES11|SLES12/;
 my $suffix_32bit = ($DISTRO =~ m/SLES|openSUSE/ && !$is_suse_suff64) ? "-32bit" : ".$target_cpu32";
 my $suffix_64bit = ($DISTRO =~ m/SLES|openSUSE/ &&  $is_suse_suff64) ? "-64bit" : "";
 
@@ -498,7 +509,7 @@ if ($DISTRO =~ /RHEL|OEL/) {
     $kernel_req = "redhat-rpm-config";
 } elsif ($DISTRO =~ /SLES10/) {
     $kernel_req = "kernel-syms";
-} elsif ($DISTRO =~ /SLES11/) {
+} elsif ($DISTRO =~ /SLES11|SLES12/) {
     $kernel_req = "kernel-source";
 }
 
@@ -724,7 +735,7 @@ my %packages_info = (
             { name => "libibverbs", parent => "libibverbs",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => 
-            ( $build32 == 1 )?["gcc_3.3.3", "glibc-devel$suffix_64bit","glibc-devel$suffix_32bit","$libstdc","$libstdc" . "$suffix_32bit","$libgcc","$libgcc" . "lib32gcc1"]:["gcc_3.3.3", "glibc-devel$suffix_64bit","$libstdc","$libgcc"],
+            ( $build32 == 1 )?["gcc__3.3.3", "glibc-devel$suffix_64bit","glibc-devel$suffix_32bit","$libgcc","$libgcc" . "$suffix_32bit"]:["gcc__3.3.3", "glibc-devel$suffix_64bit","$libgcc"],
             dist_req_inst => [], ofa_req_build => [], ofa_req_inst => ["ofed-scripts"], 
             ubuntu_dist_req_build =>( $build32 == 1 )?["gcc", "libc6-dev","libc6-dev-i386","$libstdc",
             "lib32stdc++6","libgcc1","lib32gcc1"]:["gcc", "libc6-dev","$libstdc","libgcc1"], 
@@ -1291,8 +1302,8 @@ my %packages_info = (
         'ibutils' =>
             { name => "ibutils", parent => "ibutils",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["tcl_8.4", "tcl-devel_8.4", "tk", "$libstdc_devel"],
-            dist_req_inst => ["tcl_8.4", "tk", "$libstdc"], ofa_req_build => ["libibverbs-devel", "opensm-libs", "opensm-devel"],
+            available => 1, mode => "user", dist_req_build => ["tcl__8.4", "tcl-devel__8.4", "tk", "$libstdc_devel"],
+            dist_req_inst => ["tcl__8.4", "tk", "$libstdc"], ofa_req_build => ["libibverbs-devel", "opensm-libs", "opensm-devel"],
             ofa_req_inst => ["libibumad", "opensm-libs"],
             install32 => 0, exception => 0, configure_options => '' },
         'ibutils-debuginfo' =>
@@ -2793,7 +2804,7 @@ sub check_linux_dependencies
 
         if (not $packages_info{$package}{'rpm_exist'}) {
             for my $req ( @{ $packages_info{$package}{$dist_req_build} } ) {
-                my ($req_name, $req_version) = (split ('_',$req));
+                my ($req_name, $req_version) = (split ('__',$req));
                 next if not $req_name;
                 print BLUE "check_linux_dependencies: $req_name  is required to build $package", RESET "\n" if ($verbose3);
                 my $is_installed_flag = ($DISTRO =~ m/UBUNTU/)?(is_installed_deb($req_name)):(is_installed($req_name));
@@ -2921,7 +2932,7 @@ sub check_linux_dependencies
         my $dist_req_inst = ($DISTRO =~ m/UBUNTU/)?'ubuntu_dist_req_inst':'dist_req_inst';
         # Check installation requirements
         for my $req ( @{ $packages_info{$package}{$dist_req_inst} } ) {
-            my ($req_name, $req_version) = (split ('_',$req));
+            my ($req_name, $req_version) = (split ('__',$req));
             next if not $req_name;
             my $is_installed_flag = ($DISTRO =~ m/UBUNTU/)?(is_installed_deb($req_name)):(is_installed($req_name));
             if (not $is_installed_flag) {
