@@ -98,11 +98,13 @@ IB_ALL_PACKAGES="$IB_ALL_PACKAGES openib-mstflint openib-tvflash openib-srptools
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES ofed-docs ofed-scripts"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES infinipath-psm infinipath-psm-devel"
 IB_ALL_PACKAGES="$IB_ALL_PACKAGES mlnxofed-docs mlnx-ofc"
+IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibscif ibp-server ibpd libibscif libibscif-devel"
 
 ALL_PACKAGES="$IB_ALL_PACKAGES mvapich mvapich2 openmpi openmpi-libs openmpi-devel mpitests mft"
 
 PREV_RELEASE_PACKAGES="mpich_mlx ibtsal openib opensm opensm-devel mpi_ncsa thca ib-osm osm diags ibadm ib-diags ibgdiag ibdiag ib-management"
 PREV_RELEASE_PACKAGES="$PREV_RELEASE_PACKAGES ib-verbs ib-ipoib ib-cm ib-sdp ib-dapl udapl udapl-devel libdat libibat ib-kdapl ib-srp ib-srp_target oiscsi-iser-support"
+PREV_RELEASE_PACKAGES="$PREV_RELEASE_PACKAGES ibscif ibp-server ibpd libibscif libibscif-devel"
 
 MPI_SELECTOR_NAME="mpi-selector"
 OPENMPI_NAME="openmpi"

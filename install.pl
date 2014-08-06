@@ -119,6 +119,7 @@ my $install_option;
 my $check_linux_deps = 1;
 my $force = 0;
 my $kmp = 1;
+my $with_xeon_phi = 0;
 my %disabled_packages;
 
 while ( $#ARGV >= 0 ) {
@@ -175,6 +176,8 @@ while ( $#ARGV >= 0 ) {
         $verbose = 1;
         $verbose2 = 1;
         $verbose3 = 1;
+    } elsif ( $cmd_flag eq "--with-xeon-phi" ) {
+        $with_xeon_phi = 1;
     } elsif ( $cmd_flag =~ /--without|--disable/ ) {
         my $pckg = $cmd_flag;
         $pckg =~ s/--without-|--disable-//;
@@ -485,6 +488,7 @@ sub usage
    print "\n           --force              Force uninstall RPM coming with Distribution";
    print "\n           --builddir           Change build directory. Default: $builddir";
    print "\n           --umad-dev-rw        Grant non root users read/write permission for umad devices instead of default";
+   print "\n           --with-xeon-phi      Install XEON PHI support";
    print "\n           --without-<package>  Do not install package";
    print "\n\n           --all|--hpc|--basic    Install all,hpc or basic packages correspondingly";
    print RESET "\n\n";
@@ -546,6 +550,7 @@ my @prev_ofed_packages = (
                         "ibutils", "ibutils-devel", "ibutils-libs", "ibutils2", "ibutils2-devel",
                         "libnes", "libnes-devel",
                         "infinipath-psm", "infinipath-psm-devel",
+                        "ibpd", "libibscif", "libibscif-devel",
                         "mvapich", "openmpi", "mvapich2"
                         );
 
@@ -565,6 +570,7 @@ my @mlnx_en_packages = (
 my @kernel_packages = ("compat-rdma", "compat-rdma-devel", "ib-bonding", "ib-bonding-debuginfo");
 my @basic_kernel_modules = ("core", "mthca", "mlx4", "mlx4_en", "mlx5", "cxgb3", "cxgb4", "nes", "ehca", "qib", "ocrdma", "ipoib");
 my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser", "nfsrdma");
+my @xeon_phi_kernel = ("ibscif", "ibp-server", "ibp-debug");
 
 # kernel modules in "technology preview" status can be installed by
 # adding "module=y" to the ofed.conf file in unattended installation mode
@@ -590,6 +596,8 @@ my @mpi_packages = ( "mpi-selector",
                      "openmpi_gcc", "openmpi_pgi", "openmpi_intel", "openmpi_pathscale", 
                      @mpitests_packages
                     );
+
+my @xeon_phi_user = ("ibpd", "libibscif");
 
 my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static", 
                      "libibverbs-utils", "libibverbs-debuginfo",
@@ -700,6 +708,15 @@ my %kernel_modules_info = (
         'nfsrdma' =>
             { name => "nfsrdma", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core", "ipoib"], },
+        'ibscif' =>
+            { name => "ibscif", available => 1, selected => 0,
+            included_in_rpm => 0, requires => ["core"], },
+        'ibp-server' =>
+            { name => "ibp-server", available => 1, selected => 0,
+            included_in_rpm => 0, requires => ["core"], },
+        'ibp-debug' =>
+            { name => "ibp-debug", available => 1, selected => 0,
+            included_in_rpm => 0, requires => ["core", "ibp-server"], },
         );
 
 my %packages_info = (
@@ -1046,6 +1063,31 @@ my %packages_info = (
             dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
+
+        'libibscif' =>
+            { name => "libibscif", parent => "libibscif",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [],ubuntu_dist_req_build => [],
+            ubuntu_dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
+            ofa_req_inst => ["libibverbs"],
+            install32 => 1, exception => 0, configure_options => '' },
+        'libibscif-devel' =>
+            { name => "libibscif-devel", parent => "libibscif",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
+            ofa_req_inst => ["libibverbs", "libibscif"],
+            install32 => 1, exception => 0 },
+
+        'ibpd' =>
+            { name => "ibpd", parent => "ibpd",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [],ubuntu_dist_req_build => [],
+            ubuntu_dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
+            ofa_req_inst => ["libibverbs"],
+            install32 => 1, exception => 0, configure_options => '' },
 
         'opensm' =>
             { name => "opensm", parent => "opensm",
@@ -4347,7 +4389,11 @@ sub main
         }
 
         @selected_by_user = (@list);
+        push (@selected_by_user, @xeon_phi_user) if ($with_xeon_phi);
+
         @selected_modules_by_user = (@kernel_modules);
+        push (@selected_modules_by_user, @xeon_phi_kernel) if ($with_xeon_phi);
+
         resolve_dependencies();
         open(CONFIG, ">$config") || die "Can't open $config: $!";;
         flock CONFIG, $LOCK_EXCLUSIVE;
@@ -4370,12 +4416,21 @@ sub main
         }
         flock CONFIG, $UNLOCK;
         close(CONFIG);
+
+	if ($DISTRO =~ /RHEL.*/ || $DISTRO =~ /SLES.*/ ) {
+            print "\nTech Preview: ";
+            print "xeon-phi ";
+        }
+
         print "\n";
         print GREEN "Created $config", RESET "\n";
         exit 0;
     }
     
     my $num_selected = 0;
+
+    push (@kernel_modules, @xeon_phi_kernel) if ($with_xeon_phi);
+    push (@all_packages, @xeon_phi_user) if ($with_xeon_phi);
 
     if ($interactive) {
         my $inp;
