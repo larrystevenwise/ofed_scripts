@@ -1416,7 +1416,7 @@ my %packages_info = (
         'dapl-debuginfo' =>
             { name => "dapl-debuginfo", parent => "dapl",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel", "librdmacm", "librdmacm-devel"],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
