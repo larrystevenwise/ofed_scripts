@@ -290,7 +290,7 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
 } elsif ($dist_rpm =~ /redhat-release-.*-5.5|centos-release-5-5|enterprise-release-5-5/) {
     system("grep -wq XenServer /etc/issue > /dev/null 2>&1");
     my $res = $? >> 8;
-    my $sig = $? & 127; 
+    my $sig = $? & 127;
     if ($sig or $res) {
         $DISTRO = "RHEL5.5";
         $rpm_distro = "rhel5u5";
@@ -585,23 +585,23 @@ my $user_configure_options = '';
 my @misc_packages = ("ofed-docs", "ofed-scripts");
 
 my @mpitests_packages = (
-                     "mpitests_mvapich_gcc", "mpitests_mvapich_pgi", "mpitests_mvapich_intel", "mpitests_mvapich_pathscale", 
-                     "mpitests_mvapich2_gcc", "mpitests_mvapich2_pgi", "mpitests_mvapich2_intel", "mpitests_mvapich2_pathscale", 
-                     "mpitests_openmpi_gcc", "mpitests_openmpi_pgi", "mpitests_openmpi_intel", "mpitests_openmpi_pathscale" 
+                     "mpitests_mvapich_gcc", "mpitests_mvapich_pgi", "mpitests_mvapich_intel", "mpitests_mvapich_pathscale",
+                     "mpitests_mvapich2_gcc", "mpitests_mvapich2_pgi", "mpitests_mvapich2_intel", "mpitests_mvapich2_pathscale",
+                     "mpitests_openmpi_gcc", "mpitests_openmpi_pgi", "mpitests_openmpi_intel", "mpitests_openmpi_pathscale"
                     );
 
 my @mpi_packages = ( "mpi-selector",
-                     "mvapich_gcc", "mvapich_pgi", "mvapich_intel", "mvapich_pathscale", 
-                     "mvapich2_gcc", "mvapich2_pgi", "mvapich2_intel", "mvapich2_pathscale", 
-                     "openmpi_gcc", "openmpi_pgi", "openmpi_intel", "openmpi_pathscale", 
+                     "mvapich_gcc", "mvapich_pgi", "mvapich_intel", "mvapich_pathscale",
+                     "mvapich2_gcc", "mvapich2_pgi", "mvapich2_intel", "mvapich2_pathscale",
+                     "openmpi_gcc", "openmpi_pgi", "openmpi_intel", "openmpi_pathscale",
                      @mpitests_packages
                     );
 
 my @xeon_phi_user = ("ibpd", "libibscif");
 
-my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static", 
+my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static",
                      "libibverbs-utils", "libibverbs-debuginfo",
-                     "libmthca", "libmthca-devel-static", "libmthca-debuginfo", 
+                     "libmthca", "libmthca-devel-static", "libmthca-debuginfo",
                      "libmlx4", "libmlx4-devel", "libmlx4-debuginfo",
                      "libmlx5", "libmlx5-devel", "libmlx5-debuginfo",
                      "libehca", "libehca-devel-static", "libehca-debuginfo",
@@ -751,11 +751,11 @@ my %packages_info = (
         'libibverbs' =>
             { name => "libibverbs", parent => "libibverbs",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => 
+            available => 1, mode => "user", dist_req_build =>
             ( $build32 == 1 )?["gcc__3.3.3", "glibc-devel$suffix_64bit","glibc-devel$suffix_32bit","$libgcc","$libgcc" . "$suffix_32bit"]:["gcc__3.3.3", "glibc-devel$suffix_64bit","$libgcc"],
-            dist_req_inst => [], ofa_req_build => [], ofa_req_inst => ["ofed-scripts"], 
+            dist_req_inst => [], ofa_req_build => [], ofa_req_inst => ["ofed-scripts"],
             ubuntu_dist_req_build =>( $build32 == 1 )?["gcc", "libc6-dev","libc6-dev-i386","$libstdc",
-            "lib32stdc++6","libgcc1","lib32gcc1"]:["gcc", "libc6-dev","$libstdc","libgcc1"], 
+            "lib32stdc++6","libgcc1","lib32gcc1"]:["gcc", "libc6-dev","$libstdc","libgcc1"],
             ubuntu_dist_req_inst => [],install32 => 1, exception => 0, configure_options => '' },
         'libibverbs-devel' =>
             { name => "libibverbs-devel", parent => "libibverbs",
@@ -1678,8 +1678,8 @@ my %MPI_SUPPORTED_COMPILERS = (gcc => 0, pgi => 0, intel => 0, pathscale => 0);
 
 my %gcc = ('gcc' => 0, 'gfortran' => 0, 'g77' => 0, 'g++' => 0);
 my %pathscale = ('pathcc' => 0, 'pathCC' => 0, 'pathf90' => 0);
-my %pgi = ('pgf77' => 0, 'pgf90' => 0, 'pgCC' => 0); 
-my %intel = ('icc' => 0, 'icpc' => 0, 'ifort' => 0); 
+my %pgi = ('pgf77' => 0, 'pgf90' => 0, 'pgCC' => 0);
+my %intel = ('icc' => 0, 'icpc' => 0, 'ifort' => 0);
 
 # mvapich2 environment
 my $mvapich2_conf_impl = "ofa";
@@ -2821,7 +2821,7 @@ sub check_linux_dependencies
                 }
             }
         }
-		
+
         if($DISTRO =~/UBUNTU/){
             if(not is_installed_deb("rpm")){
                 print RED "rpm is required to build OFED", RESET "\n";
@@ -3469,7 +3469,7 @@ sub build_rpm
             else {
                 $openmpi_lib = 'lib';
             }
-            
+
             if ($compiler eq "gcc") {
                 $openmpi_comp_env .= " CC=gcc";
                 if ($gcc{'g++'}) {
@@ -3660,7 +3660,7 @@ sub build_rpm
         }
     }
 
-    if ($build32 and $packages_info{$name}{'install32'} and 
+    if ($build32 and $packages_info{$name}{'install32'} and
         not $packages_info{$name}{'rpm_exist32'}) {
         build_rpm_32($name);
     }
@@ -3815,8 +3815,8 @@ sub is_installed_deb
     my $name = shift @_;
     my $result = `dpkg-query -W -f='\${version}' $name`;
     if (($result eq "") && ($? == 0) ){
-        $res = 1; 
-    } 
+        $res = 1;
+    }
     return not $res;
 }
 
@@ -3824,7 +3824,7 @@ sub is_installed
 {
     my $res = 0;
     my $name = shift @_;
-    
+
     if ($DISTRO eq "DEBIAN") {
         system("dpkg-query -W -f='\${Package} \${Version}\n' $name > /dev/null 2>&1");
     }
@@ -4295,14 +4295,14 @@ sub install
 
         if ($packages_info{$package}{'mode'} eq "user") {
             if (not $packages_info{$package}{'exception'}) {
-                if ( (not $packages_info{$package}{'rpm_exist'}) or 
-                     ($build32 and $packages_info{$package}{'install32'} and 
+                if ( (not $packages_info{$package}{'rpm_exist'}) or
+                     ($build32 and $packages_info{$package}{'install32'} and
                       not $packages_info{$package}{'rpm_exist32'}) ) {
                     build_rpm($package);
                 }
-    
-                if ( (not $packages_info{$package}{'rpm_exist'}) or 
-                     ($build32 and $packages_info{$package}{'install32'} and 
+
+                if ( (not $packages_info{$package}{'rpm_exist'}) or
+                     ($build32 and $packages_info{$package}{'install32'} and
                       not $packages_info{$package}{'rpm_exist32'}) ) {
                     print RED "$package was not created", RESET "\n";
                     exit 1;
@@ -4431,7 +4431,7 @@ sub main
         print GREEN "Created $config", RESET "\n";
         exit 0;
     }
-    
+
     my $num_selected = 0;
 
     push (@kernel_modules, @xeon_phi_kernel) if ($with_xeon_phi);
@@ -4441,11 +4441,11 @@ sub main
         my $inp;
         my $ok = 0;
         my $max_inp;
-    
+
         while (! $ok) {
             $max_inp = show_menu("main");
             $inp = getch();
-    
+
             if ($inp =~ m/[qQ]/ || $inp =~ m/[Xx]/ ) {
                 die "Exiting\n";
             }
@@ -4463,7 +4463,7 @@ sub main
             }
             $ok = 1;
         }
-    
+
         if ($inp == 1) {
             if (-e "$CWD/docs/${PACKAGE}_Installation_Guide.txt") {
                 system("less $CWD/docs/${PACKAGE}_Installation_Guide.txt");
@@ -4481,7 +4481,7 @@ sub main
             for my $srcrpm ( <$SRPMS*> ) {
                 set_cfg ($srcrpm);
             }
-            
+
             # Set RPMs info for available source RPMs
             set_availability();
             $num_selected = select_packages();
@@ -4515,7 +4515,7 @@ sub main
             uninstall();
             exit 0;
         }
-    
+
     }
     else {
         for my $srcrpm ( <$SRPMS*> ) {
@@ -4532,13 +4532,13 @@ sub main
             print_selected();
         }
     }
-    
+
     if (not $num_selected) {
         print RED "$num_selected packages selected. Exiting...", RESET "\n";
         exit 1;
     }
     print BLUE "Detected Linux Distribution: $DISTRO", RESET "\n" if ($verbose3);
-    
+
     # Uninstall the previous installations
     uninstall();
     my $vendor_ret;
