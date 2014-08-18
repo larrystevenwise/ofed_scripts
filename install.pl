@@ -3323,6 +3323,11 @@ sub build_rpm
         # Prefix should be defined per package
         if ($parent eq "ibutils") {
             $packages_info{'ibutils'}{'configure_options'} .= " --with-osm=$prefix";
+            if ($DISTRO =~ m/SLES12/) {
+                my $tklib = `/bin/ls -1d /usr/lib*/tcl/tk8.6 2> /dev/null | head -1`;
+                chomp $tklib;
+                $packages_info{'ibutils'}{'configure_options'} .= " --with-tk-lib=$tklib" if ($tklib);
+            }
             $cmd .= " --define '_prefix $prefix'";
             $cmd .= " --define '_exec_prefix $prefix'";
             $cmd .= " --define '_sysconfdir $sysconfdir'";
