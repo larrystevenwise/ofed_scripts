@@ -101,8 +101,10 @@ my $arch = `uname -m`;
 chomp $arch;
 my $kernel = `uname -r`;
 chomp $kernel;
-my $kernel_sources = "/lib/modules/$kernel/build";
-chomp $kernel_sources;
+my $linux_obj = "/lib/modules/$kernel/build";
+chomp $linux_obj;
+my $linux = "/lib/modules/$kernel/source";
+chomp $linux;
 my $ib_udev_rules = "/etc/udev/rules.d/90-ib.rules";
 
 # Define RPMs environment
@@ -139,8 +141,11 @@ while ( $#ARGV >= 0 ) {
     } elsif ( $cmd_flag eq "-k" or $cmd_flag eq "--kernel" ) {
         $kernel = shift(@ARGV);
         $kernel_given = 1;
-    } elsif ( $cmd_flag eq "-s" or $cmd_flag eq "--kernel-sources" ) {
-        $kernel_sources = shift(@ARGV);
+    } elsif ( $cmd_flag eq "-s" or $cmd_flag eq "--linux" ) {
+        $linux = shift(@ARGV);
+        $kernel_source_given = 1;
+    } elsif ( $cmd_flag eq "-o" or $cmd_flag eq "--linux-obj" ) {
+        $linux_obj = shift(@ARGV);
         $kernel_source_given = 1;
     } elsif ( $cmd_flag eq "-p" or $cmd_flag eq "--print-available" ) {
         $print_available = 1;
@@ -383,7 +388,7 @@ chomp $target_cpu32;
 
 if ($kernel_given and not $kernel_source_given) {
     if (-d "/lib/modules/$kernel/build") {
-        $kernel_sources = "/lib/modules/$kernel/build";
+        $linux_obj = "/lib/modules/$kernel/build";
     }
     else {
         print RED "Provide path to the kernel sources for $kernel kernel.", RESET "\n";
@@ -483,7 +488,8 @@ sub usage
    print "\n           -p|--print-available Print available packages for current platform.";
    print "\n                                And create corresponding ofed.conf file.";
    print "\n           -k|--kernel <kernel version>. Default on this system: $kernel";
-   print "\n           -s|--kernel-sources  <path to the kernel sources>. Default on this system: $kernel_sources";
+   print "\n           -s|--linux           <path to the kernel sources>. Default on this system: $linux";
+   print "\n           -o|--linux-obj       <path to the kernel sources>. Default on this system: $linux_obj";
    print "\n           --build32            Build 32-bit libraries. Relevant for x86_64 and ppc64 platforms";
    print "\n           --without-depcheck   Skip Distro's libraries check";
    print "\n           -v|-vv|-vvv          Set verbosity level";
@@ -2815,8 +2821,8 @@ sub check_linux_dependencies
                     exit 1;
                 }
                 # kernel sources required
-                if ( not -d "$kernel_sources/scripts" ) {
-                    print RED "$kernel_sources/scripts is required to build $package RPM.", RESET "\n";
+                if ( not -d "$linux_obj/scripts" ) {
+                    print RED "$linux_obj/scripts is required to build $package RPM.", RESET "\n";
                     print RED "Please install the corresponding kernel-source or kernel-devel RPM.", RESET "\n";
                     $err++;
                 }
@@ -3097,7 +3103,8 @@ sub build_kernel_rpm
         $cmd .= " --define 'build_kernel_ib 1'";
         $cmd .= " --define 'build_kernel_ib_devel 1'";
         $cmd .= " --define 'KVERSION $kernel'";
-        $cmd .= " --define 'K_SRC $kernel_sources'";
+        $cmd .= " --define 'K_SRC $linux'";
+        $cmd .= " --define 'K_SRC_OBJ $linux_obj'";
         $cmd .= " --define '_release $main_packages{'compat-rdma'}{'release'}.$kernel_rel'";
         $cmd .= " --define 'network_dir $network_dir'";
     }
