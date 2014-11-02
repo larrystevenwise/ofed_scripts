@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/perl
 #
-# Copyright (c) 2006 Mellanox Technologies. All rights reserved.
+# Copyright (c) 2014 Mellanox Technologies. All rights reserved.
 #
 # This Software is licensed under one of the following licenses:
 #
@@ -25,327 +25,286 @@
 # notice, one of the license notices in the documentation
 # and/or other materials provided with the distribution.
 #
-#
-#  $Id: uninstall.sh 9432 2006-09-12 09:06:46Z vlad $
-#
 # Description: OFED package uninstall script
 
-RPM=`which rpm 2>/dev/null`
-if [ ! -n "$RPM" ]; then
-	echo "Please install rpm package to continue"
-	exit 1
-fi
+use strict;
+use warnings;
+use Term::ANSIColor qw(:constants);
+use File::Path;
 
-RM=/bin/rm
-NULL=/dev/null
+my $PREREQUISIT = "2";
+my $ERROR = "1";
+my $NONOFEDRPMS = "3";
 
-PACKAGE="OFED"
-# Default ${PACKAGE} stack prefix
+$ENV{"LANG"} = "en_US.UTF-8";
 
-STACK_PREFIX=/usr
-
-ARCH=$(uname -m)
-
-UNLOAD_MODULES=0
-FORCE=0
-
-while [ $# -gt 0 ]
-do
-    case $1 in
-            --unload-modules)
-                UNLOAD_MODULES=1
-            ;;
-            --force)
-                FORCE=1
-            ;;
-            *)
-            ;;
-    esac
-    shift
-done
-
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES compat-rdma compat-rdma-devel "
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES kernel-ib kernel-ib-devel ipoibtools "
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libopensm libopensm-devel libosmcomp libosmcomp-devel libosmvendor libosmvendor-devel"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES openib-diags ib-bonding ib-bonding-debuginfo"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libibverbs libibverbs-devel libibverbs-devel-static libibverbs-static"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libibverbs-utils libibverbs-debuginfo"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libmthca libmthca-devel libmthca-devel-static libmthca-debuginfo libmthca-static"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libmlx4 libmlx4-devel libmlx4-devel-static libmlx4-debuginfo libmlx4-static"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libmlx5 libmlx5-devel libmlx5-devel-static libmlx5-debuginfo libmlx5-static"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libehca libehca-devel-static libehca-debuginfo"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libcxgb3 libcxgb3-devel libcxgb3-debuginfo libcxgb3-static"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libcxgb4 libcxgb4-devel libcxgb4-debuginfo libcxgb4-static"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libnes libnes-devel-static libnes-debuginfo libnes-static"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libipathverbs libipathverbs-devel libipathverbs-debuginfo libipathverbs-static"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libibcm libibcm-devel libibcm-debuginfo libibcm-static"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libibcommon libibcommon-devel libibcommon-static libibcommon-debuginfo"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libibumad libibumad-devel libibumad-static libibumad-debuginfo"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libibmad libibmad-devel libibmad-static libibmad-debuginfo"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES librdmacm librdmacm-utils librdmacm-devel librdmacm-debuginfo librdmacm-static ibacm"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libsdp libsdp-devel libsdp-debuginfo"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES libocrdma libocrdma-devel libocrdma-debuginfo"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES opensm opensm-libs opensm-devel opensm-debuginfo opensm-static"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES perftest perftest-debuginfo mstflint mstflint-debuginfo"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES compat-dapl compat-dapl-devel compat-dapl-devel-static compat-dapl-utils compat-dapl-debuginfo compat-dapl-static"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES compat-dapl-1.2.5 compat-dapl-devel-1.2.5 compat-dapl-devel-static-1.2.5 compat-dapl-utils-1.2.5 compat-dapl-debuginfo-1.2.5 compat-dapl-static-1.2.5"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES dapl dapl-devel dapl-devel-static dapl-utils dapl-debuginfo dapl-static"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES qlvnictools qlvnictools-debuginfo ibvexdmtools ibvexdmtools-debuginfo qlgc_vnic_daemon sdpnetstat sdpnetstat-debuginfo"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES srptools srptools-debuginfo rds-tools rds-devel rds-tools-debuginfo rnfs-utils rnfs-utils-debuginfo"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibsim ibsim-debuginfo ibutils2 ibutils2-devel ibutils2-debuginfo"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibutils ibutils-debuginfo ibutils-libs ibutils-devel infiniband-diags infiniband-diags-debuginfo qperf qperf-debuginfo"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES openib-mstflint openib-tvflash openib-srptools openib-perftest"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES ofed-docs ofed-scripts"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES infinipath-psm infinipath-psm-devel"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES mlnxofed-docs mlnx-ofc"
-IB_ALL_PACKAGES="$IB_ALL_PACKAGES ibscif ibp-server ibpd libibscif libibscif-devel"
-
-ALL_PACKAGES="$IB_ALL_PACKAGES mvapich mvapich2 openmpi openmpi-libs openmpi-devel mpitests mft"
-
-PREV_RELEASE_PACKAGES="mpich_mlx ibtsal openib opensm opensm-devel mpi_ncsa thca ib-osm osm diags ibadm ib-diags ibgdiag ibdiag ib-management"
-PREV_RELEASE_PACKAGES="$PREV_RELEASE_PACKAGES ib-verbs ib-ipoib ib-cm ib-sdp ib-dapl udapl udapl-devel libdat libibat ib-kdapl ib-srp ib-srp_target oiscsi-iser-support"
-PREV_RELEASE_PACKAGES="$PREV_RELEASE_PACKAGES ibscif ibp-server ibpd libibscif libibscif-devel"
-
-MPI_SELECTOR_NAME="mpi-selector"
-OPENMPI_NAME="openmpi"
-MVAPICH2_NAME="mvapich2"
-MVAPICH_NAME="mvapich"
-
-if [ -f /etc/SuSE-release ]; then
-    DISTRIBUTION="SuSE"
-elif [ -f /etc/fedora-release ]; then
-    DISTRIBUTION="fedora"
-elif [ -f /etc/rocks-release ]; then
-    DISTRIBUTION="Rocks"
-elif [ -f /etc/redhat-release ]; then
-    DISTRIBUTION="redhat"
-elif [ -f /etc/debian_version ]; then
-    DISTRIBUTION="debian"
-else
-    DISTRIBUTION=$(ls /etc/*-release | head -n 1 | xargs -iXXX basename XXX -release 2> $NULL)
-    [ -z "${DISTRIBUTION}" ] && DISTRIBUTION="unsupported"
-fi
-
-OPEN_ISCSI_SUSE_NAME="open-iscsi"
-OPEN_ISCSI_REDHAT_NAME="iscsi-initiator-utils"
-STGT_SUSE_NAME="tgt"
-STGT_REDHAT_NAME="scsi-target-utils"
-
-# Execute the command $@ and check exit status
-ex()
-{
-echo Running $@
-eval "$@"
-if [ $? -ne 0 ]; then
-     echo
-     echo Failed in execution \"$@\"
-     echo
-     exit 5
-fi
+if ($<) {
+    print RED "Only root can run $0", RESET "\n";
+    exit $PREREQUISIT;
 }
 
-
-# Uninstall Software
-uninstall()
-{
-    local RC=0
-    echo
-    echo "Removing ${PACKAGE} Software installations"
-    echo
-    packs_to_remove=""
-
-    case ${DISTRIBUTION} in
-        SuSE)
-        if ( $RPM -q ${OPEN_ISCSI_SUSE_NAME} > $NULL 2>&1 ) && ( $RPM --queryformat "[%{VENDOR}]" -q ${OPEN_ISCSI_SUSE_NAME} | grep -i Voltaire > $NULL 2>&1 ); then
-            packs_to_remove="$packs_to_remove ${OPEN_ISCSI_SUSE_NAME}"
-        fi
-        if ( $RPM -q ${STGT_SUSE_NAME} > $NULL 2>&1 ) && ( $RPM --queryformat "[%{VENDOR}]" -q ${STGT_SUSE_NAME} | grep -i Voltaire > $NULL 2>&1 ); then
-            packs_to_remove="$packs_to_remove ${STGT_SUSE_NAME}"
-        fi
-        ;;
-        redhat)
-        if ( $RPM -q ${OPEN_ISCSI_REDHAT_NAME} > $NULL 2>&1 ) && ( $RPM --queryformat "[%{VENDOR}]" -q ${OPEN_ISCSI_REDHAT_NAME} | grep -i Voltaire > $NULL 2>&1 ); then
-            packs_to_remove="$packs_to_remove ${OPEN_ISCSI_REDHAT_NAME}"
-        fi
-        if ( $RPM -q ${STGT_REDHAT_NAME} > $NULL 2>&1 ) && ( $RPM --queryformat "[%{VENDOR}]" -q ${STGT_REDHAT_NAME} | grep -i Voltaire > $NULL 2>&1 ); then
-            packs_to_remove="$packs_to_remove ${STGT_REDHAT_NAME}"
-        fi
-        ;;
-        *)
-        echo "Error: Distribution ${DISTRIBUTION} is not supported by open-iscsi over iSER. Cannot uninstall open-iscsi"
-        ;;
-    esac
-
-    MPITESTS_LIST=$(rpm -qa | grep mpitests)
-
-    if [ -n "$MPITESTS_LIST" ]; then
-        for mpitest_name in $MPITESTS_LIST
-        do 
-            if ( $RPM -q ${mpitest_name} > $NULL 2>&1 ); then
-                ex "$RPM -e ${mpitest_name}"
-            fi
-        done    
-    fi
-
-   MVAPICH_LIST=$(rpm -qa | grep ${MVAPICH_NAME})
-
-    if [ -n "$MVAPICH_LIST" ]; then
-        for mpi_name in $MVAPICH_LIST
-        do 
-            if ( $RPM -q ${mpi_name} > $NULL 2>&1 ); then
-                ex "$RPM -e --allmatches ${mpi_name}"
-            fi
-        done    
-    fi
-
-    MVAPICH2_LIST=$(rpm -qa |grep ${MVAPICH2_NAME})
-
-    if [ -n "$MVAPICH2_LIST" ]; then
-        for mpi_name in $MVAPICH2_LIST
-        do
-            if ( $RPM -q ${mpi_name} > $NULL 2>&1 ); then
-                ex "$RPM -e --allmatches ${mpi_name}"
-            fi
-        done
-    fi
-
-    OPENMPI_LIST=$(rpm -qa | grep ${OPENMPI_NAME})
-
-    if [ -n "$OPENMPI_LIST" ]; then
-        ompi_packs_to_remove=""
-        for mpi_name in $OPENMPI_LIST
-        do 
-            if ( $RPM -q ${mpi_name} > $NULL 2>&1 ); then
-                ompi_packs_to_remove="$ompi_packs_to_remove ${mpi_name}"	
-            fi
-        done   
-        ex "$RPM -e --allmatches $ompi_packs_to_remove > /dev/null 2>&1"
-    fi
-
-    MPI_SELECTOR_LIST=$(rpm -qa | grep ${MPI_SELECTOR_NAME})
-
-    if [ -n "$MPI_SELECTOR_LIST" ]; then
-        for mpiselector in $MPI_SELECTOR_LIST
-        do 
-            if ( $RPM -q ${mpiselector} > $NULL 2>&1 ); then
-                if ! ( $RPM -e --allmatches ${mpiselector} > /dev/null 2>&1 ); then
-			echo "Cannot remove ${mpiselector}."
-			echo "There are RPMs that depend on it."
-                fi
-            fi
-        done    
-    fi
-    
-    for package in $ALL_PACKAGES $PREV_RELEASE_PACKAGES
-    do
-        if ( $RPM -q ${package} > $NULL 2>&1 ); then
-            packs_to_remove="$packs_to_remove ${package}"
-            let RC++
-        fi
-    done    
-
-    if ( $RPM -q ib-verbs > $NULL 2>&1 ); then
-        STACK_PREFIX=`$RPM -ql ib-verbs | grep "bin/ibv_devinfo" | sed -e 's/\/bin\/ibv_devinfo//'`
-        let RC++
-    fi    
-
-    if ( $RPM -q libibverbs > $NULL 2>&1 ); then
-        STACK_PREFIX=$($RPM -ql libibverbs | grep "libibverbs.so" | head -1 | sed -e 's@/lib.*/libibverbs.so.*@@')            
-    fi
-
-    if [ -x /etc/infiniband/info ]; then
-        if [ -z ${STACK_PREFIX} ]; then
-            STACK_PREFIX=`/etc/infiniband/info | grep -w prefix | cut -d '=' -f 2`
-        fi
-        KVERSION=`/etc/infiniband/info | grep -w Kernel | cut -d '=' -f 2`
-    fi
-
-    if [ -n "${packs_to_remove}" ]; then
-        ex "$RPM -e --allmatches $packs_to_remove"
-    fi
-
-    if [[ ! -z $MTHOME && -d $MTHOME ]]; then
-        if [ -e $MTHOME/uninstall.sh ]; then
-            echo
-            echo "  An old version of the OPENIB driver was detected and will be removed now"
-            ex "yes | env MTHOME=$MTHOME $MTHOME/uninstall.sh"
-        fi    
-        let RC++
-    elif [ -d /usr/mellanox ]; then
-        if [ -e /usr/mellanox/uninstall.sh ]; then
-            echo
-            echo "  Removing MVAPI..."
-            ex "yes | /usr/mellanox/uninstall.sh"
-        fi  
-    fi
-
-    # Remove /usr/local/ofed* if exist
-    # BUG: https://bugs.openfabrics.org/show_bug.cgi?id=563
-    if [ -d ${STACK_PREFIX} ]; then
-        case ${STACK_PREFIX} in
-                    /usr/local/ofed* )
-                    rm -rf ${STACK_PREFIX}
-                    ;;
-        esac
-    fi
-
-    if [ -d ${STACK_PREFIX}/mpi ]; then
-        find ${STACK_PREFIX}/mpi -type d | sort -r | xargs rmdir
-    fi
-
-#    # Uninstall SilverStorm package
-#    if [ -e /sbin/iba_config ]; then
-#        ex /sbin/iba_config -u
-#    fi
-
-    # Uninstall Topspin package
-    topspin_rpms=$($RPM -qa | grep "topspin-ib")
-    if [ -n "${topspin_rpms}" ]; then
-        ex $RPM -e ${topspin_rpms}
-    fi
-
-    # Uninstall Voltaire package
-    voltaire_rpms=$($RPM -qa | grep -i "Voltaire" | grep "4.0.0_5")
-    if [ -n "${voltaire_rpms}" ]; then
-        ex $RPM -e ${voltaire_rpms}
-    fi
-
-    if [ ! -z "${KVERSION}" ]; then
-        # Remove OFED kernel modules from updates directory
-        LIB_MOD_DIR=/lib/modules/${KVERSION}/updates
-        /bin/rm -rf ${LIB_MOD_DIR}/kernel/drivers/infiniband
-        /bin/rm -rf ${LIB_MOD_DIR}/kernel/drivers/net/mlx4
-        /bin/rm -rf ${LIB_MOD_DIR}/kernel/drivers/net/cxgb3
-        /bin/rm -rf ${LIB_MOD_DIR}/kernel/net/rds
-    fi
-
-    if [ -f /etc/modprobe.d/ipv6 ]; then
-        perl -ni -e "s@# install ipv6 \/bin\/true@install ipv6 /bin/true@;print" /etc/modprobe.d/ipv6
-    fi
+my $ofed_info = `which ofed_info 2> /dev/null`;
+if (not $ofed_info) {
+    print "No OFED installation detected. Exiting ...\n";
+    exit $ERROR;
 }
 
-echo
-echo "This program will uninstall all ${PACKAGE} packages on your machine."
-echo
+my @packages_to_uninstall = ();
+my @dependant_packages_to_uninstall = ();
+my %selected_for_uninstall = ();
+my %non_ofed_for_uninstall = ();
+my $unload_modules = 0;
+my $force = 0;
+my $verbose = 0;
+my $quiet = 0;
+my $dry_run = 0;
+my $PACKAGE = `ofed_info -s | sed -e 's/://'`;
+chomp $PACKAGE;
+my $ofedlogs = "/tmp/$PACKAGE.$$.logs";
+my $prefix = '/usr';
+my $info = '/etc/infiniband/info';
+my $rpm_flags = '';
 
-if [ $FORCE -eq 0 ]; then
-    read -p "Do you want to continue?[y/N]:" ans_r
-else
-    ans_r="y"
-fi
+sub usage
+{
+   print GREEN;
+   print "\n Usage: $0 [--unload-modules] [-v|--verbose] [-q|--quiet] [--dry-run]\n";
 
-if [[ "$ans_r" == "y" || "$ans_r" == "Y" || "$ans_r" == "yes" ]]; then
-    if [ $UNLOAD_MODULES -eq 1 ]; then
-        if [ -x /etc/init.d/openibd ]; then
-            ex /etc/init.d/openibd stop
-        fi
-    fi
-    [ -x $STACK_PREFIX/sbin/vendor_pre_uninstall.sh ] && ex $STACK_PREFIX/sbin/vendor_pre_uninstall.sh
-    [ -x $STACK_PREFIX/sbin/vendor_post_uninstall.sh ] && \
-        cp $STACK_PREFIX/sbin/vendor_post_uninstall.sh /tmp/$$-ofed_vendor_post_uninstall.sh
-    uninstall
-    [ -x /tmp/$$-ofed_vendor_post_uninstall.sh ] && ex /tmp/$$-ofed_vendor_post_uninstall.sh
-    exit 0
-else    
-    exit 1
-fi
+   print "\n           --unload-modules     Run /etc/init.d/openibd stop before uninstall";
+   print "\n           --force              Force uninstallation and remove packages that depends on MLNX_OFED";
+   print "\n           -v|--verbose         Increase verbosity level";
+   print "\n           --dry-run            Print the list of packages to be uninstalled without actually uninstalling them";
+   print "\n           -q                   Set quiet - no messages will be printed";
+   print RESET "\n\n";
+}
+
+sub getch
+{
+    my $c;
+    $c=getc(STDIN);
+
+    return $c;
+}
+
+sub log_and_exit
+{
+    my $rc = shift @_;
+    if ($rc) {
+        print RED "See logs under $ofedlogs", RESET "\n";
+    }
+
+    exit $rc;
+}
+
+# Find in file $name line containing str1 and replace it with str2
+# If str2 is empty the line with str1 will be removed
+sub find_and_replace
+{
+    my $name = shift @_;
+    my $str1 = shift @_;
+    my $str2 = shift @_;
+
+    my @lines;
+    open(FD, "$name");
+    while (<FD>) {
+        push @lines, $_;
+    }
+    close (FD);
+
+    open(FD, ">$name");
+    foreach my $line (@lines) {
+        chomp $line;
+        if ($line =~ /$str1/) {
+            print FD "$str2\n" if ($str2);
+        } else {
+            print FD "$line\n";
+        }
+    }
+    close (FD);
+}
+
+sub is_installed
+{
+    my $res = 0;
+    my $name = shift @_;
+
+    system("rpm -q $name > /dev/null 2>&1");
+    $res = $? >> 8;
+
+    return not $res;
+}
+
+sub mark_for_uninstall
+{
+    my $package = shift @_;
+    if (not $selected_for_uninstall{$package}) {
+        push (@dependant_packages_to_uninstall, "$package");
+        my $pname = $package;
+        $pname =~ s@-[0-9].*@@g;
+        $pname =~ s@-dev.*@@g;
+        $selected_for_uninstall{$package} = 1;
+        if ( `ofed_info 2>/dev/null | grep -i $pname 2>/dev/null` eq "" and $pname !~ /ofed-scripts/) {
+            $non_ofed_for_uninstall{$package} = 1;
+        }
+    }
+}
+
+sub get_requires
+{
+    my $package = shift @_;
+
+    # Strip RPM version
+    $package = `rpm -q --queryformat "[%{NAME}]" $package`;
+    chomp $package;
+warn("$package\n");
+    my @what_requires = `/bin/rpm -q --whatrequires $package 2>&1 | grep -v "no package requires" 2> /dev/null`;
+
+    for my $pack_req (@what_requires) {
+        chomp $pack_req;
+        print "get_requires: $package is required by $pack_req\n" if ($verbose);
+        get_requires($pack_req);
+        mark_for_uninstall($pack_req);
+    }
+}
+
+sub uninstall
+{
+    my $res = 0;
+    my $sig = 0;
+    my $cnt = 0;
+    my @installed_rpms = `ofed_info | grep -A999 '^-' 2> /dev/null | grep -v '^-'`;
+    my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep -wE "compat-rdma|libibverbs|rdma|ofed|openib|kernel-ib|rds|ib-bonding|infiniband"`;
+    my $cmd = "rpm -e --allmatches --nodeps $rpm_flags";
+
+    for my $package (@other_ofed_rpms) {
+        chomp $package;
+        my $pname = $package;
+        $pname =~ s@-[0-9].*@@g;
+        $pname =~ s@-dev.*@@g;
+        if ( `ofed_info 2>/dev/null | grep -i $pname 2>/dev/null` eq "" and $pname !~ /ofed-scripts/ ) {
+            $non_ofed_for_uninstall{$package} = 1;
+        }
+    }
+
+    if (is_installed("ofed")) {
+        # W/A for SLES 10 SP4 in-box ofed RPM uninstall issue
+        $cmd .= " --noscripts";
+    }
+
+    for my $package (@installed_rpms, @other_ofed_rpms) {
+        chomp $package;
+        next if ($package eq "mpi-selector");
+        if (is_installed($package)) {
+            push (@packages_to_uninstall, $package);
+            $selected_for_uninstall{$package} = 1;
+        }
+    }
+
+    for my $package (@packages_to_uninstall) {
+        get_requires($package);
+    }
+
+    if (not $force and keys %non_ofed_for_uninstall) {
+        print "\nError: One or more packages depends on MLNX_OFED.\nThose packages should be removed before uninstalling MLNX_OFED:\n\n";
+        print join(" ", (keys %non_ofed_for_uninstall)) . "\n\n";
+        print "To force uninstallation use '--force' flag.\n";
+        exit $NONOFEDRPMS;
+    }
+
+    for my $package (@packages_to_uninstall, @dependant_packages_to_uninstall) {
+        if (is_installed("$package")) {
+            $cmd .= " $package";
+            $cnt ++;
+        }
+    }
+
+    if ($cnt) {
+        print "\n$cmd\n" if (not $quiet);
+        open (LOG, "+>$ofedlogs/ofed_uninstall.log");
+        print LOG "$cmd\n";
+        close LOG;
+
+        if (not $dry_run) {
+            system("$cmd >> $ofedlogs/ofed_uninstall.log 2>&1");
+            $res = $? >> 8;
+            $sig = $? & 127;
+            if ($sig or $res) {
+                print RED "Failed to uninstall the previous installation", RESET "\n";
+                print RED "See $ofedlogs/ofed_uninstall.log", RESET "\n";
+                log_and_exit $ERROR;
+            }
+        }
+    }
+}
+
+######### MAIN #########
+while ( $#ARGV >= 0 ) {
+
+   my $cmd_flag = shift(@ARGV);
+
+    if ($cmd_flag eq "--unload-modules") {
+        $unload_modules = 1;
+    } elsif ($cmd_flag eq "--force") {
+        $force = 1;
+    } elsif ($cmd_flag eq "-v" or $cmd_flag eq "--verbose") {
+        $verbose = 1;
+    } elsif ($cmd_flag eq "-q" or $cmd_flag eq "--quiet") {
+        $quiet = 1;
+    } elsif ($cmd_flag eq "--dry-run") {
+        $dry_run = 1;
+    } elsif ($cmd_flag eq "-h" or $cmd_flag eq "--help") {
+        usage();
+        exit 0;
+    }
+}
+
+if (not $force) {
+    print "\nThis program will uninstall all $PACKAGE packages on your machine.\n\n";
+    print "Do you want to continue?[y/N]:";
+    my $ans = getch();
+    print "\n";
+
+    if ($ans !~ m/[yY]/) {
+        exit $ERROR;
+    }
+}
+
+mkpath([$ofedlogs]);
+
+if (-e $info) {
+    open(INFO, "$info|") or die "Failed to run: $info. Error $!\n";;
+    while(<INFO>) {
+        if (/^prefix=/) {
+            $prefix = (split '=', $_)[1];
+            last;
+        }
+    }
+    close(INFO);
+} else {
+    $prefix = $0;
+    $prefix =~ s/(\/sbin).*//g;
+}
+
+if ($unload_modules) {
+    print "Unloading kernel modules...\n" if (not $quiet);
+
+    if (not $dry_run) {
+        system("/etc/init.d/openibd stop >> $ofedlogs/openibd_stop.log 2>&1");
+        my $res = $? >> 8;
+        my $sig = $? & 127;
+        if ($sig or $res) {
+            print RED "Failed to unload kernel modules", RESET "\n";
+            log_and_exit $ERROR;
+        }
+    }
+}
+
+uninstall();
+
+exit 0 if ($dry_run);
+
+if (-e "/etc/modprobe.d/ipv6") {
+   find_and_replace ("/etc/modprobe.d/ipv6", "# install ipv6 /bin/true", "install ipv6 /bin/true");
+}
+
+print "Uninstall finished successfully\n" if (not $quiet);
