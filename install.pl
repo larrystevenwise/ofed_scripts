@@ -122,6 +122,7 @@ my $check_linux_deps = 1;
 my $force = 0;
 my $kmp = 1;
 my $with_xeon_phi = 0;
+my $libnl3_devel = `rpm -qa | grep libnl3-devel`;
 my %disabled_packages;
 
 while ( $#ARGV >= 0 ) {
@@ -628,7 +629,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "opensm", "opensm-libs", "opensm-devel", "opensm-debuginfo", "opensm-static",
                      "compat-dapl", "compat-dapl-devel",
                      "dapl", "dapl-devel", "dapl-devel-static", "dapl-utils", "dapl-debuginfo",
-                     "perftest", "mstflint",
+                     "perftest", "mstflint", "libiwpm",
                      "qlvnictools", "sdpnetstat", "srptools", "rds-tools", "rds-devel",
                      "ibutils", "infiniband-diags", "qperf", "qperf-debuginfo",
                      "ofed-docs", "ofed-scripts",
@@ -638,7 +639,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
 my @basic_kernel_packages = ("compat-rdma");
 my @basic_user_packages = ("libibverbs", "libibverbs-utils", "libmthca", "libmlx4", "libmlx5",
                             "libehca", "libcxgb3", "libcxgb4", "libnes", "libipathverbs", "librdmacm", "librdmacm-utils",
-                            "mstflint", "libocrdma", @misc_packages);
+                            "libiwpm", "mstflint", "libocrdma", @misc_packages);
 
 my @hpc_kernel_packages = ("compat-rdma", "ib-bonding");
 my @hpc_kernel_modules = (@basic_kernel_modules);
@@ -1221,6 +1222,14 @@ my %packages_info = (
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
+
+        'libiwpm' =>
+            { name => "libiwpm", parent => "libiwpm",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => ($libnl3_devel)?["libnl3-devel"]:["libnl-devel"],
+            dist_req_inst => [], ofa_req_build => [],
+            ofa_req_inst => [],
+            install32 => 0, exception => 0, configure_options => '' },
 
         'mstflint' =>
             { name => "mstflint", parent => "mstflint",
