@@ -579,7 +579,7 @@ my @mlnx_en_packages = (
 # List of all available packages sorted following dependencies
 my @kernel_packages = ("compat-rdma", "compat-rdma-devel", "ib-bonding", "ib-bonding-debuginfo");
 my @basic_kernel_modules = ("core", "mthca", "mlx4", "mlx4_en", "mlx5", "cxgb3", "cxgb4", "nes", "ehca", "qib", "ocrdma", "ipoib");
-my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser", "nfsrdma");
+my @ulp_modules = ("sdp", "srp", "srpt", "rds", "qlgc_vnic", "iser", "nfsrdma", "cxgb3i", "cxgb4i");
 my @xeon_phi_kernel = ("ibscif", "ibp-server", "ibp-debug");
 
 # kernel modules in "technology preview" status can be installed by
