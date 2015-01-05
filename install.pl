@@ -574,8 +574,8 @@ my @prev_ofed_packages = (
 my @distro_ofed_packages = (
                         "libamso", "libamso-devel", "dapl2", "dapl2-devel", "mvapich", "mvapich2", "mvapich2-devel",
                         "mvapich-devel", "libboost_mpi1_36_0", "boost-devel", "boost-doc", "libmthca-rdmav2", "libcxgb3-rdmav2", "libcxgb4-rdmav2",
-                        "libmlx4-rdmav2", "libibmad1", "libibumad1", "libibcommon1", "ofed", "ofa",
-                        "scsi-target-utils", "rdma-ofa-agent", "libibumad3", "libibmad5"
+                        "libmlx4-rdmav2", "libibverbs1", "libibmad1", "libibumad1", "libibcommon1", "ofed", "ofa", "libibdm1", "libibcm1", "libibnetdisc5",
+                        "scsi-target-utils", "rdma-ofa-agent", "libibumad3", "libibmad5", "libibverbs-runtime", "librdmacm1"
                         );
 
 my @mlnx_en_packages = (
