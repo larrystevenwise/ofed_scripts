@@ -3130,8 +3130,6 @@ sub build_kernel_rpm
         $cmd .= " --nodeps";
         $cmd .= " --define '_dist .$rpm_distro'";
         $cmd .= " --define 'configure_options $kernel_configure_options'";
-        $cmd .= " --define 'build_kernel_ib 1'";
-        $cmd .= " --define 'build_kernel_ib_devel 1'";
         $cmd .= " --define 'KVERSION $kernel'";
         $cmd .= " --define 'K_SRC $linux'";
         $cmd .= " --define 'K_SRC_OBJ $linux_obj'";
