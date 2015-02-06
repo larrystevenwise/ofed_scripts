@@ -643,6 +643,7 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "qlvnictools", "sdpnetstat", "srptools", "rds-tools", "rds-devel",
                      "ibutils", "infiniband-diags", "qperf", "qperf-debuginfo",
                      "ofed-docs", "ofed-scripts",
+                     "libfabric", "libfabric-devel", "libfabric-debuginfo",
 		     @mpi_packages
                      );
 
@@ -1002,6 +1003,28 @@ my %packages_info = (
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
             ofa_req_inst => [],
+            install32 => 0, exception => 0 },
+
+        'libfabric' =>
+            { name => "libfabric", parent => "libfabric",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => ["libnl3-devel"],
+            dist_req_inst => ["libnl3"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel", "infinipath-psm-devel"],
+            ofa_req_inst => ["libibverbs", "librdmasm", "infinipath-psm"],
+            install32 => 1, exception => 0, configure_options => '' },
+        'libfabric-devel' =>
+            { name => "libfabric-devel", parent => "libfabric",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libfabric"],
+            ofa_req_inst => ["libfabric"],
+            install32 => 1, exception => 0 },
+        'libfabric-debuginfo' =>
+            { name => "libfabric-debuginfo", parent => "libfabric",
+            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libfabric"],
+            ofa_req_inst => ["libfabric"],
             install32 => 0, exception => 0 },
 
         'libibcm' =>
