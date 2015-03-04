@@ -122,7 +122,8 @@ my $check_linux_deps = 1;
 my $force = 0;
 my $kmp = 1;
 my $with_xeon_phi = 0;
-my $libnl3_devel = `rpm -qa | grep libnl3-devel`;
+my $libnl = "libnl";
+my $libnl_devel = "libnl-devel";
 my %disabled_packages;
 
 while ( $#ARGV >= 0 ) {
@@ -467,6 +468,8 @@ if ($DISTRO eq "openSUSE11.2") {
     $libgcc = 'libgcc_s1';
     $libgfortran = 'libgfortran3';
     $curl_devel = 'libcurl-devel';
+    $libnl = "libnl3-200";
+    $libnl_devel = "libnl3-devel";
 } elsif ($DISTRO =~ m/RHEL|OEL|FC/) {
     $libstdc = 'libstdc++';
     $libgcc = 'libgcc';
@@ -1008,8 +1011,8 @@ my %packages_info = (
         'libfabric' =>
             { name => "libfabric", parent => "libfabric",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["libnl3-devel"],
-            dist_req_inst => ["libnl3"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel", "infinipath-psm-devel"],
+            available => 1, mode => "user", dist_req_build => ["$libnl_devel"],
+            dist_req_inst => ["$libnl"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel", "infinipath-psm-devel"],
             ofa_req_inst => ["libibverbs", "librdmasm", "infinipath-psm"],
             install32 => 1, exception => 0, configure_options => '' },
         'libfabric-devel' =>
@@ -1259,7 +1262,7 @@ my %packages_info = (
         'libiwpm' =>
             { name => "libiwpm", parent => "libiwpm",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ($libnl3_devel)?["libnl3-devel"]:["libnl-devel"],
+            available => 1, mode => "user", dist_req_build => ["$libnl_devel"],
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
