@@ -443,6 +443,7 @@ my $libstdc = '';
 my $libgcc = 'libgcc';
 my $libgfortran = '';
 my $curl_devel = 'curl-devel';
+my $libudev_devel = 'libudev-devel';
 if ($DISTRO eq "openSUSE11.2") {
     $libstdc = 'libstdc++44';
     $libgcc = 'libgcc44';
@@ -474,8 +475,11 @@ if ($DISTRO eq "openSUSE11.2") {
     $libstdc = 'libstdc++';
     $libgcc = 'libgcc';
     $libgfortran = 'gcc-gfortran';
-    if ($DISTRO =~ m/RHEL6|RHEL7|OEL6|FC/) {
+    if ($DISTRO =~ m/RHEL6|OEL6|FC/) {
         $curl_devel = 'libcurl-devel';
+    } elsif ($DISTRO =~ m/RHEL7|OEL7/) {
+        $curl_devel = 'libcurl-devel';
+		$libudev_devel = 'systemd-devel';
     }
 } else {
     $libstdc = 'libstdc++';
@@ -1413,7 +1417,7 @@ my %packages_info = (
         'infiniband-diags' =>
             { name => "infiniband-diags", parent => "infiniband-diags",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["glib2-devel"],
+            available => 1, mode => "user", dist_req_build => ["glib2-devel", "$libudev_devel"],
             dist_req_inst => [], ofa_req_build => ["opensm-devel", "libibmad-devel", "libibumad-devel"],
             ofa_req_inst => ["libibumad", "libibmad", "opensm-libs"],
             install32 => 0, exception => 0, configure_options => '' },
