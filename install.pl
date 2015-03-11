@@ -124,6 +124,8 @@ my $kmp = 1;
 my $with_xeon_phi = 0;
 my $libnl = "libnl";
 my $libnl_devel = "libnl-devel";
+my $libnl3 = "libnl3";
+my $libnl3_devel = "libnl3-devel";
 my %disabled_packages;
 
 while ( $#ARGV >= 0 ) {
@@ -471,15 +473,17 @@ if ($DISTRO eq "openSUSE11.2") {
     $curl_devel = 'libcurl-devel';
     $libnl = "libnl3-200";
     $libnl_devel = "libnl3-devel";
+    $libnl3 = "libnl3-200";
+    $libnl3_devel = "libnl3-devel";
 } elsif ($DISTRO =~ m/RHEL|OEL|FC/) {
     $libstdc = 'libstdc++';
     $libgcc = 'libgcc';
     $libgfortran = 'gcc-gfortran';
     if ($DISTRO =~ m/RHEL6|OEL6|FC/) {
         $curl_devel = 'libcurl-devel';
-    } elsif ($DISTRO =~ m/RHEL7|OEL7/) {
+    } elsif ($DISTRO =~ m/RHEL7/) {
         $curl_devel = 'libcurl-devel';
-		$libudev_devel = 'systemd-devel';
+        $libudev_devel = 'systemd-devel';
     }
 } else {
     $libstdc = 'libstdc++';
@@ -1015,21 +1019,21 @@ my %packages_info = (
         'libfabric' =>
             { name => "libfabric", parent => "libfabric",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["$libnl_devel"],
-            dist_req_inst => ["$libnl"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel", "infinipath-psm-devel"],
+            available => 0, mode => "user", dist_req_build => ["$libnl3_devel"],
+            dist_req_inst => ["$libnl3"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel", "infinipath-psm-devel"],
             ofa_req_inst => ["libibverbs", "librdmasm", "infinipath-psm"],
             install32 => 1, exception => 0, configure_options => '' },
         'libfabric-devel' =>
             { name => "libfabric-devel", parent => "libfabric",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libfabric"],
             ofa_req_inst => ["libfabric"],
             install32 => 1, exception => 0 },
         'libfabric-debuginfo' =>
             { name => "libfabric-debuginfo", parent => "libfabric",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libfabric"],
             ofa_req_inst => ["libfabric"],
             install32 => 0, exception => 0 },
@@ -2076,6 +2080,12 @@ sub set_availability
             }
         }
     }
+
+    if ($DISTRO =~ m/RHEL6.6|SLES12/ or is_installed("$libnl3_devel")) {
+        $packages_info{'libfabric'}{'available'} = 1;
+        $packages_info{'libfabric-devel'}{'available'} = 1;
+        $packages_info{'libfabric-debuginfo'}{'available'} = 1;
+	}
 
     for my $key ( keys %disabled_packages ) {
         if (exists $packages_info{$key}) {
