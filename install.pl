@@ -2081,6 +2081,10 @@ sub set_availability
         }
     }
 
+    if ($rpm_distro =~ m/sles11sp3/) {
+	    $kernel_modules_info{'nfsrdma'}{'available'} = 0;
+    }
+
     if ($DISTRO =~ m/RHEL6.6|SLES12/ or is_installed("$libnl3_devel")) {
         $packages_info{'libfabric'}{'available'} = 1;
         $packages_info{'libfabric-devel'}{'available'} = 1;
