@@ -1021,7 +1021,7 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => ["$libnl3_devel"],
             dist_req_inst => ["$libnl3"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel", "infinipath-psm-devel"],
-            ofa_req_inst => ["libibverbs", "librdmasm", "infinipath-psm"],
+            ofa_req_inst => ["libibverbs", "librdmacm", "infinipath-psm"],
             install32 => 1, exception => 0, configure_options => '' },
         'libfabric-devel' =>
             { name => "libfabric-devel", parent => "libfabric",
@@ -2072,6 +2072,12 @@ sub set_availability
         $packages_info{'mpitests_openmpi_intel'}{'available'} = 1;
     }
 
+    if ($DISTRO =~ m/RHEL6.6|SLES12/ or is_installed("$libnl3_devel")) {
+        $packages_info{'libfabric'}{'available'} = 1;
+        $packages_info{'libfabric-devel'}{'available'} = 1;
+        $packages_info{'libfabric-debuginfo'}{'available'} = 1;
+    }
+
     # debuginfo RPM currently are not supported on SuSE
     if ($DISTRO =~ m/SLES/ or $DISTRO eq 'DEBIAN') {
         for my $package (@all_packages) {
@@ -2084,12 +2090,6 @@ sub set_availability
     if ($rpm_distro =~ m/sles11sp3/) {
 	    $kernel_modules_info{'nfsrdma'}{'available'} = 0;
     }
-
-    if ($DISTRO =~ m/RHEL6.6|SLES12/ or is_installed("$libnl3_devel")) {
-        $packages_info{'libfabric'}{'available'} = 1;
-        $packages_info{'libfabric-devel'}{'available'} = 1;
-        $packages_info{'libfabric-debuginfo'}{'available'} = 1;
-	}
 
     for my $key ( keys %disabled_packages ) {
         if (exists $packages_info{$key}) {
