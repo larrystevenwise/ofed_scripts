@@ -705,10 +705,10 @@ my %kernel_modules_info = (
             { name => "cxgb4", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'cxgb3i' =>
-            { name => "cxgb3i", available => 1, selected => 0,
+            { name => "cxgb3i", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'cxgb4i' =>
-            { name => "cxgb4i", available => 1, selected => 0,
+            { name => "cxgb4i", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'nes' =>
             { name => "nes", available => 1, selected => 0,
