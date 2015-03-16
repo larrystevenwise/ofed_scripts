@@ -2087,10 +2087,6 @@ sub set_availability
         }
     }
 
-    if ($rpm_distro =~ m/sles11sp3/) {
-	    $kernel_modules_info{'nfsrdma'}{'available'} = 0;
-    }
-
     for my $key ( keys %disabled_packages ) {
         if (exists $packages_info{$key}) {
             $packages_info{$key}{'available'} = 0;
