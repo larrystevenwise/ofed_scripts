@@ -2029,6 +2029,9 @@ sub set_availability
             $packages_info{'qlvnictools-debuginfo'}{'available'} = 1;
     }
 
+    if ($kernel =~ m/el6|^3\.18/) {
+            $kernel_modules_info{'nfsrdma'}{'available'} = 0;
+    }
 
     # mvapich, mvapich2 and openmpi
     if ($gcc{'gcc'}) {
