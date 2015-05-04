@@ -173,7 +173,7 @@ sub uninstall
     my $sig = 0;
     my $cnt = 0;
     my @installed_rpms = `ofed_info | grep -A999 '^-' 2> /dev/null | grep -v '^-'`;
-    my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep -wE "compat-rdma|libibverbs|rdma|ofed|openib|kernel-ib|rds|ib-bonding|infiniband"`;
+    my @other_ofed_rpms = `rpm -qa 2> /dev/null | grep -wE "compat-rdma|libibverbs|rdma|ofed|openib|kernel-ib|rds|ib-bonding|infiniband|libfabric|fabtests"`;
     my $cmd = "rpm -e --allmatches --nodeps $rpm_flags";
 
     for my $package (@other_ofed_rpms) {
