@@ -561,7 +561,7 @@ my $lspci = '/sbin/lspci';
 # List of packages that were included in the previous OFED releases
 # for uninstall purpose
 my @prev_ofed_packages = (
-                        "mpich_mlx", "ibtsal", "openib", "opensm", "opensm-devel", "opensm-libs",
+                        "mpich_mlx", "ibtsal", "openib", "opensm", "opensm-devel", "opensm-libs", "opensm-libs3",
                         "mpi_ncsa", "mpi_osu", "thca", "ib-osm", "osm", "diags", "ibadm",
                         "ib-diags", "ibgdiag", "ibdiag", "ib-management",
                         "ib-verbs", "ib-ipoib", "ib-cm", "ib-sdp", "ib-dapl", "udapl",
