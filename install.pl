@@ -427,7 +427,6 @@ if (not $check_linux_deps) {
 
 if ($with_xeon_phi) {
     $rpmbuild_flags .= "-D 'PSM_HAVE_SCIF 1'";
-    $rpminstall_flags .= "-D 'PSM_HAVE_SCIF 1'";
 }
 
 my $optflags  = `rpm --eval '%{optflags}'`;
@@ -477,8 +476,8 @@ if ($DISTRO eq "openSUSE11.2") {
     $libgcc = 'libgcc_s1';
     $libgfortran = 'libgfortran3';
     $curl_devel = 'libcurl-devel';
-    $libnl = "libnl3-200";
-    $libnl_devel = "libnl3-devel";
+    $libnl = "libnl1";
+    $libnl_devel = "libnl-1_1-devel";
     $libnl3 = "libnl3-200";
     $libnl3_devel = "libnl3-devel";
 } elsif ($DISTRO =~ m/RHEL|OEL|FC/) {
@@ -1026,21 +1025,21 @@ my %packages_info = (
         'libfabric' =>
             { name => "libfabric", parent => "libfabric",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["$libnl3_devel"],
-            dist_req_inst => ["$libnl3"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel", "infinipath-psm-devel"],
+            available => 1, mode => "user", dist_req_build => ["$libnl_devel"],
+            dist_req_inst => ["$libnl"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel", "infinipath-psm-devel"],
             ofa_req_inst => ["libibverbs", "librdmacm", "infinipath-psm"],
             install32 => 1, exception => 0, configure_options => '' },
         'libfabric-devel' =>
             { name => "libfabric-devel", parent => "libfabric",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libfabric"],
             ofa_req_inst => ["libfabric"],
             install32 => 1, exception => 0 },
         'libfabric-debuginfo' =>
             { name => "libfabric-debuginfo", parent => "libfabric",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libfabric"],
             ofa_req_inst => ["libfabric"],
             install32 => 0, exception => 0 },
@@ -1048,14 +1047,14 @@ my %packages_info = (
         'fabtests' =>
             { name => "fabtests", parent => "fabtests",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libfabric-devel", "libibverbs-devel", "librdmacm-devel", "infinipath-psm-devel"],
             ofa_req_inst => ["libfabric", "libibverbs", "librdmacm", "infinipath-psm"],
             install32 => 1, exception => 0, configure_options => '' },
         'fabtests-debuginfo' =>
             { name => "fabtests-debuginfo", parent => "fabtests",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["fabtests"],
             ofa_req_inst => ["fabtests"],
             install32 => 0, exception => 0 },
@@ -1293,7 +1292,7 @@ my %packages_info = (
             { name => "libiwpm", parent => "libiwpm",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => ["$libnl_devel"],
-            dist_req_inst => [], ofa_req_build => [],
+            dist_req_inst => ["$libnl"], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
 
@@ -2092,12 +2091,6 @@ sub set_availability
         }
         $packages_info{'openmpi_intel'}{'available'} = 1;
         $packages_info{'mpitests_openmpi_intel'}{'available'} = 1;
-    }
-
-    if ($DISTRO =~ m/RHEL6.6|SLES12/ or is_installed("$libnl3_devel")) {
-        $packages_info{'libfabric'}{'available'} = 1;
-        $packages_info{'libfabric-devel'}{'available'} = 1;
-        $packages_info{'libfabric-debuginfo'}{'available'} = 1;
     }
 
     # debuginfo RPM currently are not supported on SuSE
