@@ -1047,14 +1047,14 @@ my %packages_info = (
         'fabtests' =>
             { name => "fabtests", parent => "fabtests",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libfabric-devel", "libibverbs-devel", "librdmacm-devel", "infinipath-psm-devel"],
             ofa_req_inst => ["libfabric", "libibverbs", "librdmacm", "infinipath-psm"],
             install32 => 1, exception => 0, configure_options => '' },
         'fabtests-debuginfo' =>
             { name => "fabtests-debuginfo", parent => "fabtests",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["fabtests"],
             ofa_req_inst => ["fabtests"],
             install32 => 0, exception => 0 },
