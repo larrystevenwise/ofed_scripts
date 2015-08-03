@@ -1025,21 +1025,21 @@ my %packages_info = (
         'libfabric' =>
             { name => "libfabric", parent => "libfabric",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["$libnl_devel"],
-            dist_req_inst => ["$libnl"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel", "infinipath-psm-devel"],
-            ofa_req_inst => ["libibverbs", "librdmacm", "infinipath-psm"],
+            available => 1, mode => "user", dist_req_build => ["$libnl_devel"],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
+            ofa_req_inst => ["libibverbs", "librdmacm"],
             install32 => 1, exception => 0, configure_options => '' },
         'libfabric-devel' =>
             { name => "libfabric-devel", parent => "libfabric",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libfabric"],
             ofa_req_inst => ["libfabric"],
             install32 => 1, exception => 0 },
         'libfabric-debuginfo' =>
             { name => "libfabric-debuginfo", parent => "libfabric",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libfabric"],
             ofa_req_inst => ["libfabric"],
             install32 => 0, exception => 0 },
@@ -1047,14 +1047,14 @@ my %packages_info = (
         'fabtests' =>
             { name => "fabtests", parent => "fabtests",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libfabric-devel", "libibverbs-devel", "librdmacm-devel", "infinipath-psm-devel"],
-            ofa_req_inst => ["libfabric", "libibverbs", "librdmacm", "infinipath-psm"],
+            available => 1, mode => "user", dist_req_build => [],
+            dist_req_inst => [], ofa_req_build => ["libfabric-devel"],
+            ofa_req_inst => ["libfabric"],
             install32 => 1, exception => 0, configure_options => '' },
         'fabtests-debuginfo' =>
             { name => "fabtests-debuginfo", parent => "fabtests",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
+            available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["fabtests"],
             ofa_req_inst => ["fabtests"],
             install32 => 0, exception => 0 },
@@ -2042,11 +2042,8 @@ sub set_availability
 
     # libfabric due to dependency on infinipath-psm
     if ($arch =~ m/x86_64/) {
-        $packages_info{'libfabric'}{'available'} = 1;
-        $packages_info{'libfabric-devel'}{'available'} = 1;
-        $packages_info{'libfabric-debuginfo'}{'available'} = 1;
-        $packages_info{'fabtests'}{'available'} = 1;
-        $packages_info{'fabtests-debuginfo'}{'available'} = 1;
+        $packages_info{'libfabric'}{'ofa_req_build'} = ["libibverbs-devel", "librdmacm-devel", "infinipath-psm-devel"];
+        $packages_info{'libfabric'}{'ofa_req_inst'} = ["libibverbs", "librdmacm", "infinipath-psm"];
     }
 
     # QLogic vnic
