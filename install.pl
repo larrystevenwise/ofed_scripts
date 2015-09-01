@@ -2014,7 +2014,7 @@ sub set_availability
 {
     set_compilers();
 
-    if ($kernel =~ m/^3\.5/) {
+    if ($kernel =~ m/^3\.18/) {
             $kernel_modules_info{'rds'}{'available'} = 1;
             $packages_info{'rds-tools'}{'available'} = 1;
             $packages_info{'rds-devel'}{'available'} = 1;
@@ -2046,8 +2046,14 @@ sub set_availability
         $packages_info{'libfabric'}{'ofa_req_inst'} = ["libibverbs", "librdmacm", "infinipath-psm"];
     }
 
+    # Disable SRP on ppc64 platform to avoid update of scsi_transport_srp kernel module
+    # which will prevent in-box ibmvscsi module load and, as a result, kernel panic upon boot
+    if ($arch =~ m/ppc64/) {
+        $kernel_modules_info{'srp'}{'available'} = 0;
+    }
+
     # QLogic vnic
-    if ($kernel =~ m/^3\.5/) {
+    if ($kernel =~ m/^3\.18/) {
             $kernel_modules_info{'qlgc_vnic'}{'available'} = 1;
             $packages_info{'ibvexdmtools'}{'available'} = 1;
             $packages_info{'qlgc_vnic_daemon'}{'available'} = 1;
