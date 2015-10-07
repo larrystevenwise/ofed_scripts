@@ -632,7 +632,7 @@ my @mpi_packages = ( "mpi-selector",
                      @mpitests_packages
                     );
 
-my @xeon_phi_user = ("ibpd", "libibscif", "intel-mic-psm", "intel-mic-psm-devel");
+my @xeon_phi_user = ("ibpd", "libibscif");
 my @non_xeon_phi_user = ("infinipath-psm", "infinipath-psm-devel");
 
 my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static",
@@ -1026,7 +1026,7 @@ my %packages_info = (
             { name => "libfabric", parent => "libfabric",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => ["$libnl_devel"],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
+            dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel", "infinipath-devel"],
             ofa_req_inst => ["libibverbs", "librdmacm"],
             install32 => 1, exception => 0, configure_options => '' },
         'libfabric-devel' =>
@@ -1752,18 +1752,6 @@ my %packages_info = (
              available => 0, mode => "user", dist_req_build => [],
              dist_req_inst => [], ofa_req_build => [],
              ofa_req_inst => ["infinipath-psm"], install32 => 0, exception => 0 },
-        'intel-mic-psm' =>
-            { name => "intel--psm", parent=> "infinipath-psm",
-             selected => 0, installed => 0, rpm_exits => 0, rpm_exists32 => 0,
-             available => 0, mode => "user", dist_req_build => [],
-             dist_req_inst => [], ofa_req_build => [],
-             ofa_req_inst => [], install32 => 0, exception => 0 },
-        'intel-mic-psm-devel' =>
-            { name => "intel-mic-psm-devel", parent=> "infinipath-psm",
-             selected => 0, installed => 0, rpm_exits => 0, rpm_exists32 => 0,
-             available => 0, mode => "user", dist_req_build => [],
-             dist_req_inst => [], ofa_req_build => [],
-             ofa_req_inst => ["intel-mic-psm"], install32 => 0, exception => 0 },
         );
 
 
@@ -2032,8 +2020,6 @@ sub set_availability
     if ($arch =~ m/x86_64/) {
 	    $packages_info{'infinipath-psm'}{'available'} = 1;
 	    $packages_info{'infinipath-psm-devel'}{'available'} = 1;
-	    $packages_info{'intel-mic-psm'}{'available'} = 1;
-	    $packages_info{'intel-mic-psm-devel'}{'available'} = 1;
 	    $kernel_modules_info{'qib'}{'available'} = 1;
 	    $packages_info{'libipathverbs'}{'available'} = 1;
 	    $packages_info{'libipathverbs-devel'}{'available'} = 1;
