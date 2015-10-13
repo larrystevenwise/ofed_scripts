@@ -2812,6 +2812,12 @@ sub select_dependent
 {
     my $package = shift @_;
 
+    if ($package eq "infinipath-psm" and $with_xeon_phi) {
+        push($packages_info{$package}{'ofa_req_build'}, "libibscif-devel");
+        push($packages_info{$package}{'ofa_req_inst'}, "libibscif");
+    }
+
+
     if ( (not $packages_info{$package}{'rpm_exist'}) or
          ($build32 and not $packages_info{$package}{'rpm_exist32'}) ) {
         for my $req ( @{ $packages_info{$package}{'ofa_req_build'} } ) {
