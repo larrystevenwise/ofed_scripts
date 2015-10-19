@@ -426,7 +426,7 @@ if (not $check_linux_deps) {
 }
 
 if ($with_xeon_phi) {
-    $rpmbuild_flags .= "-D 'PSM_HAVE_SCIF 1'";
+    $rpmbuild_flags .= "--define 'PSM_HAVE_SCIF 1'";
 }
 
 my $optflags  = `rpm --eval '%{optflags}'`;
