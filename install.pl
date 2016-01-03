@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2013 Mellanox Technologies. All rights reserved.
+# Copyright (c) 2016 Mellanox Technologies. All rights reserved.
 #
 # This Software is licensed under one of the following licenses:
 #
@@ -239,6 +239,9 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
 } elsif ($dist_rpm =~ /openSUSE/) {
     $DISTRO = "openSUSE";
     $rpm_distro = "opensuse11sp0";
+} elsif ($dist_rpm =~ /sles-release-12\.1|SLES.*release-12\.1/) {
+    $DISTRO = "SLES12";
+    $rpm_distro = "sles12sp1";
 } elsif ($dist_rpm =~ /sles-release-12|SLES.*release-12/) {
     $DISTRO = "SLES12";
     $rpm_distro = "sles12sp0";
@@ -290,6 +293,9 @@ if ($dist_rpm =~ /openSUSE-release-11.2/) {
 } elsif ($dist_rpm =~ /redhat-release-.*-7.1|sl-release-7.1|centos-release-7-1/) {
     $DISTRO = "RHEL7.1";
     $rpm_distro = "rhel7u1";
+} elsif ($dist_rpm =~ /redhat-release-.*-7.2|sl-release-7.2|centos-release-7-2/) {
+    $DISTRO = "RHEL7.2";
+    $rpm_distro = "rhel7u2";
 } elsif ($dist_rpm =~ /oraclelinux-release-6.*-1.0.2/) {
     $DISTRO = "OEL6.1";
     $rpm_distro = "oel6u1";
