@@ -754,7 +754,8 @@ my %kernel_modules_info = (
             included_in_rpm => 0, requires => ["core", "ipoib"], },
         'ibscif' =>
             { name => "ibscif", available => 1, selected => 0,
-            included_in_rpm => 0, requires => ["core"], },
+            included_in_rpm => 0, requires => ["core"],
+            dist_req_build => ["/lib/modules/$kernel/scif.symvers"], },
         'ibp-server' =>
             { name => "ibp-server", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
@@ -2964,6 +2965,17 @@ sub check_linux_dependencies
                     if ($inst_version lt $req_version) {
                         print RED "$req_name-$req_version rpm is required to build $package", RESET "\n";
                         $err++;
+                    }
+                }
+            }
+            if ($package eq "compat-rdma") {
+                for my $module ( @selected_kernel_modules ) {
+                    for my $req ( @{ $kernel_modules_info{$module}{'dist_req_build'} } ) {
+			if ((substr($req, 0, 1) eq "/" and not -f $req) or
+                            (substr($req, 0, 1) ne "/" and not is_installed($req))) {
+                            $err++;
+                            print RED "$req is required to build $module", RESET "\n";
+                        }
                     }
                 }
             }
