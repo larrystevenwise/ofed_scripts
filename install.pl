@@ -2912,7 +2912,7 @@ sub check_linux_dependencies
         if ($package =~ /compat-rdma/) {
             if (not $packages_info{$package}{'rpm_exist'}) {
                 # Check that required kernel is supported
-                if ($kernel !~ /2.6.3[0-9]|2.6.40|3.[0-9]|3.1[0-8]/) {
+                if ($kernel !~ /2\.6\.3[0-9]|2\.6\.40|3\.[0-9]|3\.1[0-9]|4\.[0-8]/) {
                     print RED "Kernel $kernel is not supported.", RESET "\n";
                     print BLUE "For the list of Supported Platforms and Operating Systems see", RESET "\n";
                     print BLUE "$CWD/docs/OFED_release_notes.txt", RESET "\n";
