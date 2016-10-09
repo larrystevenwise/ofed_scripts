@@ -726,7 +726,7 @@ my %kernel_modules_info = (
             { name => "nes", available => 1, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'ocrdma' =>
-            { name => "ocrdma", available => 1, selected => 0,
+            { name => "ocrdma", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'ipoib' =>
             { name => "ipoib", available => 1, selected => 0,
@@ -900,21 +900,21 @@ my %packages_info = (
         'libocrdma' =>
             { name => "libocrdma", parent => "libocrdma",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
             ofa_req_inst => ["libibverbs"],
             install32 => 1, exception => 0, configure_options => '' },
         'libocrdma-devel' =>
             { name => "libocrdma-devel", parent => "libocrdma",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
             ofa_req_inst => ["libibverbs","libocrdma"],
             install32 => 1, exception => 0 },
         'libocrdma-debuginfo' =>
             { name => "libocrdma-debuginfo", parent => "libocrdma",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
