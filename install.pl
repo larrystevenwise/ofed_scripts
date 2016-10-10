@@ -690,7 +690,7 @@ my %kernel_modules_info = (
             { name => "core", available => 1, selected => 0,
             included_in_rpm => 0, requires => [], },
         'mthca' =>
-            { name => "mthca", available => 1, selected => 0,
+            { name => "mthca", available => 0, selected => 0,
             included_in_rpm => 0, requires => ["core"], },
         'mlx4' =>
             { name => "mlx4", available => 1, selected => 0,
@@ -834,21 +834,21 @@ my %packages_info = (
         'libmthca' =>
             { name => "libmthca", parent => "libmthca",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
             ofa_req_inst => ["libibverbs"],
             install32 => 1, exception => 0, configure_options => '' },
         'libmthca-devel-static' =>
             { name => "libmthca-devel-static", parent => "libmthca",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
             ofa_req_inst => ["libibverbs", "libmthca"],
             install32 => 1, exception => 0 },
         'libmthca-debuginfo' =>
             { name => "libmthca-debuginfo", parent => "libmthca",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
+            available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
