@@ -458,22 +458,16 @@ my %selected_for_uninstall = ();
 my @selected_kernel_modules = ();
 
 
+my $gcc = "gcc";
+my $gcc_cpp = "gcc-c++";
 my $libstdc = '';
 my $libgcc = 'libgcc';
 my $libgfortran = '';
 my $curl_devel = 'curl-devel';
 my $libudev_devel = 'libudev-devel';
-if ($DISTRO eq "openSUSE11.2") {
-    $libstdc = 'libstdc++44';
-    $libgcc = 'libgcc44';
-    $libgfortran = 'libgfortran44';
-} elsif ($DISTRO eq "openSUSE") {
-    $libstdc = 'libstdc++42';
-    $libgcc = 'libgcc42';
-} elsif ($DISTRO =~ /UBUNTU/) {
-    $libstdc = 'libstdc++6';
-    $libgfortran = 'libgfortran3';
-} elsif ($DISTRO =~ m/SLES11/) {
+my $pkgconfig = "pkgconfig";
+my $glibc_devel = 'glibc-devel';
+if ($DISTRO =~ m/SLES11/) {
     $libstdc = 'libstdc++43';
     $libgcc = 'libgcc43';
     $libgfortran = 'libgfortran43';
@@ -483,6 +477,7 @@ if ($DISTRO eq "openSUSE11.2") {
         $libgcc = 'libgcc46';
         $libgfortran = 'libgfortran46';
     }
+    $pkgconfig = "pkg-config";
 } elsif ($DISTRO =~ m/SLES12/) {
     $libstdc = 'libstdc++6';
     $libgcc = 'libgcc_s1';
@@ -492,6 +487,7 @@ if ($DISTRO eq "openSUSE11.2") {
     $libnl_devel = "libnl-1_1-devel";
     $libnl3 = "libnl3-200";
     $libnl3_devel = "libnl3-devel";
+    $pkgconfig = "pkg-config";
 } elsif ($DISTRO =~ m/RHEL|OEL|FC/) {
     $libstdc = 'libstdc++';
     $libgcc = 'libgcc';
@@ -598,6 +594,7 @@ my @prev_ofed_packages = (
                         "libnes", "libnes-devel",
                         "infinipath-psm", "infinipath-psm-devel", "intel-mic-psm", "intel-mic-psm-devel",
                         "ibpd", "libibscif", "libibscif-devel",
+                        "rdma-core", "rdma-core-compat",
                         "mvapich", "openmpi", "mvapich2"
                         );
 
@@ -631,39 +628,12 @@ my $user_configure_options = '';
 
 my @misc_packages = ("ofed-docs", "ofed-scripts");
 
-my @mpitests_packages = (
-                     "mpitests_mvapich_gcc", "mpitests_mvapich_pgi", "mpitests_mvapich_intel", "mpitests_mvapich_pathscale",
-                     "mpitests_mvapich2_gcc", "mpitests_mvapich2_pgi", "mpitests_mvapich2_intel", "mpitests_mvapich2_pathscale",
-                     "mpitests_openmpi_gcc", "mpitests_openmpi_pgi", "mpitests_openmpi_intel", "mpitests_openmpi_pathscale"
-                    );
-
-my @mpi_packages = ( "mpi-selector",
-                     "mvapich_gcc", "mvapich_pgi", "mvapich_intel", "mvapich_pathscale",
-                     "mvapich2_gcc", "mvapich2_pgi", "mvapich2_intel", "mvapich2_pathscale",
-                     "openmpi_gcc", "openmpi_pgi", "openmpi_intel", "openmpi_pathscale",
-                     @mpitests_packages
-                    );
-
 my @xeon_phi_user = ("ibpd", "libibscif");
 my @non_xeon_phi_user = ("infinipath-psm", "infinipath-psm-devel");
 
-my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static",
-                     "libibverbs-utils", "libibverbs-debuginfo",
-                     "libmthca", "libmthca-devel-static", "libmthca-debuginfo",
-                     "libmlx4", "libmlx4-devel", "libmlx4-debuginfo",
-                     "libmlx5", "libmlx5-devel", "libmlx5-debuginfo",
-                     "libehca", "libehca-devel-static", "libehca-debuginfo",
-                     "libcxgb3", "libcxgb3-devel", "libcxgb3-debuginfo",
-                     "libcxgb4", "libcxgb4-devel", "libcxgb4-debuginfo",
-                     "libnes", "libnes-devel-static", "libnes-debuginfo",
-                     "libocrdma", "libocrdma-devel", "libocrdma-debuginfo",
-                     "libipathverbs", "libipathverbs-devel", "libipathverbs-debuginfo",
-                     "libibcm", "libibcm-devel", "libibcm-debuginfo",
-                     "libibumad", "libibumad-devel", "libibumad-static", "libibumad-debuginfo",
+my @user_packages = ("rdma-core", "rdma-core-compat",
                      "libibmad", "libibmad-devel", "libibmad-static", "libibmad-debuginfo",
-                     "ibsim", "ibsim-debuginfo", "ibacm",
-                     "librdmacm", "librdmacm-utils", "librdmacm-devel", "librdmacm-debuginfo",
-                     "libsdp", "libsdp-devel", "libsdp-debuginfo",
+                     "ibsim", "ibsim-debuginfo",
                      "opensm", "opensm-libs", "opensm-devel", "opensm-debuginfo", "opensm-static",
                      "compat-dapl", "compat-dapl-devel",
                      "dapl", "dapl-devel", "dapl-devel-static", "dapl-utils", "dapl-debuginfo",
@@ -672,20 +642,15 @@ my @user_packages = ("libibverbs", "libibverbs-devel", "libibverbs-devel-static"
                      "ibutils", "infiniband-diags", "qperf", "qperf-debuginfo",
                      "ofed-docs", "ofed-scripts",
                      "libfabric", "libfabric-devel", "libfabric-debuginfo",
-                     "fabtests", "fabtests-debuginfo",
-		     @mpi_packages
+                     "fabtests", "fabtests-debuginfo"
                      );
 
 my @basic_kernel_packages = ("compat-rdma");
-my @basic_user_packages = ("libibverbs", "libibverbs-utils", "libmthca", "libmlx4", "libmlx5",
-                            "libehca", "libcxgb3", "libcxgb4", "libnes", "libipathverbs", "librdmacm", "librdmacm-utils",
-                            "libiwpm", "mstflint", "libocrdma", @misc_packages);
+my @basic_user_packages = ("rdma-core", "rdma-core-compat",
+                            "libiwpm", "mstflint", @misc_packages);
 
 my @hpc_kernel_packages = ("compat-rdma", "ib-bonding");
 my @hpc_kernel_modules = (@basic_kernel_modules);
-my @hpc_user_packages = (@basic_user_packages, "librdmacm",
-                        "librdmacm-utils", "compat-dapl", "compat-dapl-devel", "dapl", "dapl-devel", "dapl-devel-static", "dapl-utils",
-                        "infiniband-diags", "ibutils", "qperf", "mstflint", "perftest", @mpi_packages);
 
 # all_packages is required to save ordered (following dependencies) list of
 # packages. Hash does not saves the order
@@ -799,248 +764,31 @@ my %packages_info = (
             available => 0, mode => "kernel", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [], ofa_req_inst => [], },
         # User space libraries
-        'libibverbs' =>
-            { name => "libibverbs", parent => "libibverbs",
+        'rdma-core' =>
+            { name => "rdma-core", parent => "rdma-core",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build =>
-            ( $build32 == 1 )?["gcc__3.3.3", "glibc-devel$suffix_64bit","glibc-devel$suffix_32bit","$libgcc","$libgcc" . "$suffix_32bit"]:["gcc__3.3.3", "glibc-devel$suffix_64bit","$libgcc"],
-            dist_req_inst => [], ofa_req_build => [], ofa_req_inst => ["ofed-scripts"],
-            ubuntu_dist_req_build =>( $build32 == 1 )?["gcc", "libc6-dev","libc6-dev-i386","$libstdc",
-            "lib32stdc++6","libgcc1","lib32gcc1"]:["gcc", "libc6-dev","$libstdc","libgcc1"],
-            ubuntu_dist_req_inst => [],install32 => 1, exception => 0, configure_options => '' },
-        'libibverbs-devel' =>
-            { name => "libibverbs-devel", parent => "libibverbs",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => ["libibverbs"],
+            available => 1, mode => "user",
+            dist_req_build =>
+            ($build32 == 1 )?["cmake", "$pkgconfig", "$gcc", "$glibc_devel$suffix_64bit","$glibc_devel$suffix_32bit","$libgcc","$libgcc"."$suffix_32bit", "$libnl_devel"."$suffix_64bit", ($DISTRO =~ /SUSE/)?"$libnl_devel"."$suffix_32bit":(($arch =~ /ppc/)?"$libnl_devel":"$libnl_devel.$target_cpu32")]:["cmake", "$pkgconfig","$gcc","$glibc_devel$suffix_64bit","$libgcc", "$libnl_devel"."$suffix_64bit"],
+            dist_req_inst => ( $build32 == 1 )?["$pkgconfig","$libnl"."$suffix_64bit", ($dist_rpm !~ /sles-release-11.1/)?"$libnl"."$suffix_32bit":"$libnl.$target_cpu32"]:["$pkgconfig","$libnl"."$suffix_64bit"] ,
+            ofa_req_build => [],
+            ofa_req_inst => ["ofed-scripts"],
             install32 => 1, exception => 0 },
-        'libibverbs-devel-static' =>
-            { name => "libibverbs-devel-static", parent => "libibverbs",
+        'rdma-core-compat' =>
+            { name => "rdma-core-compat", parent => "rdma-core",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => ["libibverbs"],
+            available => 1, mode => "user",
+            dist_req_build => [],
+            dist_req_inst => [],
+            ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["rdma-core", "ofed-scripts"],
             install32 => 1, exception => 0 },
-        'libibverbs-utils' =>
-            { name => "libibverbs-utils", parent => "libibverbs",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => ["libibverbs"],
-            install32 => 0, exception => 0 },
-        'libibverbs-debuginfo' =>
-            { name => "libibverbs-debuginfo", parent => "libibverbs",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
-        'libmthca' =>
-            { name => "libmthca", parent => "libmthca",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0, configure_options => '' },
-        'libmthca-devel-static' =>
-            { name => "libmthca-devel-static", parent => "libmthca",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libmthca"],
-            install32 => 1, exception => 0 },
-        'libmthca-debuginfo' =>
-            { name => "libmthca-debuginfo", parent => "libmthca",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
-        'libmlx4' =>
-            { name => "libmlx4", parent => "libmlx4",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0, configure_options => '' },
-        'libmlx4-devel' =>
-            { name => "libmlx4-devel", parent => "libmlx4",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libmlx4"],
-            install32 => 1, exception => 0 },
-        'libmlx4-debuginfo' =>
-            { name => "libmlx4-debuginfo", parent => "libmlx4",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
-        'libmlx5' =>
-            { name => "libmlx5", parent => "libmlx5",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0, configure_options => '' },
-        'libmlx5-devel' =>
-            { name => "libmlx5-devel", parent => "libmlx5",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs","libmlx5"],
-            install32 => 1, exception => 0 },
-        'libmlx5-debuginfo' =>
-            { name => "libmlx5-debuginfo", parent => "libmlx5",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
-        'libocrdma' =>
-            { name => "libocrdma", parent => "libocrdma",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0, configure_options => '' },
-        'libocrdma-devel' =>
-            { name => "libocrdma-devel", parent => "libocrdma",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs","libocrdma"],
-            install32 => 1, exception => 0 },
-        'libocrdma-debuginfo' =>
-            { name => "libocrdma-debuginfo", parent => "libocrdma",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
-        'libehca' =>
-            { name => "libehca", parent => "libehca",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0, configure_options => '' },
-        'libehca-devel-static' =>
-            { name => "libehca-devel-static", parent => "libehca",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libehca"],
-            install32 => 1, exception => 0 },
-        'libehca-debuginfo' =>
-            { name => "libehca-debuginfo", parent => "libehca",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
-        'libcxgb3' =>
-            { name => "libcxgb3", parent => "libcxgb3",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0, configure_options => '' },
-        'libcxgb3-devel' =>
-            { name => "libcxgb3-devel", parent => "libcxgb3",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libcxgb3"],
-            install32 => 1, exception => 0 },
-        'libcxgb3-debuginfo' =>
-            { name => "libcxgb3-debuginfo", parent => "libcxgb3",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
-        'libcxgb4' =>
-            { name => "libcxgb4", parent => "libcxgb4",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0, configure_options => '' },
-        'libcxgb4-devel' =>
-            { name => "libcxgb4-devel", parent => "libcxgb4",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libcxgb4"],
-            install32 => 1, exception => 0 },
-        'libcxgb4-debuginfo' =>
-            { name => "libcxgb4-debuginfo", parent => "libcxgb4",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
-        'libnes' =>
-            { name => "libnes", parent => "libnes",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0, configure_options => '' },
-        'libnes-devel-static' =>
-            { name => "libnes-devel-static", parent => "libnes",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libnes"],
-            install32 => 1, exception => 0 },
-        'libnes-debuginfo' =>
-            { name => "libnes-debuginfo", parent => "libnes",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
-        'libipathverbs' =>
-            { name => "libipathverbs", parent => "libipathverbs",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0, configure_options => '' },
-        'libipathverbs-devel' =>
-            { name => "libipathverbs-devel", parent => "libipathverbs",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libipathverbs"],
-            install32 => 1, exception => 0 },
-        'libipathverbs-debuginfo' =>
-            { name => "libipathverbs-debuginfo", parent => "libipathverbs",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
         'libfabric' =>
             { name => "libfabric", parent => "libfabric",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => ["$libnl_devel"],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel", "infinipath-devel"],
-            ofa_req_inst => ["libibverbs", "librdmacm"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["rdma-core"],
             install32 => 1, exception => 0, configure_options => '' },
         'libfabric-devel' =>
             { name => "libfabric-devel", parent => "libfabric",
@@ -1072,83 +820,33 @@ my %packages_info = (
             ofa_req_inst => ["fabtests"],
             install32 => 0, exception => 0 },
 
-        'libibcm' =>
-            { name => "libibcm", parent => "libibcm",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs"],
-            install32 => 1, exception => 0, configure_options => '' },
-        'libibcm-devel' =>
-            { name => "libibcm-devel", parent => "libibcm",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libibverbs-devel", "libibcm"],
-            install32 => 1, exception => 0 },
-        'libibcm-debuginfo' =>
-            { name => "libibcm-debuginfo", parent => "libibcm",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
         # Management
-        'libibumad' =>
-            { name => "libibumad", parent => "libibumad",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["libtool"],
-            dist_req_inst => [],ubuntu_dist_req_build => ["libtool"],ubuntu_dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 1, exception => 0, configure_options => '' },
-        'libibumad-devel' =>
-            { name => "libibumad-devel", parent => "libibumad",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => ["libibumad"],
-            install32 => 1, exception => 0 },
-        'libibumad-static' =>
-            { name => "libibumad-static", parent => "libibumad",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => ["libibumad"],
-            install32 => 1, exception => 0 },
-        'libibumad-debuginfo' =>
-            { name => "libibumad-debuginfo", parent => "libibumad",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
         'libibmad' =>
             { name => "libibmad", parent => "libibmad",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => ["libtool"],
-            dist_req_inst => [],ubuntu_dist_req_build => ["libtool"],ubuntu_dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
-            ofa_req_inst => ["libibumad"],
+            dist_req_inst => [],ubuntu_dist_req_build => ["libtool"],ubuntu_dist_req_inst => [], ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["rdma-core"],
             install32 => 1, exception => 0, configure_options => '' },
         'libibmad-devel' =>
             { name => "libibmad-devel", parent => "libibmad",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
-            ofa_req_inst => ["libibmad", "libibumad-devel"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["libibmad", "rdma-core"],
             install32 => 1, exception => 0 },
         'libibmad-static' =>
             { name => "libibmad-static", parent => "libibmad",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
-            ofa_req_inst => ["libibmad", "libibumad-devel"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["libibmad", "rdma-core"],
             install32 => 1, exception => 0 },
         'libibmad-debuginfo' =>
             { name => "libibmad-debuginfo", parent => "libibmad",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
 
@@ -1157,15 +855,15 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [],ubuntu_dist_req_build => [],
-            ubuntu_dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs"],
+            ubuntu_dist_req_inst => [], ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["rdma-core"],
             install32 => 1, exception => 0, configure_options => '' },
         'libibscif-devel' =>
             { name => "libibscif-devel", parent => "libibscif",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libibscif"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["rdma-core", "libibscif"],
             install32 => 1, exception => 0 },
 
         'ibpd' =>
@@ -1173,43 +871,43 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
             dist_req_inst => [],ubuntu_dist_req_build => [],
-            ubuntu_dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs"],
+            ubuntu_dist_req_inst => [], ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["rdma-core"],
             install32 => 1, exception => 0, configure_options => '' },
 
         'opensm' =>
             { name => "opensm", parent => "opensm",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => ["bison", "flex"],
-            dist_req_inst => [],ubuntu_dist_req_build => ["bison", "flex"],ubuntu_dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
+            dist_req_inst => [],ubuntu_dist_req_build => ["bison", "flex"],ubuntu_dist_req_inst => [], ofa_req_build => ["rdma-core"],
             ofa_req_inst => ["opensm-libs"],
             install32 => 0, exception => 0, configure_options => '' },
         'opensm-devel' =>
             { name => "opensm-devel", parent => "opensm",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
-            ofa_req_inst => ["libibumad-devel", "opensm-libs"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["rdma-core", "opensm-libs"],
             install32 => 1, exception => 0 },
         'opensm-libs' =>
             { name => "opensm-libs", parent => "opensm",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => ["bison", "flex"],
-            dist_req_inst => [],ubuntu_dist_req_build => ["bison", "flex"],ubuntu_dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
-            ofa_req_inst => ["libibumad"],
+            dist_req_inst => [],ubuntu_dist_req_build => ["bison", "flex"],ubuntu_dist_req_inst => [], ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["rdma-core"],
             install32 => 1, exception => 0 },
         'opensm-static' =>
             { name => "opensm-static", parent => "opensm",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
-            ofa_req_inst => ["libibumad-devel", "opensm-libs"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["rdma-core", "opensm-libs"],
             install32 => 1, exception => 0 },
         'opensm-debuginfo' =>
             { name => "opensm-debuginfo", parent => "opensm",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
 
@@ -1217,81 +915,22 @@ my %packages_info = (
             { name => "ibsim", parent => "ibsim",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibmad-devel"],
-            ofa_req_inst => ["libibumad", "libibmad"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core", "libibmad-devel"],
+            ofa_req_inst => ["rdma-core", "libibmad"],
             install32 => 0, exception => 0, configure_options => '' },
         'ibsim-debuginfo' =>
             { name => "ibsim-debuginfo", parent => "ibsim",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibmad-devel"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core", "libibmad-devel"],
             ofa_req_inst => [],
             install32 => 0, exception => 0, configure_options => '' },
-
-        'ibacm' =>
-            { name => "ibacm", parent => "ibacm",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "libibumad-devel"],
-            ofa_req_inst => ["libibverbs", "libibumad"],
-            install32 => 0, exception => 0, configure_options => '' },
-        'librdmacm' =>
-            { name => "librdmacm", parent => "librdmacm",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["libibverbs", "libibverbs-devel"],
-            install32 => 1, exception => 0, configure_options => '' },
-        'librdmacm-devel' =>
-            { name => "librdmacm-devel", parent => "librdmacm",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["librdmacm", "libibverbs-devel"],
-            install32 => 1, exception => 0 },
-        'librdmacm-utils' =>
-            { name => "librdmacm-utils", parent => "librdmacm",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => ["librdmacm"],
-            install32 => 0, exception => 0 },
-        'librdmacm-debuginfo' =>
-            { name => "librdmacm-debuginfo", parent => "librdmacm",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel"],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
-        'libsdp' =>
-            { name => "libsdp", parent => "libsdp",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 1, exception => 0, configure_options => '' },
-        'libsdp-devel' =>
-            { name => "libsdp-devel", parent => "libsdp",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => ["libsdp"],
-            install32 => 1, exception => 0 },
-        'libsdp-debuginfo' =>
-            { name => "libsdp-debuginfo", parent => "libsdp",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
         'perftest' =>
             { name => "perftest", parent => "perftest",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel", "libibumad-devel"],
-            ofa_req_inst => ["libibverbs", "librdmacm", "libibumad"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["rdma-core"],
             install32 => 0, exception => 0, configure_options => '' },
         'perftest-debuginfo' =>
             { name => "perftest-debuginfo", parent => "perftest",
@@ -1300,14 +939,6 @@ my %packages_info = (
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
-
-        'libiwpm' =>
-            { name => "libiwpm", parent => "libiwpm",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["$libnl_devel"],
-            dist_req_inst => ["$libnl"], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0, configure_options => '' },
 
         'mstflint' =>
             { name => "mstflint", parent => "mstflint",
@@ -1330,8 +961,8 @@ my %packages_info = (
             { name => "ibvexdmtools", parent => "qlvnictools",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
-            ofa_req_inst => ["libibumad"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["rdma-core"],
             install32 => 0, exception => 0, configure_options => '' },
         'qlgc_vnic_daemon' =>
             { name => "qlgc_vnic_daemon", parent => "qlvnictools",
@@ -1344,44 +975,14 @@ my %packages_info = (
             { name => "qlvnictools", parent => "qlvnictools",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
-            ofa_req_inst => ["ibvexdmtools", "qlgc_vnic_daemon", "libibumad"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["ibvexdmtools", "qlgc_vnic_daemon", "rdma-core"],
             install32 => 0, exception => 0, configure_options => '' },
         'qlvnictools-debuginfo' =>
             { name => "qlvnictools-debuginfo", parent => "qlvnictools",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 0, mode => "user", dist_req_build => [],
             dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
-        'sdpnetstat' =>
-            { name => "sdpnetstat", parent => "sdpnetstat",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0, configure_options => '' },
-        'sdpnetstat-debuginfo' =>
-            { name => "sdpnetstat-debuginfo", parent => "sdpnetstat",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0 },
-
-        'srptools' =>
-            { name => "srptools", parent => "srptools",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
-            ofa_req_inst => ["libibumad", "libibverbs"],
-            install32 => 0, exception => 0, configure_options => '' },
-        'srptools-debuginfo' =>
-            { name => "srptools-debuginfo", parent => "srptools",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel"],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
 
@@ -1426,8 +1027,8 @@ my %packages_info = (
             { name => "qperf", parent => "qperf",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["libibverbs", "librdmacm"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["rdma-core"],
             install32 => 0, exception => 0, configure_options => '' },
         'qperf-debuginfo' =>
             { name => "qperf-debuginfo", parent => "qperf",
@@ -1441,8 +1042,8 @@ my %packages_info = (
             { name => "ibutils", parent => "ibutils",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => ["tcl__8.4", "tcl-devel__8.4", "tk", "$libstdc_devel"],
-            dist_req_inst => ["tcl__8.4", "tk", "$libstdc"], ofa_req_build => ["libibverbs-devel", "opensm-libs", "opensm-devel"],
-            ofa_req_inst => ["libibumad", "opensm-libs"],
+            dist_req_inst => ["tcl__8.4", "tk", "$libstdc"], ofa_req_build => ["rdma-core", "opensm-libs", "opensm-devel"],
+            ofa_req_inst => ["rdma-core", "opensm-libs"],
             install32 => 0, exception => 0, configure_options => '' },
         'ibutils-debuginfo' =>
             { name => "ibutils-debuginfo", parent => "ibutils",
@@ -1456,7 +1057,7 @@ my %packages_info = (
             { name => "infiniband-diags", parent => "infiniband-diags",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => ["glib2-devel", "$libudev_devel"],
-            dist_req_inst => [], ofa_req_build => ["opensm-devel", "libibmad-devel", "libibumad-devel"],
+            dist_req_inst => [], ofa_req_build => ["opensm-devel", "libibmad-devel", "rdma-core"],
             ofa_req_inst => ["libibumad", "libibmad", "opensm-libs"],
             install32 => 0, exception => 0, configure_options => '' },
         'infiniband-diags-debuginfo' =>
@@ -1471,272 +1072,52 @@ my %packages_info = (
             { name => "dapl", parent => "compat-dapl",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs", "libibverbs-devel", "librdmacm", "librdmacm-devel"],
-            ofa_req_inst => ["libibverbs", "librdmacm"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["rdma-core"],
             install32 => 1, exception => 0, configure_options => '' },
         'compat-dapl-devel' =>
             { name => "dapl-devel", parent => "compat-dapl",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel", "librdmacm", "librdmacm-devel"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
             ofa_req_inst => ["compat-dapl"],
             install32 => 1, exception => 0, configure_options => '' },
         'dapl' =>
             { name => "dapl", parent => "dapl",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs", "libibverbs-devel", "librdmacm", "librdmacm-devel"],
-            ofa_req_inst => ["libibverbs", "librdmacm"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
+            ofa_req_inst => ["rdma-core"],
             install32 => 1, exception => 0, configure_options => '' },
         'dapl-devel' =>
             { name => "dapl-devel", parent => "dapl",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel", "librdmacm", "librdmacm-devel"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
             ofa_req_inst => ["dapl"],
             install32 => 1, exception => 0, configure_options => '' },
         'dapl-devel-static' =>
             { name => "dapl-devel-static", parent => "dapl",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel", "librdmacm", "librdmacm-devel"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
             ofa_req_inst => ["dapl"],
             install32 => 1, exception => 0, configure_options => '' },
         'dapl-utils' =>
             { name => "dapl-utils", parent => "dapl",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel", "librdmacm", "librdmacm-devel"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
             ofa_req_inst => ["dapl"],
             install32 => 0, exception => 0, configure_options => '' },
         'dapl-debuginfo' =>
             { name => "dapl-debuginfo", parent => "dapl",
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["libibverbs","libibverbs-devel", "librdmacm", "librdmacm-devel"],
+            dist_req_inst => [], ofa_req_build => ["rdma-core"],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
 
-        'mpi-selector' =>
-            { name => "mpi-selector", parent => "mpi-selector",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["tcsh"],
-            dist_req_inst => ["tcsh"], ofa_req_build => [],
-            ofa_req_inst => [],
-            ubuntu_dist_req_build => ["tcsh"],ubuntu_dist_req_inst => ["tcsh"],
-            install32 => 0, exception => 0, configure_options => '' },
-
-        'mvapich' =>
-            { name => "mvapich", parent => "mvapich",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
-            dist_req_inst => ["$libstdc"], ofa_req_build => ["libibumad-devel"],
-            ofa_req_inst => ["libibumad"],
-            ubuntu_dist_req_build => ["$libstdc_devel"],
-            ubuntu_dist_req_inst => ["$libstdc"],
-            install32 => 0, exception => 0, configure_options => '' },
-        'mvapich_gcc' =>
-            { name => "mvapich_gcc", parent => "mvapich",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["$libgfortran","$libstdc_devel"],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
-            ofa_req_inst => ["mpi-selector", "libibverbs", "libibumad"],
-            ubuntu_dist_req_build => ["$libstdc_devel"],
-            ubuntu_dist_req_inst => [""],
-            install32 => 0, exception => 0 },
-        'mvapich_pgi' =>
-            { name => "mvapich_pgi", parent => "mvapich",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
-            dist_req_inst => [],
-            ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
-            ofa_req_inst => ["mpi-selector", "libibverbs", "libibumad"],
-            install32 => 0, exception => 0 },
-        'mvapich_intel' =>
-            { name => "mvapich_intel", parent => "mvapich",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
-            ofa_req_inst => ["mpi-selector", "libibverbs", "libibumad"],
-            install32 => 0, exception => 0 },
-        'mvapich_pathscale' =>
-            { name => "mvapich_pathscale", parent => "mvapich",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
-            ofa_req_inst => ["mpi-selector", "libibverbs", "libibumad"],
-            install32 => 0, exception => 0 },
-
-        'mvapich2' =>
-            { name => "mvapich2", parent => "mvapich2",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [$sysfsutils_devel, "$libstdc_devel"],
-            dist_req_inst => [$sysfsutils, "$libstdc"], ofa_req_build => ["libibumad-devel", "libibverbs-devel"],
-            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
-            install32 => 0, exception => 0, configure_options => '' },
-        'mvapich2_gcc' =>
-            { name => "mvapich2_gcc", parent => "mvapich2",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["$libgfortran","$sysfsutils_devel", "$libstdc_devel"],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
-            install32 => 0, exception => 0 },
-        'mvapich2_pgi' =>
-            { name => "mvapich2_pgi", parent => "mvapich2",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [$sysfsutils_devel, "$libstdc_devel"],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
-            install32 => 0, exception => 0 },
-        'mvapich2_intel' =>
-            { name => "mvapich2_intel", parent => "mvapich2",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [$sysfsutils_devel, "$libstdc_devel"],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
-            install32 => 0, exception => 0 },
-        'mvapich2_pathscale' =>
-            { name => "mvapich2_pathscale", parent => "mvapich2",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [$sysfsutils_devel, "$libstdc_devel"],
-            dist_req_inst => [], ofa_req_build => ["libibumad-devel", "libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["mpi-selector", "librdmacm", "libibumad", "libibumad-devel"],
-            install32 => 0, exception => 0 },
-
-        'openmpi' =>
-            { name => "openmpi", parent => "openmpi",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
-            dist_req_inst => ["$libstdc"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["libibverbs", "mpi-selector", "librdmacm"],
-            ubuntu_dist_req_build => ["$libstdc_devel"],
-            ubuntu_dist_req_inst => ["$libstdc"],
-            install32 => 0, exception => 0, configure_options => '' },
-        'openmpi_gcc' =>
-            { name => "openmpi_gcc", parent => "openmpi",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => ["$libgfortran","$libstdc_devel"],
-            dist_req_inst => ["$libstdc"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["libibverbs", "librdmacm-devel", "mpi-selector"],
-            ubuntu_dist_req_build => ["$libgfortran","$libstdc_devel"],
-            ubuntu_dist_req_inst => ["$libstdc"],
-            install32 => 0, exception => 0 },
-        'openmpi_pgi' =>
-            { name => "openmpi_pgi", parent => "openmpi",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
-            dist_req_inst => ["$libstdc"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["libibverbs", "librdmacm-devel", "mpi-selector"],
-            install32 => 0, exception => 0 },
-        'openmpi_intel' =>
-            { name => "openmpi_intel", parent => "openmpi",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
-            dist_req_inst => ["$libstdc"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["libibverbs", "librdmacm-devel", "mpi-selector"],
-            install32 => 0, exception => 0 },
-        'openmpi_pathscale' =>
-            { name => "openmpi_pathscale", parent => "openmpi",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => ["$libstdc_devel"],
-            dist_req_inst => ["$libstdc"], ofa_req_build => ["libibverbs-devel", "librdmacm-devel"],
-            ofa_req_inst => ["libibverbs", "librdmacm-devel", "mpi-selector"],
-            install32 => 0, exception => 0 },
-
-        'mpitests' =>
-            { name => "mpitests", parent => "mpitests",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => [],
-            ofa_req_inst => [],
-            install32 => 0, exception => 0, configure_options => '' },
-
-        'mpitests_mvapich_gcc' =>
-            { name => "mpitests_mvapich_gcc", parent => "mpitests",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["mvapich_gcc", "libibumad-devel", "librdmacm-devel"],
-            ofa_req_inst => ["mvapich_gcc"],
-            install32 => 0, exception => 0 },
-        'mpitests_mvapich_pgi' =>
-            { name => "mpitests_mvapich_pgi", parent => "mpitests",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["mvapich_pgi", "libibumad-devel", "librdmacm-devel"],
-            ofa_req_inst => ["mvapich_pgi"],
-            install32 => 0, exception => 0 },
-        'mpitests_mvapich_pathscale' =>
-            { name => "mpitests_mvapich_pathscale", parent => "mpitests",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["mvapich_pathscale", "libibumad-devel", "librdmacm-devel"],
-            ofa_req_inst => ["mvapich_pathscale"],
-            install32 => 0, exception => 0 },
-        'mpitests_mvapich_intel' =>
-            { name => "mpitests_mvapich_intel", parent => "mpitests",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["mvapich_intel", "libibumad-devel", "librdmacm-devel"],
-            ofa_req_inst => ["mvapich_intel"],
-            install32 => 0, exception => 0 },
-
-        'mpitests_mvapich2_gcc' =>
-            { name => "mpitests_mvapich2_gcc", parent => "mpitests",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["mvapich2_gcc", "libibumad-devel", "librdmacm-devel"],
-            ofa_req_inst => ["mvapich2_gcc"],
-            install32 => 0, exception => 0 },
-        'mpitests_mvapich2_pgi' =>
-            { name => "mpitests_mvapich2_pgi", parent => "mpitests",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["mvapich2_pgi", "libibumad-devel", "librdmacm-devel"],
-            ofa_req_inst => ["mvapich2_pgi"],
-            install32 => 0, exception => 0 },
-        'mpitests_mvapich2_pathscale' =>
-            { name => "mpitests_mvapich2_pathscale", parent => "mpitests",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["mvapich2_pathscale", "libibumad-devel", "librdmacm-devel"],
-            ofa_req_inst => ["mvapich2_pathscale"],
-            install32 => 0, exception => 0 },
-        'mpitests_mvapich2_intel' =>
-            { name => "mpitests_mvapich2_intel", parent => "mpitests",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["mvapich2_intel", "libibumad-devel", "librdmacm-devel"],
-            ofa_req_inst => ["mvapich2_intel"],
-            install32 => 0, exception => 0 },
-
-        'mpitests_openmpi_gcc' =>
-            { name => "mpitests_openmpi_gcc", parent => "mpitests",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["openmpi_gcc", "libibumad-devel", "librdmacm-devel"],
-            ofa_req_inst => ["openmpi_gcc"],
-            install32 => 0, exception => 0 },
-        'mpitests_openmpi_pgi' =>
-            { name => "mpitests_openmpi_pgi", parent => "mpitests",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["openmpi_pgi", "libibumad-devel", "librdmacm-devel"],
-            ofa_req_inst => ["openmpi_pgi"],
-            install32 => 0, exception => 0 },
-        'mpitests_openmpi_pathscale' =>
-            { name => "mpitests_openmpi_pathscale", parent => "mpitests",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["openmpi_pathscale", "libibumad-devel", "librdmacm-devel"],
-            ofa_req_inst => ["openmpi_pathscale"],
-            install32 => 0, exception => 0 },
-        'mpitests_openmpi_intel' =>
-            { name => "mpitests_openmpi_intel", parent => "mpitests",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 0, mode => "user", dist_req_build => [],
-            dist_req_inst => [], ofa_req_build => ["openmpi_intel", "libibumad-devel", "librdmacm-devel"],
-            ofa_req_inst => ["openmpi_intel"],
-            install32 => 0, exception => 0 },
 
         'ofed-docs' =>
             { name => "ofed-docs", parent => "ofed-docs",
@@ -1753,44 +1134,10 @@ my %packages_info = (
             dist_req_inst => [], ofa_req_build => [],
             ofa_req_inst => [],
             install32 => 0, exception => 0 },
-        'infinipath-psm' =>
-            { name => "infinipath-psm", parent=> "infinipath-psm",
-             selected => 0, installed => 0, rpm_exits => 0, rpm_exists32 => 0,
-             available => 0, mode => "user", dist_req_build => [],
-             dist_req_inst => [], ofa_req_build => [],
-             ofa_req_inst => [], install32 => 0, exception => 0 },
-        'infinipath-psm-devel' =>
-            { name => "infinipath-psm-devel", parent=> "infinipath-psm",
-             selected => 0, installed => 0, rpm_exits => 0, rpm_exists32 => 0,
-             available => 0, mode => "user", dist_req_build => [],
-             dist_req_inst => [], ofa_req_build => [],
-             ofa_req_inst => ["infinipath-psm"], install32 => 0, exception => 0 },
         );
 
 
 my @hidden_packages = ("ibvexdmtools", "qlgc_vnic_daemon");
-
-my %MPI_SUPPORTED_COMPILERS = (gcc => 0, pgi => 0, intel => 0, pathscale => 0);
-
-my %gcc = ('gcc' => 0, 'gfortran' => 0, 'g77' => 0, 'g++' => 0);
-my %pathscale = ('pathcc' => 0, 'pathCC' => 0, 'pathf90' => 0);
-my %pgi = ('pgf77' => 0, 'pgf90' => 0, 'pgCC' => 0);
-my %intel = ('icc' => 0, 'icpc' => 0, 'ifort' => 0);
-
-# mvapich2 environment
-my $mvapich2_conf_impl = "ofa";
-my $mvapich2_conf_romio = 1;
-my $mvapich2_conf_shared_libs = 1;
-my $mvapich2_conf_ckpt = 0;
-my $mvapich2_conf_blcr_home;
-my $mvapich2_conf_vcluster = "small";
-my $mvapich2_conf_io_bus;
-my $mvapich2_conf_link_speed;
-my $mvapich2_conf_dapl_provider = "";
-my $mvapich2_comp_env;
-my $mvapich2_dat_lib;
-my $mvapich2_dat_include;
-my $mvapich2_conf_done = 0;
 
 my $TOPDIR = $builddir . '/' . $PACKAGE . "_topdir";
 chomp $TOPDIR;
@@ -1937,56 +1284,6 @@ sub supported32bit
     return 1
 }
 
-# Check whether compiler $1 exist
-sub set_compilers
-{
-    if (`which gcc 2> /dev/null`) {
-        $gcc{'gcc'} = 1;
-    }
-    if (`which g77 2> /dev/null`) {
-        $gcc{'g77'} = 1;
-    }
-    if (`which g++ 2> /dev/null`) {
-        $gcc{'g++'} = 1;
-    }
-    if (`which gfortran 2> /dev/null`) {
-        $gcc{'gfortran'} = 1;
-    }
-
-    if (`which pathcc 2> /dev/null`) {
-        $pathscale{'pathcc'} = 1;
-    }
-    if (`which pathCC 2> /dev/null`) {
-        $pathscale{'pathCC'} = 1;
-    }
-    if (`which pathf90 2> /dev/null`) {
-        $pathscale{'pathf90'} = 1;
-    }
-
-    if (`which pgcc 2> /dev/null`) {
-        $pgi{'pgcc'} = 1;
-    }
-    if (`which pgCC 2> /dev/null`) {
-        $pgi{'pgCC'} = 1;
-    }
-    if (`which pgf77 2> /dev/null`) {
-        $pgi{'pgf77'} = 1;
-    }
-    if (`which pgf90 2> /dev/null`) {
-        $pgi{'pgf90'} = 1;
-    }
-
-    if (`which icc 2> /dev/null`) {
-        $intel{'icc'} = 1;
-    }
-    if (`which icpc 2> /dev/null`) {
-        $intel{'icpc'} = 1;
-    }
-    if (`which ifort 2> /dev/null`) {
-        $intel{'ifort'} = 1;
-    }
-}
-
 sub set_cfg
 {
     my $srpm_full_path = shift @_;
@@ -2013,94 +1310,36 @@ sub set_cfg
 # Set packages availability depending OS/Kernel/arch
 sub set_availability
 {
-    set_compilers();
-
-    if ($kernel =~ m/^3\.18/) {
+    if ($kernel =~ m/^4\.8/) {
             $kernel_modules_info{'rds'}{'available'} = 1;
             $packages_info{'rds-tools'}{'available'} = 1;
             $packages_info{'rds-devel'}{'available'} = 1;
             $packages_info{'rds-tools-debuginfo'}{'available'} = 1;
             $kernel_modules_info{'srpt'}{'available'} = 1;
-            if ($arch =~ m/ppc64|powerpc/) {
-                $kernel_modules_info{'ehca'}{'available'} = 1;
-                $packages_info{'libehca'}{'available'} = 1;
-                $packages_info{'libehca-devel-static'}{'available'} = 1;
-                $packages_info{'libehca-debuginfo'}{'available'} = 1;
-            }
     }
-
-    # Ipath
-    if ($arch =~ m/x86_64/) {
-	    $packages_info{'infinipath-psm'}{'available'} = 1;
-	    $packages_info{'infinipath-psm-devel'}{'available'} = 1;
-	    $kernel_modules_info{'qib'}{'available'} = 1;
-	    $packages_info{'libipathverbs'}{'available'} = 1;
-	    $packages_info{'libipathverbs-devel'}{'available'} = 1;
-	    $packages_info{'libipathverbs-debuginfo'}{'available'} = 1;
-    }
-
     # libfabric due to dependency on infinipath-psm
     if ($arch =~ m/x86_64/) {
-        $packages_info{'libfabric'}{'ofa_req_build'} = ["libibverbs-devel", "librdmacm-devel", "infinipath-psm-devel"];
-        $packages_info{'libfabric'}{'ofa_req_inst'} = ["libibverbs", "librdmacm", "infinipath-psm"];
+        $packages_info{'libfabric'}{'ofa_req_build'} = ["rdma-core"];
+        $packages_info{'libfabric'}{'ofa_req_inst'} = ["rdma-core"];
+    }
+
+    # require numa stuff where supported inbox
+    if ($DISTRO =~ /RHEL|OEL|FC|POWERKVM/) {
+        push(@{$packages_info{'rdma-core'}{'dist_req_build'}}, "numactl-devel$suffix_64bit");
+        push(@{$packages_info{'rdma-core'}{'dist_req_build'}}, "numactl-devel$suffix_32bit") if ($build32 == 1);
+
+        my $numactl = "numactl";
+        if ($DISTRO =~ /FC19|FC[2-9]|OEL[7-9]|RHEL[7-9]|POWERKVM/) {
+            $numactl = "numactl-libs";
+        }
+        push(@{$packages_info{'rdma-core'}{'dist_req_inst'}}, "${numactl}${suffix_64bit}");
+        push(@{$packages_info{'rdma-core'}{'dist_req_inst'}}, "${numactl}${suffix_32bit}") if ($build32 == 1);
     }
 
     # Disable SRP on ppc64 platform to avoid update of scsi_transport_srp kernel module
     # which will prevent in-box ibmvscsi module load and, as a result, kernel panic upon boot
     if ($arch =~ m/ppc64/) {
         $kernel_modules_info{'srp'}{'available'} = 0;
-    }
-
-    # QLogic vnic
-    if ($kernel =~ m/^3\.18/) {
-            $kernel_modules_info{'qlgc_vnic'}{'available'} = 1;
-            $packages_info{'ibvexdmtools'}{'available'} = 1;
-            $packages_info{'qlgc_vnic_daemon'}{'available'} = 1;
-            $packages_info{'qlvnictools'}{'available'} = 1;
-            $packages_info{'qlvnictools-debuginfo'}{'available'} = 1;
-    }
-
-
-    # mvapich, mvapich2 and openmpi
-    if ($gcc{'gcc'}) {
-        if ($gcc{'g77'} or $gcc{'gfortran'}) {
-            $packages_info{'mvapich_gcc'}{'available'} = 1;
-            $packages_info{'mvapich2_gcc'}{'available'} = 1;
-            $packages_info{'mpitests_mvapich_gcc'}{'available'} = 1;
-            $packages_info{'mpitests_mvapich2_gcc'}{'available'} = 1;
-        }
-        $packages_info{'openmpi_gcc'}{'available'} = 1;
-        $packages_info{'mpitests_openmpi_gcc'}{'available'} = 1;
-    }
-    if ($pathscale{'pathcc'}) {
-        if ($pathscale{'pathCC'} and $pathscale{'pathf90'}) {
-            $packages_info{'mvapich_pathscale'}{'available'} = 1;
-            $packages_info{'mvapich2_pathscale'}{'available'} = 1;
-            $packages_info{'mpitests_mvapich_pathscale'}{'available'} = 1;
-            $packages_info{'mpitests_mvapich2_pathscale'}{'available'} = 1;
-        }
-        $packages_info{'openmpi_pathscale'}{'available'} = 1;
-        $packages_info{'mpitests_openmpi_pathscale'}{'available'} = 1;
-    }
-    if ($pgi{'pgcc'}) {
-        if ($pgi{'pgf77'} and $pgi{'pgf90'}) {
-            $packages_info{'mvapich_pgi'}{'available'} = 1;
-            $packages_info{'mvapich2_pgi'}{'available'} = 1;
-            $packages_info{'mpitests_mvapich_pgi'}{'available'} = 1;
-            $packages_info{'mpitests_mvapich2_pgi'}{'available'} = 1;
-        }
-        $packages_info{'openmpi_pgi'}{'available'} = 1;
-        $packages_info{'mpitests_openmpi_pgi'}{'available'} = 1;
-    }
-    if ($intel{'icc'}) {
-        if ($intel{'icpc'} and $intel{'ifort'}) {
-            $packages_info{'mvapich_intel'}{'available'} = 1;
-            $packages_info{'mvapich2_intel'}{'available'} = 1;
-            $packages_info{'mpitests_mvapich_intel'}{'available'} = 1;
-            $packages_info{'mpitests_mvapich2_intel'}{'available'} = 1;
-        }
-        $packages_info{'openmpi_intel'}{'available'} = 1;
-        $packages_info{'mpitests_openmpi_intel'}{'available'} = 1;
     }
 
     # debuginfo RPM currently are not supported on SuSE
@@ -2160,196 +1399,6 @@ sub set_existing_rpms
     }
 }
 
-sub mvapich2_config
-{
-    my $ans;
-    my $done;
-
-    if ($mvapich2_conf_done) {
-        return;
-    }
-
-    if (not $interactive) {
-        $mvapich2_conf_done = 1;
-        return;
-    }
-
-    print "\nPlease choose an implementation of MVAPICH2:\n\n";
-    print "1) OFA (IB and iWARP)\n";
-    print "2) uDAPL\n";
-    $done = 0;
-
-    while (not $done) {
-        print "Implementation [1]: ";
-        $ans = getch();
-
-        if (ord($ans) == $KEY_ENTER or $ans eq "1") {
-            $mvapich2_conf_impl = "ofa";
-            $done = 1;
-        }
-
-        elsif ($ans eq "2") {
-            $mvapich2_conf_impl = "udapl";
-            $done = 1;
-        }
-
-        else {
-            $done = 0;
-        }
-    }
-
-    print "\nEnable ROMIO support [Y/n]: ";
-    $ans = getch();
-
-    if ($ans =~ m/Nn/) {
-        $mvapich2_conf_romio = 0;
-    }
-
-    else {
-        $mvapich2_conf_romio = 1;
-    }
-
-    print "\nEnable shared library support [Y/n]: ";
-    $ans = getch();
-
-    if ($ans =~ m/Nn/) {
-        $mvapich2_conf_shared_libs = 0;
-    }
-
-    else {
-        $mvapich2_conf_shared_libs = 1;
-    }
-
-    # OFA specific options.
-    if ($mvapich2_conf_impl eq "ofa") {
-        $done = 0;
-
-        while (not $done) {
-            print "\nEnable Checkpoint-Restart support [y/N]: ";
-            $ans = getch();
-
-            if ($ans =~ m/[Yy]/) {
-                $mvapich2_conf_ckpt = 1;
-                print "\nBLCR installation directory [or nothing if not installed]: ";
-                my $tmp = <STDIN>;
-                chomp $tmp;
-
-                if (-d "$tmp") {
-                    $mvapich2_conf_blcr_home = $tmp;
-                    $done = 1;
-                }
-
-                else {
-                    print RED "\nBLCR installation directory not found.", RESET "\n";
-                }
-            }
-
-            else {
-                $mvapich2_conf_ckpt = 0;
-                $done = 1;
-            }
-        }
-    }
-
-    else {
-        $mvapich2_conf_ckpt = 0;
-    }
-
-    # uDAPL specific options.
-    if ($mvapich2_conf_impl eq "udapl") {
-        print "\nCluster size:\n\n1) Small\n2) Medium\n3) Large\n";
-        $done = 0;
-
-        while (not $done) {
-            print "Cluster size [1]: ";
-            $ans = getch();
-
-            if (ord($ans) == $KEY_ENTER or $ans eq "1") {
-                $mvapich2_conf_vcluster = "small";
-                $done = 1;
-            }
-
-            elsif ($ans eq "2") {
-                $mvapich2_conf_vcluster = "medium";
-                $done = 1;
-            }
-
-            elsif ($ans eq "3") {
-                $mvapich2_conf_vcluster = "large";
-                $done = 1;
-            }
-        }
-
-        print "\nI/O Bus:\n\n1) PCI-Express\n2) PCI-X\n";
-        $done = 0;
-
-        while (not $done) {
-            print "I/O Bus [1]: ";
-            $ans = getch();
-
-            if (ord($ans) == $KEY_ENTER or $ans eq "1") {
-                $mvapich2_conf_io_bus = "PCI_EX";
-                $done = 1;
-            }
-
-            elsif ($ans eq "2") {
-                $mvapich2_conf_io_bus = "PCI_X";
-                $done = 1;
-            }
-        }
-
-        if ($mvapich2_conf_io_bus eq "PCI_EX") {
-            print "\nLink Speed:\n\n1) SDR\n2) DDR\n";
-            $done = 0;
-
-            while (not $done) {
-                print "Link Speed [1]: ";
-                $ans = getch();
-
-                if (ord($ans) == $KEY_ENTER or $ans eq "1") {
-                    $mvapich2_conf_link_speed = "SDR";
-                    $done = 1;
-                }
-
-                elsif ($ans eq "2") {
-                    $mvapich2_conf_link_speed = "DDR";
-                    $done = 1;
-                }
-            }
-        }
-
-        else {
-            $mvapich2_conf_link_speed = "SDR";
-        }
-
-        print "\nDefault DAPL provider []: ";
-        $ans = <STDIN>;
-        chomp $ans;
-
-        if ($ans) {
-            $mvapich2_conf_dapl_provider = $ans;
-        }
-    }
-
-    $mvapich2_conf_done = 1;
-
-    open(CONFIG, ">>$config") || die "Can't open $config: $!";;
-    flock CONFIG, $LOCK_EXCLUSIVE;
-
-    print CONFIG "mvapich2_conf_impl=$mvapich2_conf_impl\n";
-    print CONFIG "mvapich2_conf_romio=$mvapich2_conf_romio\n";
-    print CONFIG "mvapich2_conf_shared_libs=$mvapich2_conf_shared_libs\n";
-    print CONFIG "mvapich2_conf_ckpt=$mvapich2_conf_ckpt\n";
-    print CONFIG "mvapich2_conf_blcr_home=$mvapich2_conf_blcr_home\n" if ($mvapich2_conf_blcr_home);
-    print CONFIG "mvapich2_conf_vcluster=$mvapich2_conf_vcluster\n";
-    print CONFIG "mvapich2_conf_io_bus=$mvapich2_conf_io_bus\n" if ($mvapich2_conf_io_bus);
-    print CONFIG "mvapich2_conf_link_speed=$mvapich2_conf_link_speed\n" if ($mvapich2_conf_link_speed);
-    print CONFIG "mvapich2_conf_dapl_provider=$mvapich2_conf_dapl_provider\n" if ($mvapich2_conf_dapl_provider);
-
-    flock CONFIG, $UNLOCK;
-    close(CONFIG);
-}
-
 sub show_menu
 {
     my $menu = shift @_;
@@ -2371,11 +1420,10 @@ sub show_menu
     elsif ($menu eq "select") {
         print "$PACKAGE Distribution Software Installation Menu\n\n";
         print "   1) Basic ($PACKAGE modules and basic user level libraries)\n";
-        print "   2) HPC ($PACKAGE modules and libraries, MPI and diagnostic tools)\n";
-        print "   3) All packages (all of Basic, HPC)\n";
-        print "   4) Customize\n";
+        print "   2) All packages (all of Basic, HPC)\n";
+        print "   3) Customize\n";
         print "\n   Q) Exit\n";
-        $max_inp=4;
+        $max_inp=3;
         print "\nSelect Option [1-$max_inp]:"
     }
 
@@ -2422,21 +1470,6 @@ sub select_packages
                 $cnt ++;
             }
             for my $module ( @basic_kernel_modules ) {
-                next if (not $kernel_modules_info{$module}{'available'});
-                push (@selected_modules_by_user, $module);
-                print CONFIG "$module=y\n";
-            }
-        }
-        elsif ($inp == $HPC) {
-            for my $package ( @hpc_user_packages, @hpc_kernel_packages ) {
-                next if (not $packages_info{$package}{'available'});
-                my $parent = $packages_info{$package}{'parent'};
-                next if (not $main_packages{$parent}{'srpmpath'});
-                push (@selected_by_user, $package);
-                print CONFIG "$package=y\n";
-                $cnt ++;
-            }
-            for my $module ( @hpc_kernel_modules ) {
                 next if (not $kernel_modules_info{$module}{'available'});
                 push (@selected_modules_by_user, $module);
                 print CONFIG "$module=y\n";
@@ -2518,7 +1551,7 @@ sub select_packages
     }
     else {
         if ($config_given) {
-            open(CONFIG, "$config") || die "Can't open $config: $!";;
+            open(CONFIG, "$config") || die "Can't open $config: $!";
             while(<CONFIG>) {
                 next if (m@^\s+$|^#.*@);
                 my ($package,$selected) = (split '=', $_);
@@ -2547,51 +1580,47 @@ sub select_packages
                     next;
                 }
 
-		if (substr($package,0,length("vendor_config")) eq "vendor_config") {
-		       next;
-		}
+                if (substr($package,0,length("vendor_config")) eq "vendor_config") {
+                    next;
+                }
 
-                if ($package eq "vendor_pre_install") {
-		    if ( -f $selected ) {
-			$vendor_pre_install = dirname($selected) . '/' . basename($selected);
-		    }
-		    else {
-			print RED "\nVendor script $selected is not found", RESET "\n" if (not $quiet);
-			exit 1
-		    }
+               if ($package eq "vendor_pre_install") {
+                   	if ( -f $selected ) {
+                        $vendor_pre_install = dirname($selected) . '/' . basename($selected);
+                    } else {
+                        print RED "\nVendor script $selected is not found", RESET "\n" if (not $quiet);
+                        exit 1
+                    }
                     next;
                 }
 
                 if ($package eq "vendor_post_install") {
-		    if ( -f $selected ) {
-			$vendor_post_install = dirname($selected) . '/' . basename($selected);
-		    }
-		    else {
-			print RED "\nVendor script $selected is not found", RESET "\n" if (not $quiet);
-			exit 1
-		    }
+		            if ( -f $selected ) {
+			            $vendor_post_install = dirname($selected) . '/' . basename($selected);
+		            } else {
+			            print RED "\nVendor script $selected is not found", RESET "\n" if (not $quiet);
+			            exit 1
+		            }
                     next;
                 }
 
                 if ($package eq "vendor_pre_uninstall") {
-		    if ( -f $selected ) {
-			$vendor_pre_uninstall = dirname($selected) . '/' . basename($selected);
-		    }
-		    else {
-			print RED "\nVendor script $selected is not found", RESET "\n" if (not $quiet);
-			exit 1
-		    }
+                    if ( -f $selected ) {
+                        $vendor_pre_uninstall = dirname($selected) . '/' . basename($selected);
+                    } else {
+                        print RED "\nVendor script $selected is not found", RESET "\n" if (not $quiet);
+                        exit 1
+                    }
                     next;
                 }
 
                 if ($package eq "vendor_post_uninstall") {
-		    if ( -f $selected ) {
-			$vendor_post_uninstall = dirname($selected) . '/' . basename($selected);
-		    }
-		    else {
-			print RED "\nVendor script $selected is not found", RESET "\n" if (not $quiet);
-			exit 1
-		    }
+                    if ( -f $selected ) {
+                        $vendor_post_uninstall = dirname($selected) . '/' . basename($selected);
+                    } else {
+                        print RED "\nVendor script $selected is not found", RESET "\n" if (not $quiet);
+                        exit 1
+                    }
                     next;
                 }
 
@@ -2608,52 +1637,6 @@ sub select_packages
                 if ($package =~ m/configure_options/) {
                     my $pack_name = (split '_', $_)[0];
                     $packages_info{$pack_name}{'configure_options'} = $selected;
-                    next;
-                }
-
-                # mvapich2 configuration environment
-                if ($package eq "mvapich2_conf_impl") {
-                    $mvapich2_conf_impl = $selected;
-                    next;
-                }
-
-                elsif ($package eq "mvapich2_conf_romio") {
-                    $mvapich2_conf_romio = $selected;
-                    next;
-                }
-
-                elsif ($package eq "mvapich2_conf_shared_libs") {
-                    $mvapich2_conf_shared_libs = $selected;
-                    next;
-                }
-
-                elsif ($package eq "mvapich2_conf_ckpt") {
-                    $mvapich2_conf_ckpt = $selected;
-                    next;
-                }
-
-                elsif ($package eq "mvapich2_conf_blcr_home") {
-                    $mvapich2_conf_blcr_home = $selected;
-                    next;
-                }
-
-                elsif ($package eq "mvapich2_conf_vcluster") {
-                    $mvapich2_conf_vcluster = $selected;
-                    next;
-                }
-
-                elsif ($package eq "mvapich2_conf_io_bus") {
-                    $mvapich2_conf_io_bus = $selected;
-                    next;
-                }
-
-                elsif ($package eq "mvapich2_conf_link_speed") {
-                    $mvapich2_conf_link_speed = $selected;
-                    next;
-                }
-
-                elsif ($package eq "mvapich2_conf_dapl_provider") {
-                    $mvapich2_conf_dapl_provider = $selected;
                     next;
                 }
 
@@ -2708,21 +1691,6 @@ sub select_packages
                     $cnt ++;
                 }
                 for my $module ( @kernel_modules ) {
-                    next if (not $kernel_modules_info{$module}{'available'});
-                    push (@selected_modules_by_user, $module);
-                    print CONFIG "$module=y\n";
-                }
-            }
-            elsif ($install_option eq 'hpc') {
-                for my $package ( @hpc_user_packages, @hpc_kernel_packages ) {
-                    next if (not $packages_info{$package}{'available'});
-                    my $parent = $packages_info{$package}{'parent'};
-                    next if (not $main_packages{$parent}{'srpmpath'});
-                    push (@selected_by_user, $package);
-                    print CONFIG "$package=y\n";
-                    $cnt ++;
-                }
-                for my $module ( @hpc_kernel_modules ) {
                     next if (not $kernel_modules_info{$module}{'available'});
                     push (@selected_modules_by_user, $module);
                     print CONFIG "$module=y\n";
@@ -2852,7 +1820,7 @@ sub select_dependent
 
     if (not $packages_info{$package}{'selected'}) {
         return if (not $packages_info{$package}{'available'});
-        # Assume that the requirement is not strict. E.g. openmpi dependency on fca
+        # Assume that the requirement is not strict.
         my $parent = $packages_info{$package}{'parent'};
         return if (not $main_packages{$parent}{'srpmpath'});
         $packages_info{$package}{'selected'} = 1;
@@ -2884,11 +1852,7 @@ sub resolve_dependencies
     for my $package ( @selected_by_user ) {
             # Get the list of dependencies
             select_dependent($package);
-
-            if ($package =~ /mvapich2_*/ and not $print_available) {
-                    mvapich2_config();
-            }
-        }
+    }
 
     for my $module ( @selected_modules_by_user ) {
         select_dependent_module($module);
@@ -2974,78 +1938,67 @@ sub check_linux_dependencies
                     }
                 }
             }
-            if ($package eq "compat-rdma") {
-                for my $module ( @selected_kernel_modules ) {
-                    for my $req ( @{ $kernel_modules_info{$module}{'dist_req_build'} } ) {
-			if ((substr($req, 0, 1) eq "/" and not -f $req) or
-                            (substr($req, 0, 1) ne "/" and not is_installed($req))) {
-                            $err++;
-                            print RED "$req is required to build $module", RESET "\n";
+                if ($package eq "compat-rdma") {
+                    for my $module ( @selected_kernel_modules ) {
+                        for my $req ( @{ $kernel_modules_info{$module}{'dist_req_build'} } ) {
+                            if ((substr($req, 0, 1) eq "/" and not -f $req) or
+                                (substr($req, 0, 1) ne "/" and not is_installed($req))) {
+                                $err++;
+                                print RED "$req is required to build $module", RESET "\n";
+                            }
                         }
                     }
                 }
-            }
-            if ($build32) {
-                if (not -f "/usr/lib/crt1.o") {
-                    if (! $p1) {
-                        print RED "glibc-devel 32bit is required to build 32-bit libraries.", RESET "\n";
-                        $p1 = 1;
-                        $err++;
-                    }
-                }
-		if ($DISTRO =~ m/SLES11/) {
-                    if (not is_installed("gcc-32bit")) {
-                        if (not $gcc_32bit_printed) {
-                            print RED "gcc-32bit is required to build 32-bit libraries.", RESET "\n";
-                            $gcc_32bit_printed++;
+                if ($build32) {
+                    if (not -f "/usr/lib/crt1.o") {
+                        if (! $p1) {
+                            print RED "glibc-devel 32bit is required to build 32-bit libraries.", RESET "\n";
+                            $p1 = 1;
                             $err++;
                         }
                     }
-                }
-                if ($arch eq "ppc64") {
-                    my @libstdc32 = </usr/lib/libstdc++.so.*>;
-                    if ($package eq "mstflint") {
-                        if (not scalar(@libstdc32)) {
-                            print RED "$libstdc 32bit is required to build mstflint.", RESET "\n";
-                            $err++;
+                    if ($DISTRO =~ m/SLES11/) {
+                        if (not is_installed("gcc-32bit")) {
+                            if (not $gcc_32bit_printed) {
+                                print RED "gcc-32bit is required to build 32-bit libraries.", RESET "\n";
+                                $gcc_32bit_printed++;
+                                $err++;
+                            }
                         }
                     }
-                    elsif ($package eq "openmpi") {
-                        my @libsysfs = </usr/lib/libsysfs.so>;
-                        if (not scalar(@libstdc32)) {
-                            print RED "$libstdc_devel 32bit is required to build openmpi.", RESET "\n";
-                            $err++;
-                        }
-                        if (not scalar(@libsysfs)) {
-                            print RED "$sysfsutils_devel 32bit is required to build openmpi.", RESET "\n";
-                            $err++;
+                    if ($arch eq "ppc64") {
+                        my @libstdc32 = </usr/lib/libstdc++.so.*>;
+                        if ($package eq "mstflint") {
+                            if (not scalar(@libstdc32)) {
+                                print RED "$libstdc 32bit is required to build mstflint.", RESET "\n";
+                                $err++;
+                            }
                         }
                     }
                 }
-            }
-            if ($package eq "rnfs-utils") {
-                if (not is_installed("krb5-devel")) {
-                    print RED "krb5-devel is required to build rnfs-utils.", RESET "\n";
-                    $err++;
-                }
-                if ($DISTRO =~ m/RHEL|FC/) {
-                    if (not is_installed("krb5-libs")) {
-                        print RED "krb5-libs is required to build rnfs-utils.", RESET "\n";
+                if ($package eq "rnfs-utils") {
+                    if (not is_installed("krb5-devel")) {
+                        print RED "krb5-devel is required to build rnfs-utils.", RESET "\n";
                         $err++;
                     }
-                    if (not is_installed("libevent-devel")) {
-                        print RED "libevent-devel is required to build rnfs-utils.", RESET "\n";
-                        $err++;
-                    }
-                    if (not is_installed("nfs-utils-lib-devel")) {
-                        print RED "nfs-utils-lib-devel is required to build rnfs-utils.", RESET "\n";
-                        $err++;
-                    }
-                    if (not is_installed("openldap-devel")) {
-                        print RED "openldap-devel is required to build rnfs-utils.", RESET "\n";
-                        $err++;
-                    }
-                } else {
+                    if ($DISTRO =~ m/RHEL|FC/) {
+                        if (not is_installed("krb5-libs")) {
+                            print RED "krb5-libs is required to build rnfs-utils.", RESET "\n";
+                            $err++;
+                        }
+                        if (not is_installed("libevent-devel")) {
+                            print RED "libevent-devel is required to build rnfs-utils.", RESET "\n";
+                            $err++;
+                        }
+                        if (not is_installed("nfs-utils-lib-devel")) {
+                            print RED "nfs-utils-lib-devel is required to build rnfs-utils.", RESET "\n";
+                            $err++;
+                        }
+                        if (not is_installed("openldap-devel")) {
+                            print RED "openldap-devel is required to build rnfs-utils.", RESET "\n";
+                            $err++;
+                        }
+                    } else {
                     if ($DISTRO =~ m/SLES11/) {
                         if (not is_installed("libevent-devel")) {
                             print RED "libevent-devel is required to build rnfs-utils.", RESET "\n";
@@ -3082,16 +2035,15 @@ sub check_linux_dependencies
                         $err++;
                     }
                 }
+                        my $blkid_so = ($arch =~ m/x86_64/) ? "/usr/lib64/libblkid.so" : "/usr/lib/libblkid.so";
+                        my $blkid_pkg = ($DISTRO =~ m/SLES10|RHEL5/) ? "e2fsprogs-devel" : "libblkid-devel";
+                        $blkid_pkg .= ($arch =~ m/powerpc|ppc64/) ? "-32bit" : "";
 
-                my $blkid_so = ($arch =~ m/x86_64/) ? "/usr/lib64/libblkid.so" : "/usr/lib/libblkid.so";
-                my $blkid_pkg = ($DISTRO =~ m/SLES10|RHEL5/) ? "e2fsprogs-devel" : "libblkid-devel";
-                $blkid_pkg .= ($arch =~ m/powerpc|ppc64/) ? "-32bit" : "";
-
-                if (not -e $blkid_so) {
-                    print RED "$blkid_pkg is required to build rnfs-utils.", RESET "\n";
-                    $err++;
+                        if (not -e $blkid_so) {
+                            print RED "$blkid_pkg is required to build rnfs-utils.", RESET "\n";
+                            $err++;
+                        }
                 }
-            }
         }
         my $dist_req_inst = ($DISTRO =~ m/UBUNTU/)?'ubuntu_dist_req_inst':'dist_req_inst';
         # Check installation requirements
@@ -3125,17 +2077,6 @@ sub check_linux_dependencies
                 if ($package eq "mstflint") {
                     if (not scalar(@libstdc32)) {
                         print RED "$libstdc 32bit is required to install mstflint.", RESET "\n";
-                        $err++;
-                    }
-                }
-                elsif ($package eq "openmpi") {
-                    my @libsysfs = </usr/lib/libsysfs.so.*>;
-                    if (not scalar(@libstdc32)) {
-                        print RED "$libstdc 32bit is required to install openmpi.", RESET "\n";
-                        $err++;
-                    }
-                    if (not scalar(@libsysfs)) {
-                        print RED "$sysfsutils 32bit is required to install openmpi.", RESET "\n";
                         $err++;
                     }
                 }
@@ -3357,7 +2298,6 @@ sub build_rpm
     my $cxxflags;
     my $fflags;
     my $ldlibs;
-    my $openmpi_comp_env;
     my $parent = $packages_info{$name}{'parent'};
     my $srpmdir;
     my $srpmpath_for_distro;
@@ -3365,19 +2305,8 @@ sub build_rpm
     print "Build $name RPM\n" if ($verbose);
 
     my $pref_env = '';
-    if ($prefix ne $default_prefix) {
-        if ($parent ne "mvapich" and $parent ne "mvapich2" and $parent ne "openmpi") {
-            $ldflags .= "$optflags -L$prefix/lib64 -L$prefix/lib";
-            $cflags .= "$optflags -I$prefix/include";
-            $cppflags .= "$optflags -I$prefix/include";
-        }
-    }
 
     if (not $packages_info{$name}{'rpm_exist'}) {
-
-        if ($parent eq "ibacm" and $DISTRO eq "FC14") {
-            $ldflags    = " -g -O2 -lpthread";
-        }
 
         if ($arch eq "ppc64") {
             if ($DISTRO =~ m/SLES/ and $dist_rpm_rel gt 15.2) {
@@ -3385,10 +2314,7 @@ sub build_rpm
                 if ($parent eq "ibutils") {
                     $packages_info{'ibutils'}{'configure_options'} .= " LDFLAGS=-L/usr/lib/gcc/powerpc64-suse-linux/4.1.2/64";
                 }
-                if ($parent eq "openmpi") {
-                    $openmpi_comp_env .= ' LDFLAGS="-m64 -O2 -L/usr/lib/gcc/powerpc64-suse-linux/4.1.2/64"';
-                }
-                if ($parent eq "sdpnetstat" or $parent eq "rds-tools" or $parent eq "rnfs-utils") {
+                if ($parent eq "rds-tools" or $parent eq "rnfs-utils") {
                     $ldflags    = " -g -O2";
                     $cflags     = " -g -O2";
                     $cppflags   = " -g -O2";
@@ -3398,7 +2324,7 @@ sub build_rpm
                 }
             }
             else {
-                if ($parent =~ /sdpnetstat|rds-tools|rnfs-utils/) {
+                if ($parent =~ /rds-tools|rnfs-utils/) {
                     # Override compilation flags on RHEL 4.0 and 5.0 PPC64
                     $ldflags    = " -g -O2";
                     $cflags     = " -g -O2";
@@ -3456,273 +2382,6 @@ sub build_rpm
             $cmd .= " --define 'build_ibmgtsim 1'";
             $cmd .= " --define '__arch_install_post %{nil}'";
         }
-        elsif ( $parent eq "mvapich") {
-            my $compiler = (split('_', $name))[1];
-            $cmd .= " --define '_name $name'";
-            $cmd .= " --define 'compiler $compiler'";
-            $cmd .= " --define 'openib_prefix $prefix'";
-            $cmd .= " --define '_usr $prefix'";
-            $cmd .= " --define 'use_mpi_selector 1'";
-            $cmd .= " --define '__arch_install_post %{nil}'";
-            if ($packages_info{'mvapich'}{'configure_options'}) {
-                $cmd .= " --define 'configure_options $packages_info{'mvapich'}{'configure_options'}'";
-            }
-            $cmd .= " --define 'mpi_selector $prefix/bin/mpi-selector'";
-            $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
-        }
-        elsif ($parent eq "mvapich2") {
-            my $compiler = (split('_', $name))[1];
-            $cmd .= " --define '_name $name'";
-            $cmd .= " --define 'impl $mvapich2_conf_impl'";
-
-            if ($compiler eq "gcc") {
-                if ($gcc{'gfortran'}) {
-                    if ($arch eq "ppc64") {
-                        $mvapich2_comp_env = 'CC="gcc -m64" CXX="g++ -m64" F77="gfortran -m64" FC="gfortran -m64"';
-                    }
-
-                    else {
-                        $mvapich2_comp_env = "CC=gcc CXX=g++ F77=gfortran FC=gfortran";
-                    }
-                }
-
-                elsif ($gcc{'g77'}) {
-                    if ($arch eq "ppc64") {
-                        $mvapich2_comp_env = 'CC="gcc -m64" CXX="g++ -m64" F77="g77 -m64" FC=/bin/false';
-                    }
-
-                    else {
-                        $mvapich2_comp_env = "CC=gcc CXX=g++ F77=g77 FC=/bin/false";
-                    }
-                }
-
-                else {
-                    $mvapich2_comp_env .= " --disable-f77 --disable-fc";
-                }
-            }
-
-            elsif ($compiler eq "pathscale") {
-                $mvapich2_comp_env = "CC=pathcc CXX=pathCC F77=pathf90 FC=pathf90";
-                # On i686 the PathScale compiler requires -g optimization
-                # for MVAPICH2 in the shared library configuration.
-                if ($arch eq "i686" and $mvapich2_conf_shared_libs) {
-                    $mvapich2_comp_env .= " OPT_FLAG=-g";
-                }
-            }
-
-            elsif ($compiler eq "pgi") {
-                $mvapich2_comp_env = "CC=pgcc CXX=pgCC F77=pgf77 FC=pgf90";
-            }
-
-            elsif ($compiler eq "intel") {
-                if ($mvapich2_conf_shared_libs) {
-                    # The -i-dynamic flag is required for MVAPICH2 in the shared
-                    # library configuration.
-                    $mvapich2_comp_env = 'CC="icc -i-dynamic" CXX="icpc -i-dynamic" F77="ifort -i-dynamic" FC="ifort -i-dynamic"';
-                }
-
-                else {
-                    $mvapich2_comp_env = "CC=icc CXX=icpc F77=ifort FC=ifort";
-                }
-            }
-
-            if ($mvapich2_conf_impl eq "ofa") {
-                if ($verbose) {
-                    print BLUE;
-                    print "Building the MVAPICH2 RPM [OFA]...\n";
-                    print RESET;
-                }
-
-                $cmd .= " --define 'rdma --with-rdma=gen2'";
-                $cmd .= " --define 'ib_include --with-ib-include=$prefix/include'";
-                $cmd .= " --define 'ib_libpath --with-ib-libpath=$prefix/lib";
-                $cmd .= "64" if $arch =~ m/x86_64|ppc64/;
-                $cmd .= "'";
-
-                if ($mvapich2_conf_ckpt) {
-                    $cmd .= " --define 'blcr 1'";
-                    $cmd .= " --define 'blcr_include --with-blcr-include=$mvapich2_conf_blcr_home/include'";
-                    $cmd .= " --define 'blcr_libpath --with-blcr-libpath=$mvapich2_conf_blcr_home/lib'";
-                }
-            }
-
-            elsif ($mvapich2_conf_impl eq "udapl") {
-                if ($verbose) {
-                    print BLUE;
-                    print "Building the MVAPICH2 RPM [uDAPL]...\n";
-                    print RESET;
-                }
-
-                $cmd .= " --define 'rdma --with-rdma=udapl'";
-                $cmd .= " --define 'dapl_include --with-dapl-include=$prefix/include'";
-                $cmd .= " --define 'dapl_libpath --with-dapl-libpath=$prefix/lib";
-                $cmd .= "64" if $arch =~ m/x86_64|ppc64/;
-                $cmd .= "'";
-
-                $cmd .= " --define 'cluster_size --with-cluster-size=$mvapich2_conf_vcluster'";
-                $cmd .= " --define 'io_bus --with-io-bus=$mvapich2_conf_io_bus'";
-                $cmd .= " --define 'link_speed --with-link=$mvapich2_conf_link_speed'";
-                $cmd .= " --define 'dapl_provider --with-dapl-provider=$mvapich2_conf_dapl_provider'" if
-($mvapich2_conf_dapl_provider);
-            }
-
-            if ($packages_info{'mvapich2'}{'configure_options'}) {
-                $cmd .= " --define 'configure_options $packages_info{'mvapich2'}{'configure_options'}'";
-            }
-
-            $cmd .= " --define 'shared_libs 1'" if $mvapich2_conf_shared_libs;
-            $cmd .= " --define 'romio 1'" if $mvapich2_conf_romio;
-            $cmd .= " --define 'comp_env $mvapich2_comp_env'";
-            $cmd .= " --define 'auto_req 0'";
-            $cmd .= " --define 'mpi_selector $prefix/bin/mpi-selector'";
-            $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
-        }
-        elsif ($parent eq "openmpi") {
-            my $compiler = (split('_', $name))[1];
-            my $use_default_rpm_opt_flags = 1;
-            my $openmpi_ldflags = '';
-            my $openmpi_wrapper_cxx_flags;
-            my $openmpi_lib;
-
-            if ($arch =~ m/x86_64|ppc64/) {
-                $openmpi_lib = 'lib64';
-            }
-            else {
-                $openmpi_lib = 'lib';
-            }
-
-            if ($compiler eq "gcc") {
-                $openmpi_comp_env .= " CC=gcc";
-                if ($gcc{'g++'}) {
-                    $openmpi_comp_env .= " CXX=g++";
-                }
-                else {
-                    $openmpi_comp_env .= " --disable-mpi-cxx";
-                }
-                if ($gcc{'gfortran'}) {
-                    $openmpi_comp_env .= " F77=gfortran FC=gfortran";
-                }
-                elsif ($gcc{'g77'}) {
-                    $openmpi_comp_env .= " F77=g77 --disable-mpi-f90";
-                }
-                else {
-                    $openmpi_comp_env .= " --disable-mpi-f77 --disable-mpi-f90";
-                }
-            }
-            elsif ($compiler eq "pathscale") {
-                $cmd .= " --define 'disable_auto_requires 1'";
-                $openmpi_comp_env .= " CC=pathcc";
-                if ($pathscale{'pathCC'}) {
-                    $openmpi_comp_env .= " CXX=pathCC";
-                }
-                else {
-                    $openmpi_comp_env .= " --disable-mpi-cxx";
-                }
-                if ($pathscale{'pathf90'}) {
-                    $openmpi_comp_env .= " F77=pathf90 FC=pathf90";
-                }
-                else {
-                    $openmpi_comp_env .= " --disable-mpi-f77 --disable-mpi-f90";
-                }
-                # On fedora6 and redhat5 the pathscale compiler fails with default $RPM_OPT_FLAGS
-                if ($DISTRO =~ m/RHEL|FC/) {
-                    $use_default_rpm_opt_flags = 0;
-                }
-            }
-            elsif ($compiler eq "pgi") {
-                $cmd .= " --define 'disable_auto_requires 1'";
-                $openmpi_comp_env .= " CC=pgcc";
-                $use_default_rpm_opt_flags = 0;
-                if ($pgi{'pgCC'}) {
-                    $openmpi_comp_env .= " CXX=pgCC";
-                    # See http://www.pgroup.com/userforum/viewtopic.php?p=2371
-                    $openmpi_wrapper_cxx_flags .= " -fpic";
-                }
-                else {
-                    $openmpi_comp_env .= " --disable-mpi-cxx";
-                }
-                if ($pgi{'pgf77'}) {
-                    $openmpi_comp_env .= " F77=pgf77";
-                }
-                else {
-                    $openmpi_comp_env .= " --disable-mpi-f77";
-                }
-                if ($pgi{'pgf90'}) {
-                    # *Must* put in FCFLAGS=-O2 so that -g doesn't get
-                    # snuck in there (pgi 6.2-5 has a problem with
-                    # modules and -g).
-                    $openmpi_comp_env .= " FC=pgf90 FCFLAGS=-O2";
-                }
-                else {
-                    $openmpi_comp_env .= " --disable-mpi-f90";
-                }
-            }
-            elsif ($compiler eq "intel") {
-                $cmd .= " --define 'disable_auto_requires 1'";
-                $openmpi_comp_env .= " CC=icc";
-                if ($intel{'icpc'}) {
-                    $openmpi_comp_env .= " CXX=icpc";
-                }
-                else {
-                    $openmpi_comp_env .= " --disable-mpi-cxx";
-                }
-                if ($intel{'ifort'}) {
-                    $openmpi_comp_env .= "  F77=ifort FC=ifort";
-                }
-                else {
-                    $openmpi_comp_env .= " --disable-mpi-f77 --disable-mpi-f90";
-                }
-            }
-
-            if ($arch eq "ppc64") {
-                # In the ppc64 case, add -m64 to all the relevant
-                # flags because it's not the default.  Also
-                # unconditionally add $OMPI_RPATH because even if
-                # it's blank, it's ok because there are other
-                # options added into the ldflags so the overall
-                # string won't be blank.
-                $openmpi_comp_env .= ' CFLAGS="-m64 -O2" CXXFLAGS="-m64 -O2" FCFLAGS="-m64 -O2" FFLAGS="-m64 -O2"';
-                $openmpi_comp_env .= ' --with-wrapper-ldflags="-g -O2 -m64 -L/usr/lib64" --with-wrapper-cflags=-m64';
-                $openmpi_comp_env .= ' --with-wrapper-cxxflags=-m64 --with-wrapper-fflags=-m64 --with-wrapper-fcflags=-m64';
-                $openmpi_wrapper_cxx_flags .= " -m64";
-            }
-
-            $openmpi_comp_env .= " --enable-mpirun-prefix-by-default";
-            if ($openmpi_wrapper_cxx_flags) {
-                $openmpi_comp_env .= " --with-wrapper-cxxflags=\"$openmpi_wrapper_cxx_flags\"";
-            }
-
-            $cmd .= " --define '_name $name'";
-            $cmd .= " --define 'mpi_selector $prefix/bin/mpi-selector'";
-            $cmd .= " --define 'use_mpi_selector 1'";
-            $cmd .= " --define 'install_shell_scripts 1'";
-            $cmd .= " --define 'shell_scripts_basename mpivars'";
-            $cmd .= " --define '_usr $prefix'";
-            $cmd .= " --define 'ofed 0'";
-            $cmd .= " --define '_prefix $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
-            $cmd .= " --define '_defaultdocdir $prefix/mpi/$compiler/$parent-$main_packages{$parent}{'version'}'";
-            $cmd .= " --define '_mandir %{_prefix}/share/man'";
-            $cmd .= " --define '_datadir %{_prefix}/share'";
-            $cmd .= " --define 'mflags -j 4'";
-            $cmd .= " --define 'configure_options $packages_info{'openmpi'}{'configure_options'} $openmpi_ldflags --with-openib=$prefix --with-openib-libdir=$prefix/$openmpi_lib $openmpi_comp_env --with-contrib-vt-flags=--disable-iotrace'";
-            $cmd .= " --define 'use_default_rpm_opt_flags $use_default_rpm_opt_flags'";
-        }
-        elsif ($parent eq "mpitests") {
-            my $mpi = (split('_', $name))[1];
-            my $compiler = (split('_', $name))[2];
-
-            $cmd .= " --define '_name $name'";
-            $cmd .= " --define 'root_path /'";
-            $cmd .= " --define '_usr $prefix'";
-            $cmd .= " --define 'path_to_mpihome $prefix/mpi/$compiler/$mpi-$main_packages{$mpi}{'version'}'";
-        }
-        elsif ($parent eq "mpi-selector") {
-            $cmd .= " --define '_prefix $prefix'";
-            $cmd .= " --define '_exec_prefix $prefix'";
-            $cmd .= " --define '_sysconfdir $sysconfdir'";
-            $cmd .= " --define '_usr $prefix'";
-            $cmd .= " --define 'shell_startup_dir /etc/profile.d'";
-        }
         elsif ($parent =~ m/dapl/) {
             my $def_doc_dir = `rpm --eval '%{_defaultdocdir}'`;
             chomp $def_doc_dir;
@@ -3737,16 +2396,6 @@ sub build_rpm
             $cmd .= " --define '_exec_prefix $prefix'";
             $cmd .= " --define '_sysconfdir $sysconfdir'";
             $cmd .= " --define '_usr $prefix'";
-        }
-
-        if ($parent eq "libmlx4") {
-            $cmd .= " --nodeps";
-        }
-
-        if ($parent eq "librdmacm") {
-            if ( $packages_info{'ibacm'}{'selected'}) {
-                $packages_info{'librdmacm'}{'configure_options'} .= " --with-ib_acm";
-            }
         }
 
         if ($packages_info{$parent}{'configure_options'} or $user_configure_options) {
@@ -3881,23 +2530,10 @@ sub install_rpm
         exit 1;
     }
 
-    if ($name eq "mpi-selector") {
-        $cmd = "rpm -Uv $rpminstall_flags --force";
-    } else {
-        if ($name eq "opensm" and $DISTRO eq "DEBIAN") {
-            $rpminstall_flags .= " --nopost";
-        }
-        $cmd = "rpm -iv $rpminstall_flags";
+    if ($name eq "opensm" and $DISTRO eq "DEBIAN") {
+        $rpminstall_flags .= " --nopost";
     }
-
-    if ($name =~ /intel|pgi/) {
-        $cmd .= " --nodeps";
-    }
-
-    if ($name eq "libmlx4") {
-        $cmd .= " --nodeps";
-    }
-
+    $cmd = "rpm -iv $rpminstall_flags";
 
     $cmd .= " $package";
 
@@ -4327,7 +2963,6 @@ sub force_uninstall
 
     for my $package (@all_packages, @hidden_packages, @prev_ofed_packages, @other_ofed_rpms, @distro_ofed_packages) {
         chomp $package;
-        next if ($package eq "mpi-selector");
         if (is_installed($package)) {
             push (@packages_to_uninstall, $package);
             $selected_for_uninstall{$package} = 1;
@@ -4504,10 +3139,6 @@ sub main
         chomp $config;
         if ($install_option eq 'all') {
             @list = (@all_packages, @hidden_packages);
-        }
-        elsif ($install_option eq 'hpc') {
-            @list = (@hpc_user_packages, @hpc_kernel_packages);
-            @kernel_modules = (@hpc_kernel_modules);
         }
         elsif ($install_option eq 'basic') {
             @list = (@basic_user_packages, @basic_kernel_packages);
