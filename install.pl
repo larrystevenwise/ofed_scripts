@@ -122,10 +122,8 @@ my $check_linux_deps = 1;
 my $force = 0;
 my $kmp = 1;
 my $with_xeon_phi = 0;
-my $libnl = "libnl";
-my $libnl_devel = "libnl-devel";
-my $libnl3 = "libnl3";
-my $libnl3_devel = "libnl3-devel";
+my $libnl = "libnl3";
+my $libnl_devel = "libnl3-devel";
 my %disabled_packages;
 
 while ( $#ARGV >= 0 ) {
@@ -483,10 +481,8 @@ if ($DISTRO =~ m/SLES11/) {
     $libgcc = 'libgcc_s1';
     $libgfortran = 'libgfortran3';
     $curl_devel = 'libcurl-devel';
-    $libnl = "libnl1";
-    $libnl_devel = "libnl-1_1-devel";
-    $libnl3 = "libnl3-200";
-    $libnl3_devel = "libnl3-devel";
+    $libnl = "libnl3-200";
+    $libnl_devel = "libnl3-devel";
     $pkgconfig = "pkg-config";
 } elsif ($DISTRO =~ m/RHEL|OEL|FC/) {
     $libstdc = 'libstdc++';
@@ -631,7 +627,7 @@ my @misc_packages = ("ofed-docs", "ofed-scripts");
 my @xeon_phi_user = ("ibpd", "libibscif");
 my @non_xeon_phi_user = ("infinipath-psm", "infinipath-psm-devel");
 
-my @user_packages = ("rdma-core", "rdma-core-compat",
+my @user_packages = ("rdma-core",
                      "libibmad", "libibmad-devel", "libibmad-static", "libibmad-debuginfo",
                      "ibsim", "ibsim-debuginfo",
                      "opensm", "opensm-libs", "opensm-devel", "opensm-debuginfo", "opensm-static",
@@ -646,7 +642,7 @@ my @user_packages = ("rdma-core", "rdma-core-compat",
                      );
 
 my @basic_kernel_packages = ("compat-rdma");
-my @basic_user_packages = ("rdma-core", "rdma-core-compat",
+my @basic_user_packages = ("rdma-core",
                             "libiwpm", "mstflint", @misc_packages);
 
 my @hpc_kernel_packages = ("compat-rdma", "ib-bonding");
@@ -769,19 +765,10 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user",
             dist_req_build =>
-            ($build32 == 1 )?["cmake", "$pkgconfig", "$gcc", "$glibc_devel$suffix_64bit","$glibc_devel$suffix_32bit","$libgcc","$libgcc"."$suffix_32bit", "$libnl_devel"."$suffix_64bit", ($DISTRO =~ /SUSE/)?"$libnl_devel"."$suffix_32bit":(($arch =~ /ppc/)?"$libnl_devel":"$libnl_devel.$target_cpu32")]:["cmake", "$pkgconfig","$gcc","$glibc_devel$suffix_64bit","$libgcc", "$libnl_devel"."$suffix_64bit"],
+            ($build32 == 1 )?["cmake", "ninja", "$pkgconfig", "$gcc", "$glibc_devel$suffix_64bit","$glibc_devel$suffix_32bit","$libgcc","$libgcc"."$suffix_32bit", "$libnl_devel"."$suffix_64bit", ($DISTRO =~ /SUSE/)?"$libnl_devel"."$suffix_32bit":(($arch =~ /ppc/)?"$libnl_devel":"$libnl_devel.$target_cpu32")]:["cmake", "$pkgconfig","$gcc","$glibc_devel$suffix_64bit","$libgcc", "$libnl_devel"."$suffix_64bit"],
             dist_req_inst => ( $build32 == 1 )?["$pkgconfig","$libnl"."$suffix_64bit", ($dist_rpm !~ /sles-release-11.1/)?"$libnl"."$suffix_32bit":"$libnl.$target_cpu32"]:["$pkgconfig","$libnl"."$suffix_64bit"] ,
             ofa_req_build => [],
             ofa_req_inst => ["ofed-scripts"],
-            install32 => 1, exception => 0 },
-        'rdma-core-compat' =>
-            { name => "rdma-core-compat", parent => "rdma-core",
-            selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
-            available => 1, mode => "user",
-            dist_req_build => [],
-            dist_req_inst => [],
-            ofa_req_build => ["rdma-core"],
-            ofa_req_inst => ["rdma-core", "ofed-scripts"],
             install32 => 1, exception => 0 },
         'libfabric' =>
             { name => "libfabric", parent => "libfabric",
@@ -2366,6 +2353,13 @@ sub build_rpm
         $cmd = "$pref_env rpmbuild --rebuild $rpmbuild_flags --define '_topdir $TOPDIR'";
         $cmd .= " --define 'dist %{nil}'";
         $cmd .= " --target $target_cpu";
+        if ($parent eq "rdma-core" and $DISTRO =~ m/SLES/) {
+            $cmd .= " --nodeps";
+        }
+
+        if ($parent =~ m/libibmad|opensm|perftest|ibutils|infiniband-diags|qperf/) {
+            $cmd .= " --nodeps";
+        }
 
         # Prefix should be defined per package
         if ($parent eq "ibutils") {
@@ -2534,6 +2528,14 @@ sub install_rpm
         $rpminstall_flags .= " --nopost";
     }
     $cmd = "rpm -iv $rpminstall_flags";
+
+    if ($name eq "rdma-core" and $DISTRO =~ m/SLES/) {
+        $cmd .= " --nodeps";
+    }
+
+    if ($name =~ m/libibmad|opensm|perftest|ibutils|infiniband-diags|qperf/) {
+        $cmd .= " --nodeps";
+    }
 
     $cmd .= " $package";
 
