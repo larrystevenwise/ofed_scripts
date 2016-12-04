@@ -2537,6 +2537,11 @@ sub install_rpm
         $cmd .= " --nodeps";
     }
 
+    if ($name =~ m/infiniband-diags/) {
+	    # Force infiniband-diags installation due to conflict with rdma-core
+        $cmd .= " --force";
+    }
+
     $cmd .= " $package";
 
     print "Running $cmd\n" if ($verbose);
