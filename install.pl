@@ -465,6 +465,8 @@ my $curl_devel = 'curl-devel';
 my $libudev_devel = 'libudev-devel';
 my $pkgconfig = "pkgconfig";
 my $glibc_devel = 'glibc-devel';
+my $cmake = 'cmake';
+my $ninja = 'ninja';
 if ($DISTRO =~ m/SLES11/) {
     $libstdc = 'libstdc++43';
     $libgcc = 'libgcc43';
@@ -477,6 +479,7 @@ if ($DISTRO =~ m/SLES11/) {
     }
     $pkgconfig = "pkg-config";
 } elsif ($DISTRO =~ m/SLES12/) {
+    $cmake = 'cmake__3.5';
     $libstdc = 'libstdc++6';
     $libgcc = 'libgcc_s1';
     $libgfortran = 'libgfortran3';
@@ -765,7 +768,7 @@ my %packages_info = (
             selected => 0, installed => 0, rpm_exist => 0, rpm_exist32 => 0,
             available => 1, mode => "user",
             dist_req_build =>
-            ($build32 == 1 )?["cmake", "ninja", "$pkgconfig", "$gcc", "$glibc_devel$suffix_64bit","$glibc_devel$suffix_32bit","$libgcc","$libgcc"."$suffix_32bit", "$libnl_devel"."$suffix_64bit", ($DISTRO =~ /SUSE/)?"$libnl_devel"."$suffix_32bit":(($arch =~ /ppc/)?"$libnl_devel":"$libnl_devel.$target_cpu32")]:["cmake", "$pkgconfig","$gcc","$glibc_devel$suffix_64bit","$libgcc", "$libnl_devel"."$suffix_64bit"],
+            ($build32 == 1 )?["$cmake", "$ninja", "$pkgconfig", "$gcc", "$glibc_devel$suffix_64bit","$glibc_devel$suffix_32bit","$libgcc","$libgcc"."$suffix_32bit", "$libnl_devel"."$suffix_64bit", ($DISTRO =~ /SUSE/)?"$libnl_devel"."$suffix_32bit":(($arch =~ /ppc/)?"$libnl_devel":"$libnl_devel.$target_cpu32")]:["$cmake", "$ninja", "$pkgconfig","$gcc","$glibc_devel$suffix_64bit","$libgcc", "$libnl_devel"."$suffix_64bit"],
             dist_req_inst => ( $build32 == 1 )?["$pkgconfig","$libnl"."$suffix_64bit", ($dist_rpm !~ /sles-release-11.1/)?"$libnl"."$suffix_32bit":"$libnl.$target_cpu32"]:["$pkgconfig","$libnl"."$suffix_64bit"] ,
             ofa_req_build => [],
             ofa_req_inst => ["ofed-scripts"],
@@ -2354,7 +2357,11 @@ sub build_rpm
         $cmd .= " --define 'dist %{nil}'";
         $cmd .= " --target $target_cpu";
         if ($parent eq "rdma-core" and $DISTRO =~ m/SLES/) {
-            $cmd .= " --nodeps";
+            my $make_jobs = `rpm --eval %make_jobs`;
+            chomp $make_jobs;
+            if ($make_jobs eq '%make_jobs') {
+                $cmd .= " --define 'make_jobs %ninja_build'";
+            }
         }
 
         if ($parent =~ m/libibmad|opensm|perftest|ibutils|infiniband-diags|qperf/) {
