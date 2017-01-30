@@ -466,7 +466,7 @@ my $libudev_devel = 'libudev-devel';
 my $pkgconfig = "pkgconfig";
 my $glibc_devel = 'glibc-devel';
 my $cmake = 'cmake';
-my $ninja = 'ninja';
+my $ninja = '';
 if ($DISTRO =~ m/SLES11/) {
     $libstdc = 'libstdc++43';
     $libgcc = 'libgcc43';
@@ -479,6 +479,7 @@ if ($DISTRO =~ m/SLES11/) {
     }
     $pkgconfig = "pkg-config";
 } elsif ($DISTRO =~ m/SLES12/) {
+    $ninja = 'ninja';
     $cmake = 'cmake__3.5';
     $libstdc = 'libstdc++6';
     $libgcc = 'libgcc_s1';
